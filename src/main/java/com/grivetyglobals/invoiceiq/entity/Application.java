@@ -6,13 +6,13 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "applications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,12 +21,7 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private java.util.Set<Permission> permissions = new java.util.HashSet<>();
+    private java.util.List<Module> modules = new java.util.ArrayList<>();
 }
