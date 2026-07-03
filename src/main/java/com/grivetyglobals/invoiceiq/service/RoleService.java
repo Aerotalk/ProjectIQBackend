@@ -72,7 +72,11 @@ public class RoleService {
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        user.getRoles().add(role);
+        com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                .user(user)
+                .role(role)
+                .build();
+        user.getUserRoles().add(userRole);
         userRepository.save(user);
         auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getName() + " to user " + user.getEmail(), targetUserId, "User", userId, organizationId);
     }

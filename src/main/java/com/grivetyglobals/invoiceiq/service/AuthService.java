@@ -50,7 +50,11 @@ public class AuthService {
                 .organization(null) // Super Admins don't belong to a tenant
                 .build();
         
-        superAdmin.getRoles().add(superAdminRole);
+        com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                .user(superAdmin)
+                .role(superAdminRole)
+                .build();
+        superAdmin.getUserRoles().add(userRole);
         userRepository.save(superAdmin);
     }
 

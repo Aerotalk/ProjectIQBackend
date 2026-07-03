@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import com.grivetyglobals.invoiceiq.entity.RolePermission;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +34,15 @@ public class PermissionService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         List<Permission> permissions = permissionRepository.findAllById(permissionIds);
-        role.setPermissions(new HashSet<>(permissions));
+        
+        role.getRolePermissions().clear();
+        Set<RolePermission> newPermissions = permissions.stream()
+                .map(permission -> RolePermission.builder()
+                        .role(role)
+                        .permission(permission)
+                        .build())
+                .collect(Collectors.toSet());
+        role.getRolePermissions().addAll(newPermissions);
         
         return roleRepository.save(role);
     }

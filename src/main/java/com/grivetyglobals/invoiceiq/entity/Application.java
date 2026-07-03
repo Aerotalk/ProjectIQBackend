@@ -37,7 +37,4 @@ public class Application {
     @Column(name = "status", length = 20)
     private String status;
 
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private java.util.List<Module> modules = new java.util.ArrayList<>();
 }

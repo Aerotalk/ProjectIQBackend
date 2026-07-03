@@ -123,7 +123,11 @@ public class AdminService {
                 .organization(organization)
                 .build();
 
-        user.getRoles().add(role);
+        com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                .user(user)
+                .role(role)
+                .build();
+        user.getUserRoles().add(userRole);
         return userRepository.save(user);
     }
     public java.util.List<Company> getAllCompanies(java.util.UUID organizationId) {
