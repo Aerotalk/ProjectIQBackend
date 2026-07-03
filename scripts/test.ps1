@@ -1,14 +1,14 @@
 $ErrorActionPreference = "Stop"
 
 # 1. Login as Super Admin
-$loginResp = Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" -Method Post -ContentType "application/json" -Body '{"email": "admin2@grivety.com", "password": "SecurePassword123"}'
+$loginResp = Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" -Method Post -ContentType "application/json" -Body '{"email": "admin3@grivety.com", "password": "SecurePassword123"}'
 $token = $loginResp.token
 Write-Host "✅ Logged in as Super Admin successfully."
 
 # 2. Create Organization
 $orgPayload = @{
-    organizationCode = "ORG002"
-    organizationName = "Grivety Global v2"
+    organizationCode = "ORG003"
+    organizationName = "Grivety Global v3"
     legalName = "Grivety Global Pvt Ltd"
     organizationType = "Pvt Ltd"
     industry = "Technology"
@@ -21,17 +21,17 @@ Write-Host "✅ Organization Created: $($orgResp.organizationName) (ID: $($orgRe
 # 3. Create Company under Organization
 $companyPayload = @{
     organizationId = $orgResp.id
-    companyCode = "COMP002"
-    companyName = "Grivety India v2"
+    companyCode = "COMP003"
+    companyName = "Grivety India v3"
     legalName = "Grivety India Software Pvt Ltd"
-    gstNumber = "29ABCDE1234F1Z6"
-    email = "hello2@grivety.com"
-    phone = "+919876543211"
+    gstNumber = "29ABCDE1234F1Z7"
+    email = "hello3@grivety.com"
+    phone = "+919876543212"
     status = "Active"
     addresses = @(
         @{
             addressType = "Registered"
-            addressLine1 = "123 Tech Park v2"
+            addressLine1 = "123 Tech Park v3"
             city = "Bengaluru"
             state = "Karnataka"
             country = "India"
@@ -41,8 +41,8 @@ $companyPayload = @{
     bankAccounts = @(
         @{
             bankName = "HDFC Bank"
-            accountHolderName = "Grivety India v2"
-            accountNumber = "000123456790"
+            accountHolderName = "Grivety India v3"
+            accountNumber = "000123456791"
             ifscCode = "HDFC0001234"
             isPrimary = $true
         }
@@ -56,8 +56,8 @@ Write-Host "   -> Bank Accounts saved: $($companyResp.bankAccounts.Count)"
 
 # 4. Create User under Organization
 $userPayload = @{
-    name = "John Doe"
-    email = "john@grivety.com"
+    name = "Mike Doe"
+    email = "mike@grivety.com"
     password = "SecurePassword123"
     organizationId = $orgResp.id
     role = "ROLE_ORGANIZATION_ADMIN"
@@ -67,7 +67,7 @@ $userResp = Invoke-RestMethod -Uri "http://localhost:8080/api/admin/users" -Meth
 Write-Host "✅ User Created: $($userResp.name) ($($userResp.email)) for Organization ID $($userResp.organization.id)"
 
 # 5. Login as the newly created user
-$tenantLoginResp = Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" -Method Post -ContentType "application/json" -Body '{"email": "john@grivety.com", "password": "SecurePassword123"}'
+$tenantLoginResp = Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" -Method Post -ContentType "application/json" -Body '{"email": "mike@grivety.com", "password": "SecurePassword123"}'
 Write-Host "✅ Logged in as Organization Admin successfully. Token generated."
 
 Write-Host "`nAll endpoints are working perfectly! 🚀"

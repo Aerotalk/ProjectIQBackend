@@ -3,6 +3,7 @@ package com.grivetyglobals.invoiceiq.service;
 import com.grivetyglobals.invoiceiq.dto.CompanyAddressDto;
 import com.grivetyglobals.invoiceiq.dto.CompanyBankAccountDto;
 import com.grivetyglobals.invoiceiq.dto.CompanyCreateRequest;
+import com.grivetyglobals.invoiceiq.dto.CompanyUpdateRequest;
 import com.grivetyglobals.invoiceiq.dto.OrganizationCreateRequest;
 import com.grivetyglobals.invoiceiq.dto.UserCreateRequest;
 import com.grivetyglobals.invoiceiq.entity.*;
@@ -124,5 +125,100 @@ public class AdminService {
 
         user.getRoles().add(role);
         return userRepository.save(user);
+    }
+    public java.util.List<Company> getAllCompanies(java.util.UUID organizationId) {
+        return companyRepository.findAll().stream()
+                .filter(company -> company.getOrganization().getId().equals(organizationId))
+                .toList();
+    }
+
+    public Company getCompanyById(java.util.UUID companyId, java.util.UUID organizationId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        
+        if (!company.getOrganization().getId().equals(organizationId)) {
+            throw new RuntimeException("Access Denied: Company belongs to another organization");
+        }
+        
+        return company;
+    }
+
+    @Transactional
+    public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request, java.util.UUID organizationId) {
+        Company company = getCompanyById(companyId, organizationId);
+
+        company.setCompanyName(request.getCompanyName());
+        company.setLegalName(request.getLegalName());
+        company.setGstNumber(request.getGstNumber());
+        company.setPanNumber(request.getPanNumber());
+        company.setTanNumber(request.getTanNumber());
+        company.setCinNumber(request.getCinNumber());
+        company.setMsmeNumber(request.getMsmeNumber());
+        company.setIecCode(request.getIecCode());
+        company.setEmail(request.getEmail());
+        company.setPhone(request.getPhone());
+        company.setWebsite(request.getWebsite());
+        company.setLogoFileId(request.getLogoFileId());
+        company.setInvoiceLogoId(request.getInvoiceLogoId());
+        company.setStampFileId(request.getStampFileId());
+        company.setPrimaryColor(request.getPrimaryColor());
+        company.setSecondaryColor(request.getSecondaryColor());
+
+        company = companyRepository.save(company);
+
+        // Update Addresses (Simplistic approach: delete old and recreate new)
+        companyAddressRepository.deleteAll(company.getAddresses());
+        company.getAddresses().clear();
+        
+        if (request.getAddresses() != null) {
+            for (CompanyAddressDto addressDto : request.getAddresses()) {
+                CompanyAddress address = CompanyAddress.builder()
+                        .company(company)
+                        .addressType(addressDto.getAddressType())
+                        .addressLine1(addressDto.getAddressLine1())
+                        .addressLine2(addressDto.getAddressLine2())
+                        .city(addressDto.getCity())
+                        .state(addressDto.getState())
+                        .country(addressDto.getCountry())
+                        .postalCode(addressDto.getPostalCode())
+                        .build();
+                company.getAddresses().add(companyAddressRepository.save(address));
+            }
+        }
+
+        // Update Bank Accounts (Simplistic approach: delete old and recreate new)
+        companyBankAccountRepository.deleteAll(company.getBankAccounts());
+        company.getBankAccounts().clear();
+
+        if (request.getBankAccounts() != null) {
+            for (CompanyBankAccountDto bankDto : request.getBankAccounts()) {
+                CompanyBankAccount bank = CompanyBankAccount.builder()
+                        .company(company)
+                        .bankName(bankDto.getBankName())
+                        .accountHolderName(bankDto.getAccountHolderName())
+                        .accountNumber(bankDto.getAccountNumber())
+                        .ifscCode(bankDto.getIfscCode())
+                        .swiftCode(bankDto.getSwiftCode())
+                        .upiId(bankDto.getUpiId())
+                        .isPrimary(bankDto.getIsPrimary())
+                        .build();
+                company.getBankAccounts().add(companyBankAccountRepository.save(bank));
+            }
+        }
+
+        return company;
+    }
+
+    @Transactional
+    public void deleteCompany(java.util.UUID companyId, java.util.UUID organizationId) {
+        Company company = getCompanyById(companyId, organizationId);
+        companyRepository.delete(company);
+    }
+
+    @Transactional
+    public Company updateCompanyStatus(java.util.UUID companyId, String status, java.util.UUID organizationId) {
+        Company company = getCompanyById(companyId, organizationId);
+        company.setStatus(status);
+        return companyRepository.save(company);
     }
 }

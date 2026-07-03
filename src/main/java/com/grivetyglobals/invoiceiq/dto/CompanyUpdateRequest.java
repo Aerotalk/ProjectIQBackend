@@ -3,7 +3,6 @@ package com.grivetyglobals.invoiceiq.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,13 +15,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CompanyCreateRequest {
-    @NotNull(message = "Organization ID is required")
-    private UUID organizationId;
-    
-    @NotBlank(message = "Company Code is required")
-    private String companyCode;
-
+public class CompanyUpdateRequest {
     @NotBlank(message = "Company Name is required")
     private String companyName;
 
@@ -49,9 +42,6 @@ public class CompanyCreateRequest {
     private UUID stampFileId;
     private String primaryColor;
     private String secondaryColor;
-    
-    @NotBlank(message = "Status is required")
-    private String status;
 
     @Valid
     private List<CompanyAddressDto> addresses;

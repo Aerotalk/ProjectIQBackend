@@ -7,10 +7,20 @@ erDiagram
     %% Core Tenant Entities
     ORGANIZATION ||--o{ COMPANY : "owns (1:N)"
     ORGANIZATION ||--o{ USER : "employs (1:N)"
+    ORGANIZATION ||--o{ EMPLOYEE : "employs (1:N)"
+    ORGANIZATION ||--o{ DEPARTMENT : "has departments (1:N)"
+    ORGANIZATION ||--o{ DESIGNATION : "has designations (1:N)"
     
     %% Company Details
     COMPANY ||--o{ COMPANY_ADDRESS : "has addresses (1:N)"
     COMPANY ||--o{ COMPANY_BANK_ACCOUNT : "has bank accounts (1:N)"
+
+    %% Employee Details
+    USER |o--o| EMPLOYEE : "has profile (1:1)"
+    DEPARTMENT ||--o{ EMPLOYEE : "has employees (1:N)"
+    DESIGNATION ||--o{ EMPLOYEE : "assigned to (1:N)"
+    EMPLOYEE ||--o{ EMPLOYEE : "reports to (1:N)"
+    DEPARTMENT ||--o{ DEPARTMENT : "parent of (1:N)"
 
     %% User & Auth Entities
     USER }|--|{ ROLE : "assigned via UserRoles (N:M)"
@@ -65,6 +75,42 @@ erDiagram
         String ifsc_code
         String swift_code
         Boolean is_primary
+    }
+
+    DEPARTMENT {
+        UUID department_id PK
+        UUID organization_id FK
+        UUID parent_department FK
+        String department_code
+        String department_name
+        String description
+    }
+
+    DESIGNATION {
+        UUID designation_id PK
+        UUID organization_id FK
+        String designation_code
+        String designation_name
+        Integer hierarchy_level
+        String description
+    }
+
+    EMPLOYEE {
+        UUID employee_id PK
+        UUID organization_id FK
+        UUID user_id FK
+        UUID department_id FK
+        UUID designation_id FK
+        UUID reporting_manager_id FK
+        String employee_code
+        String first_name
+        String middle_name
+        String last_name
+        String gender
+        Date date_of_birth
+        Date joining_date
+        UUID profile_picture
+        String employment_status
     }
 
     USER {
