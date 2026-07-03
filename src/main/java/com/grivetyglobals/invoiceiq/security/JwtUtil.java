@@ -51,6 +51,19 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        
+        // Add roles to claims
+        claims.put("roles", userDetails.getAuthorities().stream()
+                .map(auth -> auth.getAuthority())
+                .toList());
+                
+        // If the UserDetails is our custom User entity, add the companyId
+        if (userDetails instanceof com.grivetyglobals.invoiceiq.entity.User user) {
+            if (user.getCompany() != null) {
+                claims.put("companyId", user.getCompany().getId().toString());
+            }
+        }
+        
         return createToken(claims, userDetails.getUsername());
     }
 

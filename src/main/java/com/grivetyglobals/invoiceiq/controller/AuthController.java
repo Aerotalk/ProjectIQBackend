@@ -18,9 +18,10 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    @PostMapping("/setup-super-admin")
+    public ResponseEntity<String> setupSuperAdmin(@RequestBody RegisterRequest request) {
+        authService.setupSuperAdmin(request);
+        return ResponseEntity.ok("Super Admin created successfully.");
     }
 
     @PostMapping("/login")

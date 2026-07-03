@@ -1,10 +1,12 @@
 package com.grivetyglobals.invoiceiq.service;
 
 import com.grivetyglobals.invoiceiq.dto.*;
-import com.grivetyglobals.invoiceiq.entity.Company;
+import com.grivetyglobals.invoiceiq.entity.Role;
+import com.grivetyglobals.invoiceiq.entity.User;
 import com.grivetyglobals.invoiceiq.entity.RefreshToken;
 import com.grivetyglobals.invoiceiq.entity.VerificationToken;
-import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
+import com.grivetyglobals.invoiceiq.repository.RoleRepository;
+import com.grivetyglobals.invoiceiq.repository.UserRepository;
 import com.grivetyglobals.invoiceiq.repository.RefreshTokenRepository;
 import com.grivetyglobals.invoiceiq.repository.VerificationTokenRepository;
 import com.grivetyglobals.invoiceiq.security.JwtUtil;
@@ -22,7 +24,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -31,40 +34,24 @@ public class AuthService {
     private final EmailService emailService;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        if (companyRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use");
+    public void setupSuperAdmin(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Super admin email already exists");
         }
 
-        Company company = Company.builder()
+        Role superAdminRole = roleRepository.findByName("ROLE_SUPER_ADMIN")
+                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_SUPER_ADMIN").build()));
+
+        User superAdmin = User.builder()
                 .name(request.getName())
-                .companyName(request.getCompanyName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .country(request.getCountry())
-                .state(request.getState())
-                .district(request.getDistrict())
-                .pincode(request.getPincode())
-                .gst(request.getGst())
-                .address(request.getAddress())
-                .companyPhoneNo(request.getCompanyPhoneNo())
+                .emailVerified(true) // Auto-verified for bootstrap
+                .company(null) // Super Admins don't belong to a tenant
                 .build();
-
-        companyRepository.save(company);
         
-        // Generate Email Verification Token
-        VerificationToken verificationToken = VerificationToken.builder()
-                .company(company)
-                .token(UUID.randomUUID().toString())
-                .tokenType(VerificationToken.TokenType.EMAIL_VERIFICATION)
-                .expiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24)) // 24 hours
-                .build();
-        verificationTokenRepository.save(verificationToken);
-
-        // Send Email
-        emailService.sendVerificationEmail(company.getEmail(), verificationToken.getToken());
-        
-        return createAuthResponse(company);
+        superAdmin.getRoles().add(superAdminRole);
+        userRepository.save(superAdmin);
     }
 
     @Transactional
@@ -76,18 +63,18 @@ public class AuthService {
                 )
         );
 
-        Company company = companyRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!company.isEmailVerified()) {
+        if (!user.isEmailVerified()) {
             throw new RuntimeException("Please verify your email address before logging in");
         }
 
         // Delete any existing refresh token for this user so they don't pile up
-        refreshTokenRepository.deleteByCompany(company);
+        refreshTokenRepository.deleteByUser(user);
         refreshTokenRepository.flush(); // Force Hibernate to delete BEFORE inserting the new one
 
-        return createAuthResponse(company);
+        return createAuthResponse(user);
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
@@ -99,7 +86,7 @@ public class AuthService {
             throw new RuntimeException("Refresh token expired");
         }
 
-        String newJwtToken = jwtUtil.generateToken(refreshToken.getCompany());
+        String newJwtToken = jwtUtil.generateToken(refreshToken.getUser());
         return AuthResponse.builder()
                 .token(newJwtToken)
                 .refreshToken(refreshToken.getToken())
@@ -125,30 +112,30 @@ public class AuthService {
             throw new RuntimeException("Verification token expired");
         }
 
-        Company company = verificationToken.getCompany();
-        company.setEmailVerified(true);
-        companyRepository.save(company);
+        User user = verificationToken.getUser();
+        user.setEmailVerified(true);
+        userRepository.save(user);
 
         verificationTokenRepository.delete(verificationToken);
     }
 
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        Company company = companyRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Delete any old unused reset tokens
-        verificationTokenRepository.deleteByCompanyAndTokenType(company, VerificationToken.TokenType.PASSWORD_RESET);
+        verificationTokenRepository.deleteByUserAndTokenType(user, VerificationToken.TokenType.PASSWORD_RESET);
 
         VerificationToken resetToken = VerificationToken.builder()
-                .company(company)
+                .user(user)
                 .token(UUID.randomUUID().toString())
                 .tokenType(VerificationToken.TokenType.PASSWORD_RESET)
                 .expiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24)) // 24 hours
                 .build();
         
         verificationTokenRepository.save(resetToken);
-        emailService.sendPasswordResetEmail(company.getEmail(), resetToken.getToken());
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken.getToken());
     }
 
     @Transactional
@@ -164,18 +151,18 @@ public class AuthService {
             throw new RuntimeException("Reset token expired");
         }
 
-        Company company = resetToken.getCompany();
-        company.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        companyRepository.save(company);
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
 
         verificationTokenRepository.delete(resetToken);
     }
 
-    private AuthResponse createAuthResponse(Company company) {
-        String jwtToken = jwtUtil.generateToken(company);
+    private AuthResponse createAuthResponse(User user) {
+        String jwtToken = jwtUtil.generateToken(user);
         
         RefreshToken refreshToken = RefreshToken.builder()
-                .company(company)
+                .user(user)
                 .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(1000L * 60 * 60 * 24 * 7)) // 7 days
                 .build();

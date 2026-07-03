@@ -34,8 +34,8 @@ public class VerificationToken {
     private TokenType tokenType;
 
     @ManyToOne
-    @JoinColumn(name = "company_id", referencedColumnName = "id")
-    private Company company;
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 
     @Column(nullable = false)
     private Instant expiryDate;
