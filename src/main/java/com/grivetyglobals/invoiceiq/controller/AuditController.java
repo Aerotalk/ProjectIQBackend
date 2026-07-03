@@ -1,6 +1,6 @@
 package com.grivetyglobals.invoiceiq.controller;
 
-import com.grivetyglobals.invoiceiq.entity.ActivityLog;
+import com.grivetyglobals.invoiceiq.entity.AuditLog;
 import com.grivetyglobals.invoiceiq.service.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +20,7 @@ public class AuditController {
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<ActivityLog>> getPaginatedActivity(
+    public ResponseEntity<Page<AuditLog>> getPaginatedActivity(
             @RequestParam UUID organizationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
