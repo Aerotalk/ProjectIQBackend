@@ -48,13 +48,24 @@ public class ApplicationRegistryService {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        com.grivetyglobals.invoiceiq.entity.User user = employee.getUser();
+        if (user == null) {
+            throw new RuntimeException("Employee does not have an associated user account");
+        }
+
         List<Application> applications = applicationRepository.findAllById(applicationIds);
         if (applications.size() != applicationIds.size()) {
             throw new RuntimeException("One or more applications not found");
         }
 
-        employee.setApplications(Set.copyOf(applications));
-        employeeRepository.save(employee);
+        user.getUserApplications().clear();
+        for (Application app : applications) {
+            user.getUserApplications().add(com.grivetyglobals.invoiceiq.entity.UserApplication.builder()
+                    .user(user)
+                    .application(app)
+                    .isEnabled(true)
+                    .build());
+        }
         
         auditService.logActivity("EMPLOYEE_APPLICATIONS_UPDATED", "Updated application access for employee " + employee.getFirstName(), employeeId, "Employee", userId, organizationId);
     }
