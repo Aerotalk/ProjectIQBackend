@@ -1,6 +1,6 @@
 package com.grivetyglobals.invoiceiq.controller;
 
-import com.grivetyglobals.invoiceiq.entity.Application;
+import com.grivetyglobals.invoiceiq.entity.Permission;
 import com.grivetyglobals.invoiceiq.entity.Role;
 import com.grivetyglobals.invoiceiq.service.PermissionService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class PermissionController {
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/matrix")
-    public ResponseEntity<List<Application>> getPermissionMatrix() {
+    public ResponseEntity<Map<String, List<Permission>>> getPermissionMatrix() {
         return ResponseEntity.ok(permissionService.getPermissionMatrix());
     }
 

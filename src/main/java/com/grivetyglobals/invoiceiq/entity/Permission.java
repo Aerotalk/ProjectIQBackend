@@ -16,16 +16,18 @@ public class Permission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "permission_id")
     private UUID id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "permission_key", length = 255, nullable = false, unique = true)
+    private String permissionKey;
 
-    @Column(nullable = false, unique = true)
-    private String code;
+    @Column(name = "permission_name", length = 255, nullable = false)
+    private String permissionName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private Module module;
+    @Column(length = 100, nullable = false)
+    private String module;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 }
