@@ -27,4 +27,33 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody com.grivetyglobals.invoiceiq.dto.RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody com.grivetyglobals.invoiceiq.dto.LogoutRequest request) {
+        authService.logout(request);
+        return ResponseEntity.ok("Successfully logged out");
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@org.springframework.web.bind.annotation.RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok("Email successfully verified. You can now log in.");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody com.grivetyglobals.invoiceiq.dto.ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok("If an account with that email exists, a password reset link has been sent.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody com.grivetyglobals.invoiceiq.dto.ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok("Password successfully reset. You can now log in with your new password.");
+    }
 }

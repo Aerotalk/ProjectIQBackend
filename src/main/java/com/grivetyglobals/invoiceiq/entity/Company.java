@@ -43,6 +43,10 @@ public class Company implements UserDetails {
     private String address;
     private String companyPhoneNo;
 
+    @Builder.Default
+    @Column(columnDefinition = "boolean default false", nullable = false)
+    private boolean emailVerified = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_COMPANY"));
