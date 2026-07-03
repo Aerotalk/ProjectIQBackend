@@ -1,11 +1,11 @@
 package com.grivetyglobals.invoiceiq.repository;
 
-import com.grivetyglobals.invoiceiq.entity.FileMetadata;
+import com.grivetyglobals.invoiceiq.entity.File;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
-public interface FileMetadataRepository extends JpaRepository<FileMetadata, UUID> {
+public interface FileRepository extends JpaRepository<File, UUID> {
 }

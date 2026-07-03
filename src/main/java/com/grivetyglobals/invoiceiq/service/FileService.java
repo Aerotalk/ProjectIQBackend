@@ -1,7 +1,7 @@
 package com.grivetyglobals.invoiceiq.service;
 
-import com.grivetyglobals.invoiceiq.entity.FileMetadata;
-import com.grivetyglobals.invoiceiq.repository.FileMetadataRepository;
+import com.grivetyglobals.invoiceiq.entity.File;
+import com.grivetyglobals.invoiceiq.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -21,13 +21,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileService {
 
-    private final FileMetadataRepository fileMetadataRepository;
+    private final FileRepository fileRepository;
     private final Path rootLocation = Paths.get("uploads");
 
     @Transactional
-    public FileMetadata uploadFile(MultipartFile file, UUID organizationId) {
+    public File uploadFile(MultipartFile multipartFile, UUID organizationId, UUID uploadedBy) {
         try {
-            if (file.isEmpty()) {
+            if (multipartFile.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }
 
@@ -43,7 +43,7 @@ public class FileService {
             }
 
             // Generate unique filename to prevent collisions
-            String originalFilename = file.getOriginalFilename();
+            String originalFilename = multipartFile.getOriginalFilename();
             String extension = "";
             if (originalFilename != null && originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -56,17 +56,21 @@ public class FileService {
                 throw new RuntimeException("Cannot store file outside current directory.");
             }
 
-            Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(multipartFile.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
 
-            FileMetadata metadata = FileMetadata.builder()
-                    .originalFilename(originalFilename)
-                    .storedFilename(organizationId.toString() + "/" + storedFilename)
-                    .contentType(file.getContentType())
-                    .size(file.getSize())
+            String storagePath = organizationId.toString() + "/" + storedFilename;
+            
+            File file = File.builder()
+                    .originalName(originalFilename)
+                    .storedName(storedFilename)
+                    .mimeType(multipartFile.getContentType())
+                    .fileSize(multipartFile.getSize())
+                    .storagePath(storagePath)
                     .organizationId(organizationId)
+                    .uploadedBy(uploadedBy)
                     .build();
 
-            return fileMetadataRepository.save(metadata);
+            return fileRepository.save(file);
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
@@ -75,24 +79,24 @@ public class FileService {
 
     public Resource loadFileAsResource(UUID fileId) {
         try {
-            FileMetadata metadata = fileMetadataRepository.findById(fileId)
+            File fileEntity = fileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("File not found"));
 
-            Path file = rootLocation.resolve(metadata.getStoredFilename()).normalize();
+            Path file = rootLocation.resolve(fileEntity.getStoragePath()).normalize();
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("Could not read file: " + metadata.getOriginalFilename());
+                throw new RuntimeException("Could not read file: " + fileEntity.getOriginalName());
             }
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could not read file.", e);
         }
     }
 
-    public FileMetadata getFileMetadata(UUID fileId) {
-        return fileMetadataRepository.findById(fileId)
+    public File getFileMetadata(UUID fileId) {
+        return fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
     }
 }
