@@ -8,8 +8,8 @@ import com.grivetyglobals.invoiceiq.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +19,7 @@ public class DashboardService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
+    private final AuditService auditService;
 
     public DashboardMetricsResponse getDashboardMetrics(UUID organizationId) {
         
@@ -33,8 +34,8 @@ public class DashboardService {
                 .totalDepartments(totalDepartments)
                 .totalRoles(totalRoles)
                 .totalApplications(0) // Mocked for now
-                .recentActivityLogs(new ArrayList<>()) // Mocked for now
-                .systemNotice("Note: 'Applications' and 'Activity Logs' are currently mocked as they are pending implementation.")
+                .recentActivityLogs(auditService.getRecentActivity(organizationId).stream().map(log -> (Object) log).collect(Collectors.toList()))
+                .systemNotice("Note: 'Applications' is currently mocked as it is pending implementation.")
                 .build();
     }
 }

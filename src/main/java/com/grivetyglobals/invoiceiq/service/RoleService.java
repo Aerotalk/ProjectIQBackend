@@ -18,13 +18,16 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     @Transactional
-    public Role createRole(RoleRequest request) {
+    public Role createRole(RoleRequest request, UUID userId, UUID organizationId) {
         Role role = Role.builder()
                 .name(request.getName())
                 .build();
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        auditService.logActivity("ROLE_CREATED", "Created role " + request.getName(), saved.getId(), "Role", userId, organizationId);
+        return saved;
     }
 
     public List<Role> getAllRoles() {
@@ -37,34 +40,40 @@ public class RoleService {
     }
 
     @Transactional
-    public Role updateRole(UUID id, RoleRequest request) {
+    public Role updateRole(UUID id, RoleRequest request, UUID userId, UUID organizationId) {
         Role role = getRoleById(id);
         role.setName(request.getName());
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        auditService.logActivity("ROLE_UPDATED", "Updated role " + request.getName(), saved.getId(), "Role", userId, organizationId);
+        return saved;
     }
 
     @Transactional
-    public void deleteRole(UUID id) {
+    public void deleteRole(UUID id, UUID userId, UUID organizationId) {
         Role role = getRoleById(id);
         roleRepository.delete(role);
+        auditService.logActivity("ROLE_DELETED", "Deleted role " + role.getName(), id, "Role", userId, organizationId);
     }
 
     @Transactional
-    public Role cloneRole(UUID id) {
+    public Role cloneRole(UUID id, UUID userId, UUID organizationId) {
         Role existingRole = getRoleById(id);
         Role clonedRole = Role.builder()
                 .name(existingRole.getName() + " - Copy")
                 .build();
-        return roleRepository.save(clonedRole);
+        Role saved = roleRepository.save(clonedRole);
+        auditService.logActivity("ROLE_CLONED", "Cloned role " + existingRole.getName(), saved.getId(), "Role", userId, organizationId);
+        return saved;
     }
 
     @Transactional
-    public void assignRoleToUser(UUID roleId, UUID userId) {
+    public void assignRoleToUser(UUID roleId, UUID targetUserId, UUID userId, UUID organizationId) {
         Role role = getRoleById(roleId);
-        User user = userRepository.findById(userId)
+        User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         user.getRoles().add(role);
         userRepository.save(user);
+        auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getName() + " to user " + user.getEmail(), targetUserId, "User", userId, organizationId);
     }
 }

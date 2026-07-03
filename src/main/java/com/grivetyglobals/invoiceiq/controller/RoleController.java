@@ -21,8 +21,8 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @PostMapping
-    public ResponseEntity<Role> createRole(@Valid @RequestBody RoleRequest request) {
-        return ResponseEntity.ok(roleService.createRole(request));
+    public ResponseEntity<Role> createRole(@Valid @RequestBody RoleRequest request, @RequestParam UUID userId, @RequestParam UUID organizationId) {
+        return ResponseEntity.ok(roleService.createRole(request, userId, organizationId));
     }
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
@@ -39,27 +39,27 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Role> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
-        return ResponseEntity.ok(roleService.updateRole(id, request));
+    public ResponseEntity<Role> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request, @RequestParam UUID userId, @RequestParam UUID organizationId) {
+        return ResponseEntity.ok(roleService.updateRole(id, request, userId, organizationId));
     }
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
-        roleService.deleteRole(id);
+    public ResponseEntity<Void> deleteRole(@PathVariable UUID id, @RequestParam UUID userId, @RequestParam UUID organizationId) {
+        roleService.deleteRole(id, userId, organizationId);
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @PostMapping("/{id}/clone")
-    public ResponseEntity<Role> cloneRole(@PathVariable UUID id) {
-        return ResponseEntity.ok(roleService.cloneRole(id));
+    public ResponseEntity<Role> cloneRole(@PathVariable UUID id, @RequestParam UUID userId, @RequestParam UUID organizationId) {
+        return ResponseEntity.ok(roleService.cloneRole(id, userId, organizationId));
     }
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
     @PostMapping("/{id}/assign")
-    public ResponseEntity<Void> assignRoleToUser(@PathVariable UUID id, @RequestParam UUID userId) {
-        roleService.assignRoleToUser(id, userId);
+    public ResponseEntity<Void> assignRoleToUser(@PathVariable UUID id, @RequestParam UUID targetUserId, @RequestParam UUID userId, @RequestParam UUID organizationId) {
+        roleService.assignRoleToUser(id, targetUserId, userId, organizationId);
         return ResponseEntity.ok().build();
     }
 }
