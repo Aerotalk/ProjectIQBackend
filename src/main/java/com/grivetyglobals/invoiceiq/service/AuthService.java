@@ -47,7 +47,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .emailVerified(true) // Auto-verified for bootstrap
-                .company(null) // Super Admins don't belong to a tenant
+                .organization(null) // Super Admins don't belong to a tenant
                 .build();
         
         superAdmin.getRoles().add(superAdminRole);

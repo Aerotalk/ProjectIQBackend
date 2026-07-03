@@ -38,9 +38,9 @@ public class User implements UserDetails {
     @Column(columnDefinition = "boolean default false", nullable = false)
     private boolean emailVerified = false;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "company_id")
-    private Company company; // Nullable for Super Admins
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

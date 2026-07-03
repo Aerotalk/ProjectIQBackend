@@ -15,6 +15,6 @@ public class UserCreateRequest {
     private String name;
     private String email;
     private String password;
-    private UUID companyId;
-    private String role; // e.g. "ROLE_COMPANY_ADMIN"
+    private UUID organizationId;
+    private String role; // e.g. "ROLE_ORGANIZATION_ADMIN"
 }

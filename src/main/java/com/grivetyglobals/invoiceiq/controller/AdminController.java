@@ -1,8 +1,10 @@
 package com.grivetyglobals.invoiceiq.controller;
 
 import com.grivetyglobals.invoiceiq.dto.CompanyCreateRequest;
+import com.grivetyglobals.invoiceiq.dto.OrganizationCreateRequest;
 import com.grivetyglobals.invoiceiq.dto.UserCreateRequest;
 import com.grivetyglobals.invoiceiq.entity.Company;
+import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.entity.User;
 import com.grivetyglobals.invoiceiq.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminService adminService;
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PostMapping("/organizations")
+    public ResponseEntity<Organization> createOrganization(@RequestBody OrganizationCreateRequest request) {
+        return ResponseEntity.ok(adminService.createOrganization(request));
+    }
 
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
     @PostMapping("/companies")
