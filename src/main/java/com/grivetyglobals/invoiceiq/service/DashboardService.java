@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.DepartmentRepository;
 import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import com.grivetyglobals.invoiceiq.repository.RoleRepository;
+import com.grivetyglobals.invoiceiq.repository.ApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class DashboardService {
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
     private final AuditService auditService;
+    private final ApplicationRepository applicationRepository;
 
     public DashboardMetricsResponse getDashboardMetrics(UUID organizationId) {
         
@@ -27,15 +29,16 @@ public class DashboardService {
         long totalEmployees = employeeRepository.countByOrganizationId(organizationId);
         long totalDepartments = departmentRepository.countByOrganizationId(organizationId);
         long totalRoles = roleRepository.count(); // Roles are global across the application
+        long totalApplications = applicationRepository.count(); // Applications are global across the application
 
         return DashboardMetricsResponse.builder()
                 .totalCompanies(totalCompanies)
                 .totalEmployees(totalEmployees)
                 .totalDepartments(totalDepartments)
                 .totalRoles(totalRoles)
-                .totalApplications(0) // Mocked for now
+                .totalApplications(totalApplications)
                 .recentActivityLogs(auditService.getRecentActivity(organizationId).stream().map(log -> (Object) log).collect(Collectors.toList()))
-                .systemNotice("Note: 'Applications' is currently mocked as it is pending implementation.")
+                .systemNotice("All services are operational!")
                 .build();
     }
 }

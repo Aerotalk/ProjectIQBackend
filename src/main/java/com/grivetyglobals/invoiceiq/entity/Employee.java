@@ -86,4 +86,13 @@ public class Employee {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "employee_applications",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "application_id")
+    )
+    @Builder.Default
+    private java.util.Set<Application> applications = new java.util.HashSet<>();
 }
