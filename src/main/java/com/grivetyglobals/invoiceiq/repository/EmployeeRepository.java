@@ -4,8 +4,27 @@ import com.grivetyglobals.invoiceiq.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
+    
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.organization.id = :organizationId")
+    long countByOrganizationId(@Param("organizationId") UUID organizationId);
+
+    @Query("SELECT e FROM Employee e WHERE e.organization.id = :organizationId " +
+           "AND (:departmentId IS NULL OR e.department.id = :departmentId) " +
+           "AND (:status IS NULL OR e.employmentStatus = :status) " +
+           "AND (:keyword IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<Employee> searchAndFilterEmployees(
+            @Param("organizationId") UUID organizationId,
+            @Param("departmentId") UUID departmentId,
+            @Param("status") String status,
+            @Param("keyword") String keyword);
 }
