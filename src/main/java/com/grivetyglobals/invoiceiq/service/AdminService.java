@@ -27,15 +27,20 @@ public class AdminService {
 
     @Transactional
     public Organization createOrganization(OrganizationCreateRequest request) {
-        Organization organization = Organization.builder()
+        if (organizationRepository.existsByOrganizationCode(request.getOrganizationCode())) {
+            throw new RuntimeException("Organization with code " + request.getOrganizationCode() + " already exists.");
+        }
+        Organization org = Organization.builder()
                 .organizationCode(request.getOrganizationCode())
                 .organizationName(request.getOrganizationName())
+                .organizationEmail(request.getOrganizationEmail())
+                .organizationPassword(request.getOrganizationPassword())
                 .legalName(request.getLegalName())
                 .organizationType(request.getOrganizationType())
                 .industry(request.getIndustry())
                 .status(request.getStatus())
                 .build();
-        return organizationRepository.save(organization);
+        return organizationRepository.save(org);
     }
 
     @Transactional
@@ -112,11 +117,11 @@ public class AdminService {
         Organization organization = organizationRepository.findById(request.getOrganizationId())
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
-        Role role = roleRepository.findByName(request.getRole())
-                .orElseGet(() -> roleRepository.save(Role.builder().name(request.getRole()).build()));
+        Role role = roleRepository.findByRoleName(request.getRole())
+                .orElseGet(() -> roleRepository.save(Role.builder().roleName(request.getRole()).systemRole(false).build()));
 
         User user = User.builder()
-                .name(request.getName())
+                .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .emailVerified(true)

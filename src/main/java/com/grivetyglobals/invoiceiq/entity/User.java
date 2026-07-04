@@ -23,20 +23,46 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id")
     private UUID id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(length = 100, nullable = false)
+    private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(length = 255, nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(length = 20)
+    private String mobile;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String password;
 
     @Builder.Default
-    @Column(columnDefinition = "boolean default false", nullable = false)
+    @Column(name = "email_verified", columnDefinition = "boolean default false", nullable = false)
     private boolean emailVerified = false;
+
+    @Builder.Default
+    @Column(name = "mobile_verified", columnDefinition = "boolean default false", nullable = false)
+    private boolean mobileVerified = false;
+
+    @Builder.Default
+    @Column(name = "mfa_enabled", columnDefinition = "boolean default false", nullable = false)
+    private boolean mfaEnabled = false;
+
+    @Builder.Default
+    @Column(name = "account_locked", columnDefinition = "boolean default false", nullable = false)
+    private boolean accountLocked = false;
+
+    @Column(name = "last_login")
+    private java.time.LocalDateTime lastLogin;
+
+    @Builder.Default
+    @Column(name = "failed_login_attempts", columnDefinition = "integer default 0", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(length = 20)
+    private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
@@ -53,7 +79,7 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return userRoles.stream()
-                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getName()))
+                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
                 .collect(Collectors.toList());
     }
 

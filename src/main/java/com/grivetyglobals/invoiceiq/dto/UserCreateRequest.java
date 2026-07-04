@@ -12,8 +12,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCreateRequest {
-    private String name;
+    private String username;
     private String email;
+    private String mobile;
+    private String status;
     private String password;
     private UUID organizationId;
     private String role; // e.g. "ROLE_ORGANIZATION_ADMIN"

@@ -46,6 +46,14 @@ public class DataSeeder implements CommandLineRunner {
                         .status("ACTIVE")
                         .build()));
 
+        Role companyAdminRole = roleRepository.findByRoleName("ROLE_COMPANY_ADMIN")
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .roleName("ROLE_COMPANY_ADMIN")
+                        .systemRole(true)
+                        .description("Company Administrator")
+                        .status("ACTIVE")
+                        .build()));
+
         // 2. Seed Super Admin Account
         if (userRepository.findByEmail("superadmin@aerotalk.in").isEmpty()) {
             User superAdmin = User.builder()
@@ -100,6 +108,28 @@ public class DataSeeder implements CommandLineRunner {
 
             userRepository.save(orgAdmin);
             log.info("Organization Admin account seeded: admin@aerotalk.com / password123");
+        }
+
+        // 5. Seed Company Admin Account
+        if (userRepository.findByEmail("company@aerotalk.in").isEmpty()) {
+            User companyAdmin = User.builder()
+                    .username("company")
+                    .email("company@aerotalk.in")
+                    .password(passwordEncoder.encode("password123"))
+                    .emailVerified(true)
+                    .mobile("2222222222")
+                    .status("ACTIVE")
+                    .organization(aerotalkOrg) // Just attaching to ATK for test purposes
+                    .build();
+
+            UserRole companyAdminUserRole = UserRole.builder()
+                    .user(companyAdmin)
+                    .role(companyAdminRole)
+                    .build();
+            companyAdmin.getUserRoles().add(companyAdminUserRole);
+
+            userRepository.save(companyAdmin);
+            log.info("Company Admin account seeded: company@aerotalk.in / password123");
         }
 
         log.info("DataSeeder completed.");

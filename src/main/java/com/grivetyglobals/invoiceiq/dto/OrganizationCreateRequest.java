@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class OrganizationCreateRequest {
     private String organizationCode;
     private String organizationName;
+    private String organizationEmail;
+    private String organizationPassword;
     private String legalName;
     private String organizationType;
     private String industry;

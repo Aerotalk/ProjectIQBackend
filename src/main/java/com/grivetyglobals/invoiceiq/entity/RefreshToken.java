@@ -24,7 +24,11 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
+<<<<<<< Updated upstream
     @OneToOne
+=======
+    @OneToOne(fetch = FetchType.LAZY)
+>>>>>>> Stashed changes
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -23,7 +23,7 @@ public class RoleService {
     @Transactional
     public Role createRole(RoleRequest request, UUID userId, UUID organizationId) {
         Role role = Role.builder()
-                .name(request.getName())
+                .roleName(request.getName())
                 .build();
         Role saved = roleRepository.save(role);
         auditService.logActivity("ROLE_CREATED", "Created role " + request.getName(), saved.getId(), "Role", userId, organizationId);
@@ -42,7 +42,7 @@ public class RoleService {
     @Transactional
     public Role updateRole(UUID id, RoleRequest request, UUID userId, UUID organizationId) {
         Role role = getRoleById(id);
-        role.setName(request.getName());
+        role.setRoleName(request.getName());
         Role saved = roleRepository.save(role);
         auditService.logActivity("ROLE_UPDATED", "Updated role " + request.getName(), saved.getId(), "Role", userId, organizationId);
         return saved;
@@ -52,17 +52,17 @@ public class RoleService {
     public void deleteRole(UUID id, UUID userId, UUID organizationId) {
         Role role = getRoleById(id);
         roleRepository.delete(role);
-        auditService.logActivity("ROLE_DELETED", "Deleted role " + role.getName(), id, "Role", userId, organizationId);
+        auditService.logActivity("ROLE_DELETED", "Deleted role " + role.getRoleName(), id, "Role", userId, organizationId);
     }
 
     @Transactional
     public Role cloneRole(UUID id, UUID userId, UUID organizationId) {
         Role existingRole = getRoleById(id);
         Role clonedRole = Role.builder()
-                .name(existingRole.getName() + " - Copy")
+                .roleName(existingRole.getRoleName() + " - Copy")
                 .build();
         Role saved = roleRepository.save(clonedRole);
-        auditService.logActivity("ROLE_CLONED", "Cloned role " + existingRole.getName(), saved.getId(), "Role", userId, organizationId);
+        auditService.logActivity("ROLE_CLONED", "Cloned role " + existingRole.getRoleName(), saved.getId(), "Role", userId, organizationId);
         return saved;
     }
 
@@ -78,6 +78,6 @@ public class RoleService {
                 .build();
         user.getUserRoles().add(userRole);
         userRepository.save(user);
-        auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getName() + " to user " + user.getEmail(), targetUserId, "User", userId, organizationId);
+        auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getRoleName() + " to user " + user.getEmail(), targetUserId, "User", userId, organizationId);
     }
 }

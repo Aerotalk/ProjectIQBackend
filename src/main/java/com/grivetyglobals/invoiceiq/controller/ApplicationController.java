@@ -44,4 +44,16 @@ public class ApplicationController {
         applicationRegistryService.assignApplicationsToEmployee(employeeId, applicationIds, userId, organizationId);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PutMapping("/companies/{companyId}")
+    public ResponseEntity<Void> assignApplicationsToCompany(
+            @PathVariable UUID companyId,
+            @RequestBody List<UUID> applicationIds,
+            @RequestParam UUID userId,
+            @RequestParam UUID organizationId) {
+        
+        applicationRegistryService.assignApplicationsToCompany(companyId, applicationIds, userId, organizationId);
+        return ResponseEntity.ok().build();
+    }
 }

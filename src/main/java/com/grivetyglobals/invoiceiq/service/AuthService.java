@@ -39,11 +39,11 @@ public class AuthService {
             throw new RuntimeException("Super admin email already exists");
         }
 
-        Role superAdminRole = roleRepository.findByName("ROLE_SUPER_ADMIN")
-                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_SUPER_ADMIN").build()));
+        Role superAdminRole = roleRepository.findByRoleName("ROLE_SUPER_ADMIN")
+                .orElseGet(() -> roleRepository.save(Role.builder().roleName("ROLE_SUPER_ADMIN").systemRole(true).build()));
 
         User superAdmin = User.builder()
-                .name(request.getName())
+                .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .emailVerified(true) // Auto-verified for bootstrap

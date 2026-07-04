@@ -102,4 +102,8 @@ public class Company {
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private java.util.List<CompanyBankAccount> bankAccounts;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private java.util.Set<CompanyApplication> companyApplications = new java.util.HashSet<>();
 }

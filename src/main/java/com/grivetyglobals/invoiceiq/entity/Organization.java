@@ -36,6 +36,12 @@ public class Organization {
     @Column(name = "organization_name", length = 255, nullable = false)
     private String organizationName;
 
+    @Column(name = "organization_email", length = 255, nullable = false)
+    private String organizationEmail;
+
+    @Column(name = "organization_password", length = 255, nullable = false)
+    private String organizationPassword;
+
     @Column(name = "legal_name", length = 255, nullable = false)
     private String legalName;
 

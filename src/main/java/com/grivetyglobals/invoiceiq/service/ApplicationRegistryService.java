@@ -19,6 +19,7 @@ public class ApplicationRegistryService {
 
     private final ApplicationRepository applicationRepository;
     private final EmployeeRepository employeeRepository;
+    private final com.grivetyglobals.invoiceiq.repository.CompanyRepository companyRepository;
     private final AuditService auditService;
 
     @Transactional
@@ -68,5 +69,31 @@ public class ApplicationRegistryService {
         }
         
         auditService.logActivity("EMPLOYEE_APPLICATIONS_UPDATED", "Updated application access for employee " + employee.getFirstName(), employeeId, "Employee", userId, organizationId);
+    }
+
+    @Transactional
+    public void assignApplicationsToCompany(UUID companyId, List<UUID> applicationIds, UUID userId, UUID organizationId) {
+        com.grivetyglobals.invoiceiq.entity.Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        
+        if (!company.getOrganization().getId().equals(organizationId)) {
+            throw new RuntimeException("Company does not belong to the specified organization");
+        }
+
+        List<Application> applications = applicationRepository.findAllById(applicationIds);
+        if (applications.size() != applicationIds.size()) {
+            throw new RuntimeException("One or more applications not found");
+        }
+
+        company.getCompanyApplications().clear();
+        for (Application app : applications) {
+            company.getCompanyApplications().add(com.grivetyglobals.invoiceiq.entity.CompanyApplication.builder()
+                    .company(company)
+                    .application(app)
+                    .status("Active")
+                    .build());
+        }
+
+        auditService.logActivity("COMPANY_APPLICATIONS_UPDATED", "Updated module assignments for company " + company.getCompanyName(), companyId, "Company", userId, organizationId);
     }
 }

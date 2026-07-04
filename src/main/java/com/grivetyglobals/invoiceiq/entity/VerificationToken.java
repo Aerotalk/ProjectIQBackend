@@ -33,7 +33,11 @@ public class VerificationToken {
     @Column(nullable = false)
     private TokenType tokenType;
 
+<<<<<<< Updated upstream
     @ManyToOne
+=======
+    @ManyToOne(fetch = FetchType.LAZY)
+>>>>>>> Stashed changes
     @JoinColumn(name = "user_id")
     private User user;
 
