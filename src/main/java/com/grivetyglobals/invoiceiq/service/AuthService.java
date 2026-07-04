@@ -173,9 +173,15 @@ public class AuthService {
                 
         refreshTokenRepository.save(refreshToken);
 
+        java.util.List<String> roles = user.getUserRoles().stream()
+                .map(userRole -> userRole.getRole().getRoleName())
+                .collect(java.util.stream.Collectors.toList());
+
         return AuthResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken.getToken())
+                .username(user.getUsername())
+                .roles(roles)
                 .build();
     }
 }
