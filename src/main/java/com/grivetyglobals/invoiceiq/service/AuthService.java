@@ -182,6 +182,7 @@ public class AuthService {
                 .refreshToken(refreshToken.getToken())
                 .username(user.getUsername())
                 .roles(roles)
+                .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .build();
     }
 }

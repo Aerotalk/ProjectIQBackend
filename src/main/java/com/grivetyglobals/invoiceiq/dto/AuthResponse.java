@@ -14,4 +14,5 @@ public class AuthResponse {
     private String refreshToken;
     private String username;
     private java.util.List<String> roles;
+    private java.util.UUID organizationId;
 }

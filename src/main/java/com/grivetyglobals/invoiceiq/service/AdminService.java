@@ -43,6 +43,30 @@ public class AdminService {
         return organizationRepository.save(org);
     }
 
+    public java.util.List<Organization> getAllOrganizations() {
+        return organizationRepository.findAll();
+    }
+
+    public Organization getOrganizationById(java.util.UUID id) {
+        return organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+    }
+
+    @Transactional
+    public Organization updateOrganization(java.util.UUID id, com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
+        Organization org = getOrganizationById(id);
+        org.setOrganizationName(request.getOrganizationName());
+        org.setOrganizationEmail(request.getOrganizationEmail());
+        if (request.getOrganizationPassword() != null && !request.getOrganizationPassword().isEmpty()) {
+            org.setOrganizationPassword(request.getOrganizationPassword());
+        }
+        org.setLegalName(request.getLegalName());
+        org.setOrganizationType(request.getOrganizationType());
+        org.setIndustry(request.getIndustry());
+        org.setStatus(request.getStatus());
+        return organizationRepository.save(org);
+    }
+
     @Transactional
     public Company createCompany(CompanyCreateRequest request) {
         Organization organization = organizationRepository.findById(request.getOrganizationId())

@@ -29,7 +29,25 @@ public class AdminController {
         return ResponseEntity.ok(adminService.createOrganization(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @GetMapping("/organizations")
+    public ResponseEntity<List<Organization>> getAllOrganizations() {
+        return ResponseEntity.ok(adminService.getAllOrganizations());
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @GetMapping("/organizations/{id}")
+    public ResponseEntity<Organization> getOrganizationById(@PathVariable UUID id) {
+        return ResponseEntity.ok(adminService.getOrganizationById(id));
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PutMapping("/organizations/{id}")
+    public ResponseEntity<Organization> updateOrganization(@PathVariable UUID id, @RequestBody com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
+        return ResponseEntity.ok(adminService.updateOrganization(id, request));
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(@Valid @RequestBody CompanyCreateRequest request) {
         return ResponseEntity.ok(adminService.createCompany(request));
@@ -41,31 +59,31 @@ public class AdminController {
         return ResponseEntity.ok(adminService.createUser(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @GetMapping("/companies")
     public ResponseEntity<List<Company>> getAllCompanies(@RequestParam UUID organizationId) {
         return ResponseEntity.ok(adminService.getAllCompanies(organizationId));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @GetMapping("/companies/{id}")
     public ResponseEntity<Company> getCompanyById(@PathVariable UUID id, @RequestParam UUID organizationId) {
         return ResponseEntity.ok(adminService.getCompanyById(id, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @PutMapping("/companies/{id}")
     public ResponseEntity<Company> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyUpdateRequest request, @RequestParam UUID organizationId) {
         return ResponseEntity.ok(adminService.updateCompany(id, request, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @PatchMapping("/companies/{id}/status")
     public ResponseEntity<Company> updateCompanyStatus(@PathVariable UUID id, @RequestParam String status, @RequestParam UUID organizationId) {
         return ResponseEntity.ok(adminService.updateCompanyStatus(id, status, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable UUID id, @RequestParam UUID organizationId) {
         adminService.deleteCompany(id, organizationId);
