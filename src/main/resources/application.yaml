@@ -1,6 +1,8 @@
 spring:
   application:
     name: invoiceiq
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${SUPABASE_DB_URL}
     username: ${SUPABASE_DB_USER}
@@ -13,6 +15,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 jwt:
   secret: ${JWT_SECRET}
