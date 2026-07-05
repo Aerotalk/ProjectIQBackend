@@ -99,6 +99,13 @@ public class EmployeeService {
         return employeeRepository.searchAndFilterEmployees(organizationId, departmentId, status, keyword);
     }
 
+    public Employee getMyProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return employeeRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Employee profile not found"));
+    }
+
     @Transactional
     public Employee updateEmployee(UUID employeeId, EmployeeUpdateRequest request, UUID organizationId) {
         Employee employee = getEmployeeById(employeeId, organizationId);

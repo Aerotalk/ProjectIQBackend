@@ -53,7 +53,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.createCompany(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody UserCreateRequest request) {
         return ResponseEntity.ok(adminService.createUser(request));

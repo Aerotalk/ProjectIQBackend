@@ -8,20 +8,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
-    
+    Optional<Employee> findByUserId(UUID userId);
+
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.organization.id = :organizationId")
     long countByOrganizationId(@Param("organizationId") UUID organizationId);
 
     @Query("SELECT e FROM Employee e WHERE e.organization.id = :organizationId " +
            "AND (:departmentId IS NULL OR e.department.id = :departmentId) " +
            "AND (:status IS NULL OR e.employmentStatus = :status) " +
-           "AND (:keyword IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
+           "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
+           "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')))")
     List<Employee> searchAndFilterEmployees(
             @Param("organizationId") UUID organizationId,
             @Param("departmentId") UUID departmentId,
