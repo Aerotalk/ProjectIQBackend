@@ -43,6 +43,9 @@ public class CompanyCreateRequest {
     private String phone;
     private String website;
 
+    // Admin Login
+    private String adminPassword; // Password for the auto-created company admin user
+
     // Branding
     private UUID logoFileId;
     private UUID invoiceLogoId;

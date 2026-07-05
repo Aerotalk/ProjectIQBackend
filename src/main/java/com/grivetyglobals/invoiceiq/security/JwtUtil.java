@@ -18,7 +18,7 @@ public class JwtUtil {
     
     @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
     private String SECRET;
-    private static final long EXPIRATION_TIME = 1000 * 60 * 15; // 15 minutes
+    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 hours
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());

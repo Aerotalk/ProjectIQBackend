@@ -18,7 +18,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 

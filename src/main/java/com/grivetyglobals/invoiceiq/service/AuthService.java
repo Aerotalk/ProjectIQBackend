@@ -183,6 +183,7 @@ public class AuthService {
                 .username(user.getUsername())
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
                 .build();
     }
 }

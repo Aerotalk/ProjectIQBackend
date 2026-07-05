@@ -34,13 +34,44 @@ public class AdminService {
                 .organizationCode(request.getOrganizationCode())
                 .organizationName(request.getOrganizationName())
                 .organizationEmail(request.getOrganizationEmail())
-                .organizationPassword(request.getOrganizationPassword())
+                .organizationPassword(passwordEncoder.encode(request.getOrganizationPassword()))
                 .legalName(request.getLegalName())
                 .organizationType(request.getOrganizationType())
                 .industry(request.getIndustry())
                 .status(request.getStatus())
                 .build();
-        return organizationRepository.save(org);
+                
+        org = organizationRepository.save(org);
+
+        // Auto-create Organization Admin User so they can login
+        if (userRepository.findByEmail(request.getOrganizationEmail()).isEmpty()) {
+            User orgAdmin = User.builder()
+                    .username(request.getOrganizationName().replaceAll("\\s+", "").toLowerCase() + "_admin")
+                    .email(request.getOrganizationEmail())
+                    .password(passwordEncoder.encode(request.getOrganizationPassword()))
+                    .emailVerified(true)
+                    .status("ACTIVE")
+                    .organization(org)
+                    .build();
+
+            Role orgAdminRole = roleRepository.findByRoleName("ROLE_ORG_ADMIN")
+                    .orElseGet(() -> roleRepository.save(Role.builder()
+                            .roleName("ROLE_ORG_ADMIN")
+                            .systemRole(true)
+                            .description("Organization Administrator")
+                            .status("ACTIVE")
+                            .build()));
+
+            UserRole orgAdminUserRole = UserRole.builder()
+                    .user(orgAdmin)
+                    .role(orgAdminRole)
+                    .build();
+            orgAdmin.getUserRoles().add(orgAdminUserRole);
+
+            userRepository.save(orgAdmin);
+        }
+
+        return org;
     }
 
     public java.util.List<Organization> getAllOrganizations() {
@@ -92,6 +123,38 @@ public class AdminService {
                 .build();
 
         company = companyRepository.save(company);
+
+        // Auto-create Company Admin User so they can login
+        if (userRepository.findByEmail(request.getEmail()).isEmpty()) {
+            String rawPassword = (request.getAdminPassword() != null && !request.getAdminPassword().isBlank())
+                    ? request.getAdminPassword()
+                    : java.util.UUID.randomUUID().toString(); // Fallback random if not provided
+
+            User companyAdmin = User.builder()
+                    .username(request.getCompanyName().replaceAll("\\s+", "").toLowerCase() + "_admin")
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(rawPassword))
+                    .emailVerified(true)
+                    .status("ACTIVE")
+                    .organization(organization)
+                    .build();
+
+            Role companyAdminRole = roleRepository.findByRoleName("ROLE_COMPANY_ADMIN")
+                    .orElseGet(() -> roleRepository.save(Role.builder()
+                            .roleName("ROLE_COMPANY_ADMIN")
+                            .systemRole(true)
+                            .description("Company Administrator")
+                            .status("ACTIVE")
+                            .build()));
+
+            com.grivetyglobals.invoiceiq.entity.UserRole companyAdminUserRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                    .user(companyAdmin)
+                    .role(companyAdminRole)
+                    .build();
+            companyAdmin.getUserRoles().add(companyAdminUserRole);
+
+            userRepository.save(companyAdmin);
+        }
 
         java.util.List<CompanyAddress> savedAddresses = new java.util.ArrayList<>();
         if (request.getAddresses() != null) {
