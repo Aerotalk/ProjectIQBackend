@@ -239,6 +239,11 @@ public class AdminService {
         return company;
     }
 
+    public Company getMyCompanyProfile(String email) {
+        return companyRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Company not found for this admin user"));
+    }
+
     @Transactional
     public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request, java.util.UUID organizationId) {
         Company company = getCompanyById(companyId, organizationId);

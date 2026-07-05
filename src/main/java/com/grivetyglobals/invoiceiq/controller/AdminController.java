@@ -71,6 +71,21 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getCompanyById(id, organizationId));
     }
 
+    @PreAuthorize("hasAuthority('ROLE_COMPANY_ADMIN')")
+    @GetMapping("/company/profile")
+    public ResponseEntity<Company> getMyCompanyProfile(java.security.Principal principal) {
+        return ResponseEntity.ok(adminService.getMyCompanyProfile(principal.getName()));
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PutMapping("/company/profile")
+    public ResponseEntity<Company> updateMyCompanyProfile(
+            java.security.Principal principal,
+            @RequestBody com.grivetyglobals.invoiceiq.dto.CompanyUpdateRequest request) {
+        Company company = adminService.getMyCompanyProfile(principal.getName());
+        return ResponseEntity.ok(adminService.updateCompany(company.getId(), request, company.getOrganization().getId()));
+    }
+
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN')")
     @PutMapping("/companies/{id}")
     public ResponseEntity<Company> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyUpdateRequest request, @RequestParam UUID organizationId) {

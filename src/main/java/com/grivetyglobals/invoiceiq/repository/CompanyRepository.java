@@ -12,6 +12,7 @@ import java.util.UUID;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
     List<Company> findByOrganizationId(UUID organizationId);
+    java.util.Optional<Company> findByEmail(String email);
 
     @Query("SELECT COUNT(c) FROM Company c WHERE c.organization.id = :organizationId")
     long countByOrganizationId(@Param("organizationId") UUID organizationId);
