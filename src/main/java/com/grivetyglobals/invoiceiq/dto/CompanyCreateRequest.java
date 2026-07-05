@@ -26,6 +26,7 @@ public class CompanyCreateRequest {
     @NotBlank(message = "Company Name is required")
     private String companyName;
 
+
     private String legalName;
 
     // Tax Information

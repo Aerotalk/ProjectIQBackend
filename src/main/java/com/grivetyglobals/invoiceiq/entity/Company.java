@@ -2,12 +2,13 @@ package com.grivetyglobals.invoiceiq.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.util.Collection;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -17,59 +18,92 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Company implements UserDetails {
+@EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE companies SET deleted_at = CURRENT_TIMESTAMP WHERE company_id=?")
+@SQLRestriction("deleted_at IS NULL")
+public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "company_id")
     private UUID id;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 
-    @Column(nullable = false)
+    @Column(name = "company_code", length = 20, unique = true)
+    private String companyCode;
+
+    @Column(name = "company_name", length = 255, nullable = false)
     private String companyName;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "legal_name", length = 255)
+    private String legalName;
+
+    @Column(name = "gst_number", length = 20)
+    private String gstNumber;
+
+    @Column(name = "pan_number", length = 20)
+    private String panNumber;
+
+    @Column(name = "tan_number", length = 20)
+    private String tanNumber;
+
+    @Column(name = "cin_number", length = 30)
+    private String cinNumber;
+
+    @Column(name = "msme_number", length = 30)
+    private String msmeNumber;
+
+    @Column(name = "iec_code", length = 30)
+    private String iecCode;
+
+    @Column(length = 255)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(length = 20)
+    private String phone;
 
-    private String country;
-    private String state;
-    private String district;
-    private String pincode;
-    private String gst;
-    private String address;
-    private String companyPhoneNo;
+    @Column(length = 255)
+    private String website;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_COMPANY"));
-    }
+    @Column(name = "logo_file_id")
+    private UUID logoFileId;
 
-    @Override
-    public String getUsername() {
-        return email;
-    }
+    @Column(name = "invoice_logo_id")
+    private UUID invoiceLogoId;
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    @Column(name = "stamp_file_id")
+    private UUID stampFileId;
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    @Column(name = "primary_color", length = 20)
+    private String primaryColor;
 
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    @Column(name = "secondary_color", length = 20)
+    private String secondaryColor;
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @Column(length = 20)
+    private String status;
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<CompanyAddress> addresses;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<CompanyBankAccount> bankAccounts;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private java.util.Set<CompanyApplication> companyApplications = new java.util.HashSet<>();
 }
