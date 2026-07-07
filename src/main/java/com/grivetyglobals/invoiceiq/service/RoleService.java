@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.entity.Role;
 import com.grivetyglobals.invoiceiq.entity.User;
 import com.grivetyglobals.invoiceiq.repository.RoleRepository;
 import com.grivetyglobals.invoiceiq.repository.UserRepository;
+import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ public class RoleService {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final EmployeeRepository employeeRepository;
 
     @Transactional
     public Role createRole(RoleRequest request, UUID userId, UUID organizationId) {
@@ -79,5 +81,29 @@ public class RoleService {
         user.getUserRoles().add(userRole);
         userRepository.save(user);
         auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getRoleName() + " to user " + user.getEmail(), targetUserId, "User", userId, organizationId);
+    }
+
+    @Transactional
+    public void assignRolesToEmployee(UUID employeeId, List<UUID> roleIds, UUID userId, UUID organizationId) {
+        com.grivetyglobals.invoiceiq.entity.Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        User user = employee.getUser();
+        if (user == null) {
+            throw new RuntimeException("No user associated with this employee");
+        }
+        
+        user.getUserRoles().clear();
+        
+        for (UUID roleId : roleIds) {
+            Role role = getRoleById(roleId);
+            com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                    .user(user)
+                    .role(role)
+                    .build();
+            user.getUserRoles().add(userRole);
+        }
+        
+        userRepository.save(user);
+        auditService.logActivity("ROLES_ASSIGNED", "Assigned multiple roles to user " + user.getEmail(), user.getId(), "User", userId, organizationId);
     }
 }

@@ -62,4 +62,15 @@ public class RoleController {
         roleService.assignRoleToUser(id, targetUserId, userId, organizationId);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PutMapping("/employees/{employeeId}/assign")
+    public ResponseEntity<Void> assignRolesToEmployee(
+            @PathVariable UUID employeeId,
+            @RequestBody List<UUID> roleIds,
+            @RequestParam UUID userId,
+            @RequestParam UUID organizationId) {
+        roleService.assignRolesToEmployee(employeeId, roleIds, userId, organizationId);
+        return ResponseEntity.ok().build();
+    }
 }
