@@ -12,12 +12,20 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handles our custom validation errors (like "Please verify your email")
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        ex.printStackTrace();
         Map<String, String> response = new HashMap<>();
         response.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Access Denied");
+        response.put("message", "You do not have the required permissions to perform this action.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     // Handles incorrect password or email during login

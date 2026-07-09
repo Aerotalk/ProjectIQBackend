@@ -11,7 +11,8 @@ import java.util.UUID;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
-    List<Company> findByOrganizationId(UUID organizationId);
+    org.springframework.data.domain.Page<Company> findByOrganizationId(UUID organizationId, org.springframework.data.domain.Pageable pageable);
+    java.util.Optional<Company> findByCompanyCode(String companyCode);
     java.util.Optional<Company> findByEmail(String email);
 
     @Query("SELECT COUNT(c) FROM Company c WHERE c.organization.id = :organizationId")

@@ -21,56 +21,53 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PreAuthorize("hasAuthority('ROLE_EMPLOYEE')")
+    @PreAuthorize("hasAuthority('employee.view')")
     @GetMapping("/me")
     public ResponseEntity<Employee> getMyProfile(Principal principal) {
         return ResponseEntity.ok(employeeService.getMyProfile(principal.getName()));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('employee.create')")
     @PostMapping
-    public ResponseEntity<Employee> createEmployee(@Valid @RequestBody EmployeeCreateRequest request, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(employeeService.createEmployee(request, organizationId));
+    public ResponseEntity<Employee> createEmployee(@Valid @RequestBody EmployeeCreateRequest request) {
+        return ResponseEntity.ok(employeeService.createEmployee(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('employee.view')")
     @GetMapping
     public ResponseEntity<List<Employee>> searchAndFilterEmployees(
-            @RequestParam UUID organizationId,
             @RequestParam(required = false) UUID departmentId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(employeeService.searchAndFilterEmployees(organizationId, departmentId, status, keyword));
+        return ResponseEntity.ok(employeeService.searchAndFilterEmployees(departmentId, status, keyword));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(employeeService.getEmployeeById(id, organizationId));
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable UUID id) {
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.edit')")
     @PutMapping("/{id}")
     public ResponseEntity<Employee> updateEmployee(
             @PathVariable UUID id,
-            @Valid @RequestBody EmployeeUpdateRequest request,
-            @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(employeeService.updateEmployee(id, request, organizationId));
+            @Valid @RequestBody EmployeeUpdateRequest request) {
+        return ResponseEntity.ok(employeeService.updateEmployee(id, request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.edit')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<Employee> changeEmploymentStatus(
             @PathVariable UUID id,
-            @RequestParam String status,
-            @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(employeeService.changeEmploymentStatus(id, status, organizationId));
+            @RequestParam String status) {
+        return ResponseEntity.ok(employeeService.changeEmploymentStatus(id, status));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        employeeService.deleteEmployee(id, organizationId);
+    public ResponseEntity<Void> deleteEmployee(@PathVariable UUID id) {
+        employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
 }

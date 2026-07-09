@@ -32,6 +32,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final PermissionService permissionService;
 
     @Transactional
     public void setupSuperAdmin(RegisterRequest request) {
@@ -184,6 +185,33 @@ public class AuthService {
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public MeResponse getMe() {
+        User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+        
+        // Fetch full user entity to avoid LazyInitializationException
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        java.util.List<String> roles = user.getUserRoles().stream()
+                .map(ur -> ur.getRole().getRoleName())
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.Set<String> effectivePermissions = permissionService.getEffectivePermissions(user);
+
+        return MeResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .roles(roles)
+                .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+                .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
+                .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
+                .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
+                .effectivePermissions(effectivePermissions)
                 .build();
     }
 }

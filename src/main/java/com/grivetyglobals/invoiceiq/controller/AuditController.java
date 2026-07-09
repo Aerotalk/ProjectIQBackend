@@ -18,7 +18,7 @@ public class AuditController {
 
     private final AuditService auditService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('org.view')")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getPaginatedActivity(
             @RequestParam UUID organizationId,

@@ -19,34 +19,34 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('department.create')")
     @PostMapping
-    public ResponseEntity<Department> createDepartment(@Valid @RequestBody DepartmentRequest request, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(departmentService.createDepartment(request, organizationId));
+    public ResponseEntity<Department> createDepartment(@Valid @RequestBody DepartmentRequest request) {
+        return ResponseEntity.ok(departmentService.createDepartment(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('department.view')")
     @GetMapping
-    public ResponseEntity<List<Department>> getAllDepartments(@RequestParam UUID organizationId) {
-        return ResponseEntity.ok(departmentService.getAllDepartments(organizationId));
+    public ResponseEntity<List<Department>> getAllDepartments() {
+        return ResponseEntity.ok(departmentService.getAllDepartments());
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Department', 'department.view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(departmentService.getDepartmentById(id, organizationId));
+    public ResponseEntity<Department> getDepartmentById(@PathVariable UUID id) {
+        return ResponseEntity.ok(departmentService.getDepartmentById(id));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Department', 'department.edit')")
     @PutMapping("/{id}")
-    public ResponseEntity<Department> updateDepartment(@PathVariable UUID id, @Valid @RequestBody DepartmentRequest request, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(departmentService.updateDepartment(id, request, organizationId));
+    public ResponseEntity<Department> updateDepartment(@PathVariable UUID id, @Valid @RequestBody DepartmentRequest request) {
+        return ResponseEntity.ok(departmentService.updateDepartment(id, request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Department', 'department.delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        departmentService.deleteDepartment(id, organizationId);
+    public ResponseEntity<Void> deleteDepartment(@PathVariable UUID id) {
+        departmentService.deleteDepartment(id);
         return ResponseEntity.noContent().build();
     }
 }

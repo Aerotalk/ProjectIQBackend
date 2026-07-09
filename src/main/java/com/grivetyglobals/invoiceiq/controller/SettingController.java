@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,50 +25,42 @@ public class SettingController {
         private String category;
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.view')")
     @GetMapping
     public ResponseEntity<List<Setting>> getSettings(
-            @RequestParam("organizationId") UUID organizationId,
             @RequestParam(value = "category", required = false) String category) {
         
         if (category != null && !category.isEmpty()) {
-            return ResponseEntity.ok(settingService.getSettingsByCategory(organizationId, category));
+            return ResponseEntity.ok(settingService.getSettingsByCategory(category));
         }
-        return ResponseEntity.ok(settingService.getSettingsByOrganization(organizationId));
+        return ResponseEntity.ok(settingService.getSettingsByOrganization());
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.view')")
     @GetMapping("/{key}")
     public ResponseEntity<Setting> getSettingByKey(
-            @RequestParam("organizationId") UUID organizationId,
             @PathVariable String key) {
-        Setting setting = settingService.getSettingByKey(organizationId, key);
+        Setting setting = settingService.getSettingByKey(key);
         if (setting == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(setting);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping
     public ResponseEntity<Setting> saveSetting(
-            @RequestParam("organizationId") UUID organizationId,
-            @RequestBody SettingRequest request,
-            @AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user) {
+            @RequestBody SettingRequest request) {
         
-        UUID userId = (user != null) ? user.getId() : null;
-        return ResponseEntity.ok(settingService.saveSetting(organizationId, request.getKey(), request.getValue(), request.getCategory(), userId));
+        return ResponseEntity.ok(settingService.saveSetting(request.getKey(), request.getValue(), request.getCategory()));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @DeleteMapping("/{key}")
     public ResponseEntity<Void> deleteSetting(
-            @RequestParam("organizationId") UUID organizationId,
-            @PathVariable String key,
-            @AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user) {
+            @PathVariable String key) {
         
-        UUID userId = (user != null) ? user.getId() : null;
-        settingService.deleteSetting(organizationId, key, userId);
+        settingService.deleteSetting(key);
         return ResponseEntity.noContent().build();
     }
 }

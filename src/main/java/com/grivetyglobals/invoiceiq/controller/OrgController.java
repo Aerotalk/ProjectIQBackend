@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
+import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 
 @RestController
 @RequestMapping("/api/org")
@@ -19,36 +19,36 @@ public class OrgController {
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
 
-    /**
-     * Allows an Org Admin to fetch their own organization's profile.
-     */
-    @PreAuthorize("hasAuthority('ROLE_ORG_ADMIN')")
+    @PreAuthorize("hasAuthority('org.view')")
     @GetMapping("/profile")
-    public ResponseEntity<Organization> getMyOrganization(Principal principal) {
-        User user = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<Organization> getMyOrganization() {
+        User user = SecurityUtils.getCurrentUser();
+        if (user.getOrganization() == null) {
+            return ResponseEntity.ok(null);
+        }
 
-        Organization org = user.getOrganization();
+        Organization org = organizationRepository.findById(user.getOrganization().getId())
+                .orElse(null);
+                
         if (org == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(null);
         }
 
         return ResponseEntity.ok(org);
     }
 
-    /**
-     * Allows an Org Admin to update their own organization's profile.
-     */
-    @PreAuthorize("hasAuthority('ROLE_ORG_ADMIN')")
+    @PreAuthorize("hasAuthority('org.edit')")
     @PutMapping("/profile")
     public ResponseEntity<Organization> updateMyOrganization(
-            Principal principal,
             @RequestBody com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
 
-        User user = userRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = SecurityUtils.getCurrentUser();
+        if (user.getOrganization() == null) {
+            return ResponseEntity.notFound().build();
+        }
 
-        Organization org = user.getOrganization();
+        Organization org = organizationRepository.findById(user.getOrganization().getId())
+                .orElse(null);
         if (org == null) {
             return ResponseEntity.notFound().build();
         }

@@ -32,6 +32,10 @@ public class Department {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @Column(name = "department_code", length = 20)
     private String departmentCode;
 
