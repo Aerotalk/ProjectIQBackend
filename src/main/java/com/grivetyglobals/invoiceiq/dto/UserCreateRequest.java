@@ -18,5 +18,6 @@ public class UserCreateRequest {
     private String status;
     private String password;
     private UUID organizationId;
-    private String role; // e.g. "ROLE_ORGANIZATION_ADMIN"
+    private UUID companyId;
+    private java.util.List<UUID> roleIds;
 }

@@ -33,6 +33,10 @@ public class Employee {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
