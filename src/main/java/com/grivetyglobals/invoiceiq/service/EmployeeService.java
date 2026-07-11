@@ -12,6 +12,7 @@ import com.grivetyglobals.invoiceiq.repository.DesignationRepository;
 import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
 import com.grivetyglobals.invoiceiq.repository.UserRepository;
+import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +36,10 @@ public class EmployeeService {
     }
 
     @Transactional
-    public Employee createEmployee(EmployeeCreateRequest request, UUID requestingOrgId) {
-        if (!request.getOrganizationId().equals(requestingOrgId)) {
-            throw new RuntimeException("Access Denied: Cannot create employee for another organization");
-        }
-
-        Organization organization = organizationRepository.findById(request.getOrganizationId())
+    public Employee createEmployee(EmployeeCreateRequest request) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        
+        Organization organization = organizationRepository.findById(currentOrgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
         User user = userRepository.findById(request.getUserId())
@@ -84,19 +83,30 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    public Employee getEmployeeById(UUID employeeId, UUID organizationId) {
+    public Employee getEmployeeById(UUID employeeId) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        if (!employee.getOrganization().getId().equals(organizationId)) {
+        if (!employee.getOrganization().getId().equals(currentOrgId)) {
             throw new RuntimeException("Access Denied: Employee belongs to another organization");
+        }
+        
+        // Data scope check: if the user belongs to a specific company, they can only view employees of that company
+        if (currentCompanyId != null && employee.getCompany() != null && !employee.getCompany().getId().equals(currentCompanyId)) {
+            throw new RuntimeException("Access Denied: Employee belongs to another company");
         }
 
         return employee;
     }
 
-    public List<Employee> searchAndFilterEmployees(UUID organizationId, UUID departmentId, String status, String keyword) {
-        return employeeRepository.searchAndFilterEmployees(organizationId, departmentId, status, keyword);
+    public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String keyword) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        // Here we pass the currentCompanyId. If it's null (e.g. Org Admin), it fetches for all companies in the Org.
+        return employeeRepository.searchAndFilterEmployees(currentOrgId, currentCompanyId, departmentId, status, keyword);
     }
 
     public Employee getMyProfile(String email) {
@@ -107,8 +117,8 @@ public class EmployeeService {
     }
 
     @Transactional
-    public Employee updateEmployee(UUID employeeId, EmployeeUpdateRequest request, UUID organizationId) {
-        Employee employee = getEmployeeById(employeeId, organizationId);
+    public Employee updateEmployee(UUID employeeId, EmployeeUpdateRequest request) {
+        Employee employee = getEmployeeById(employeeId);
 
         Department department = null;
         if (request.getDepartmentId() != null) {
@@ -143,14 +153,14 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void deleteEmployee(UUID employeeId, UUID organizationId) {
-        Employee employee = getEmployeeById(employeeId, organizationId);
+    public void deleteEmployee(UUID employeeId) {
+        Employee employee = getEmployeeById(employeeId);
         employeeRepository.delete(employee);
     }
 
     @Transactional
-    public Employee changeEmploymentStatus(UUID employeeId, String status, UUID organizationId) {
-        Employee employee = getEmployeeById(employeeId, organizationId);
+    public Employee changeEmploymentStatus(UUID employeeId, String status) {
+        Employee employee = getEmployeeById(employeeId);
         employee.setEmploymentStatus(status);
         return employeeRepository.save(employee);
     }

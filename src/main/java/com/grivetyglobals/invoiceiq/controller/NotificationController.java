@@ -16,21 +16,21 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping("/test-welcome")
     public ResponseEntity<String> testWelcomeEmail(@RequestParam String to, @RequestParam String name) {
         notificationService.sendWelcomeEmail(to, name);
         return ResponseEntity.ok("Welcome email mock triggered. Check console logs.");
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping("/test-invite")
     public ResponseEntity<String> testInviteEmail(@RequestParam String to, @RequestParam String inviteLink) {
         notificationService.sendEmployeeInviteEmail(to, inviteLink);
         return ResponseEntity.ok("Invite email mock triggered. Check console logs.");
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping("/test-password-reset")
     public ResponseEntity<String> testPasswordResetEmail(@RequestParam String to, @RequestParam String token) {
         notificationService.sendPasswordResetEmail(to, token);

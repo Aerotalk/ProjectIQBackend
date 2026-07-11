@@ -24,6 +24,7 @@ public class CompanyApplication {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
