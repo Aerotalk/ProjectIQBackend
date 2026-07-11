@@ -21,7 +21,7 @@ public class FileController {
 
     private final FileService fileService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload")
     public ResponseEntity<File> uploadFile(@RequestParam("file") MultipartFile file, 
                                            @RequestParam("organizationId") UUID organizationId,
@@ -30,7 +30,7 @@ public class FileController {
         return ResponseEntity.ok(fileService.uploadFile(file, organizationId, uploadedBy));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{fileId}")
     public ResponseEntity<Resource> downloadFile(@PathVariable UUID fileId) {
         Resource resource = fileService.loadFileAsResource(fileId);

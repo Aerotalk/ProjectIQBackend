@@ -15,7 +15,9 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -23,32 +25,20 @@ public class GlobalExceptionHandler {
 
     private final Logger log = LogManager.getLogger(this.getClass());
 
-    /**
-     * Handle validation errors from @Valid
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
-        log.warn("❌ [ERROR] Validation failed: {}", ex.getMessage());
-        
-        List<ApiValidationError> validationErrors = ex.getBindingResult()
-                .getAllErrors()
-                .stream()
-                .map(error -> {
-                    String field = error instanceof FieldError ? ((FieldError) error).getField() : error.getObjectName();
-                    Object rejectedValue = error instanceof FieldError ? ((FieldError) error).getRejectedValue() : null;
-                    return new ApiValidationError(field, error.getDefaultMessage(), rejectedValue);
-                })
-                .collect(Collectors.toList());
+    // Handles our custom validation errors (like "Please verify your email")
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 
-        ApiErrorResponse response = buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Validation Failed",
-                "Invalid input parameters",
-                request
-        );
-        response.setValidationErrors(validationErrors);
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Access Denied");
+        response.put("message", "You do not have the required permissions to perform this action.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     /**

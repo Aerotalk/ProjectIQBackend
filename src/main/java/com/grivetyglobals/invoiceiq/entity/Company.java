@@ -21,6 +21,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 @SQLDelete(sql = "UPDATE companies SET deleted_at = CURRENT_TIMESTAMP WHERE company_id=?")
 @SQLRestriction("deleted_at IS NULL")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Company {
 
     @Id

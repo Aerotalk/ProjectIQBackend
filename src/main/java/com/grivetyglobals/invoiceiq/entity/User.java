@@ -68,9 +68,17 @@ public class User implements UserDetails {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<UserApplication> userApplications = new HashSet<>();
+
+    @Transient
+    @Builder.Default
+    private Set<String> effectivePermissions = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
@@ -78,9 +86,16 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userRoles.stream()
-                .map(userRole -> new SimpleGrantedAuthority(userRole.getRole().getRoleName()))
-                .collect(Collectors.toList());
+        Set<GrantedAuthority> authorities = userRoles.stream()
+                .map(userRole -> new SimpleGrantedAuthority("ROLE_" + userRole.getRole().getRoleName()))
+                .collect(Collectors.toSet());
+                
+        if (effectivePermissions != null) {
+            for (String perm : effectivePermissions) {
+                authorities.add(new SimpleGrantedAuthority(perm));
+            }
+        }
+        return authorities;
     }
 
     @Override

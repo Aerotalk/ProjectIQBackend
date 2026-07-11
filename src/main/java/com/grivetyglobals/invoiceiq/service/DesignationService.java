@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.entity.Designation;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.repository.DesignationRepository;
 import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
+import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +21,10 @@ public class DesignationService {
     private final OrganizationRepository organizationRepository;
 
     @Transactional
-    public Designation createDesignation(DesignationRequest request, UUID organizationId) {
-        Organization organization = organizationRepository.findById(organizationId)
+    public Designation createDesignation(DesignationRequest request) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        
+        Organization organization = organizationRepository.findById(currentOrgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
         Designation designation = Designation.builder()
@@ -35,17 +38,18 @@ public class DesignationService {
         return designationRepository.save(designation);
     }
 
-    public List<Designation> getAllDesignations(UUID organizationId) {
-        return designationRepository.findAll().stream()
-                .filter(d -> d.getOrganization().getId().equals(organizationId))
-                .toList();
+    public List<Designation> getAllDesignations() {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        return designationRepository.findByOrganizationId(currentOrgId);
     }
 
-    public Designation getDesignationById(UUID id, UUID organizationId) {
+    public Designation getDesignationById(UUID id) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        
         Designation designation = designationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Designation not found"));
 
-        if (!designation.getOrganization().getId().equals(organizationId)) {
+        if (!designation.getOrganization().getId().equals(currentOrgId)) {
             throw new RuntimeException("Access Denied: Designation belongs to another organization");
         }
 
@@ -53,8 +57,8 @@ public class DesignationService {
     }
 
     @Transactional
-    public Designation updateDesignation(UUID id, DesignationRequest request, UUID organizationId) {
-        Designation designation = getDesignationById(id, organizationId);
+    public Designation updateDesignation(UUID id, DesignationRequest request) {
+        Designation designation = getDesignationById(id);
 
         designation.setDesignationCode(request.getDesignationCode());
         designation.setDesignationName(request.getDesignationName());
@@ -65,8 +69,8 @@ public class DesignationService {
     }
 
     @Transactional
-    public void deleteDesignation(UUID id, UUID organizationId) {
-        Designation designation = getDesignationById(id, organizationId);
+    public void deleteDesignation(UUID id) {
+        Designation designation = getDesignationById(id);
         designationRepository.delete(designation);
     }
 }

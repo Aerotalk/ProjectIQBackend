@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.entity.Department;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.repository.DepartmentRepository;
 import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
+import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +21,10 @@ public class DepartmentService {
     private final OrganizationRepository organizationRepository;
 
     @Transactional
-    public Department createDepartment(DepartmentRequest request, UUID organizationId) {
-        Organization organization = organizationRepository.findById(organizationId)
+    public Department createDepartment(DepartmentRequest request) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        
+        Organization organization = organizationRepository.findById(currentOrgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
         Department parentDepartment = null;
@@ -41,26 +44,33 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
-    public List<Department> getAllDepartments(UUID organizationId) {
-        return departmentRepository.findAll().stream()
-                .filter(d -> d.getOrganization().getId().equals(organizationId))
-                .toList();
+    public List<Department> getAllDepartments() {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        return departmentRepository.findByOrganizationIdAndCompanyId(currentOrgId, currentCompanyId);
     }
 
-    public Department getDepartmentById(UUID id, UUID organizationId) {
+    public Department getDepartmentById(UUID id) {
+        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Department not found"));
 
-        if (!department.getOrganization().getId().equals(organizationId)) {
+        if (!department.getOrganization().getId().equals(currentOrgId)) {
             throw new RuntimeException("Access Denied: Department belongs to another organization");
+        }
+        
+        if (currentCompanyId != null && department.getCompany() != null && !department.getCompany().getId().equals(currentCompanyId)) {
+            throw new RuntimeException("Access Denied: Department belongs to another company");
         }
 
         return department;
     }
 
     @Transactional
-    public Department updateDepartment(UUID id, DepartmentRequest request, UUID organizationId) {
-        Department department = getDepartmentById(id, organizationId);
+    public Department updateDepartment(UUID id, DepartmentRequest request) {
+        Department department = getDepartmentById(id);
 
         Department parentDepartment = null;
         if (request.getParentDepartmentId() != null) {
@@ -77,8 +87,8 @@ public class DepartmentService {
     }
 
     @Transactional
-    public void deleteDepartment(UUID id, UUID organizationId) {
-        Department department = getDepartmentById(id, organizationId);
+    public void deleteDepartment(UUID id) {
+        Department department = getDepartmentById(id);
         departmentRepository.delete(department);
     }
 }
