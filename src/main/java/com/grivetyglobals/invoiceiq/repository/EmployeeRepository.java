@@ -19,8 +19,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     long countByOrganizationId(@Param("organizationId") UUID organizationId);
 
     @Query("SELECT e FROM Employee e WHERE e.organization.id = :organizationId " +
-           "AND (:companyId IS NULL OR e.company.id = :companyId) " +
-           "AND (:departmentId IS NULL OR e.department.id = :departmentId) " +
+           "AND (cast(:companyId as uuid) IS NULL OR e.company.id = :companyId) " +
+           "AND (cast(:departmentId as uuid) IS NULL OR e.department.id = :departmentId) " +
            "AND (:status IS NULL OR e.employmentStatus = :status) " +
            "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
            "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +

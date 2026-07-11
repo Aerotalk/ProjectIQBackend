@@ -14,4 +14,6 @@ public class RoleRequest {
 
     @NotBlank(message = "Role name is required")
     private String name;
+    
+    private String description;
 }

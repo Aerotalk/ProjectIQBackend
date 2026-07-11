@@ -13,4 +13,7 @@ public interface RoleRepository extends JpaRepository<Role, UUID> {
 
     @org.springframework.data.jpa.repository.Query("SELECT r FROM Role r WHERE r.systemRole = true OR r.organization.id = :orgId OR r.company.id = :companyId")
     java.util.List<Role> findAvailableRoles(@org.springframework.data.repository.query.Param("orgId") UUID orgId, @org.springframework.data.repository.query.Param("companyId") UUID companyId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(ur) FROM UserRole ur WHERE ur.role.id = :roleId")
+    long countUsersByRoleId(@org.springframework.data.repository.query.Param("roleId") UUID roleId);
 }

@@ -20,6 +20,7 @@ public class DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final OrganizationRepository organizationRepository;
 
+    @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public Department createDepartment(DepartmentRequest request) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
@@ -44,6 +45,7 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "departmentsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId()")
     public List<Department> getAllDepartments() {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
@@ -68,6 +70,7 @@ public class DepartmentService {
         return department;
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public Department updateDepartment(UUID id, DepartmentRequest request) {
         Department department = getDepartmentById(id);
@@ -86,6 +89,7 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public void deleteDepartment(UUID id) {
         Department department = getDepartmentById(id);
