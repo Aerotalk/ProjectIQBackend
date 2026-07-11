@@ -18,7 +18,7 @@ public class ApplicationController {
 
     private final ApplicationRegistryService applicationRegistryService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping
     public ResponseEntity<Application> createApplication(
             @Valid @RequestBody com.grivetyglobals.invoiceiq.dto.ApplicationRequest request, 
@@ -27,13 +27,13 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationRegistryService.createApplication(request, userId, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.view')")
     @GetMapping
     public ResponseEntity<List<Application>> getAllApplications() {
         return ResponseEntity.ok(applicationRegistryService.getAllApplications());
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PutMapping("/employees/{employeeId}")
     public ResponseEntity<Void> assignApplicationsToEmployee(
             @PathVariable UUID employeeId,
@@ -45,7 +45,7 @@ public class ApplicationController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAuthority('setting.edit')")
     @PutMapping("/companies/{companyId}")
     public ResponseEntity<Void> assignApplicationsToCompany(
             @PathVariable UUID companyId,

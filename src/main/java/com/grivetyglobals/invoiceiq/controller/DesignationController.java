@@ -19,34 +19,34 @@ public class DesignationController {
 
     private final DesignationService designationService;
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('designation.create')")
     @PostMapping
-    public ResponseEntity<Designation> createDesignation(@Valid @RequestBody DesignationRequest request, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(designationService.createDesignation(request, organizationId));
+    public ResponseEntity<Designation> createDesignation(@Valid @RequestBody DesignationRequest request) {
+        return ResponseEntity.ok(designationService.createDesignation(request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasAuthority('designation.view')")
     @GetMapping
-    public ResponseEntity<List<Designation>> getAllDesignations(@RequestParam UUID organizationId) {
-        return ResponseEntity.ok(designationService.getAllDesignations(organizationId));
+    public ResponseEntity<List<Designation>> getAllDesignations() {
+        return ResponseEntity.ok(designationService.getAllDesignations());
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Designation', 'designation.view')")
     @GetMapping("/{id}")
-    public ResponseEntity<Designation> getDesignationById(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(designationService.getDesignationById(id, organizationId));
+    public ResponseEntity<Designation> getDesignationById(@PathVariable UUID id) {
+        return ResponseEntity.ok(designationService.getDesignationById(id));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Designation', 'designation.edit')")
     @PutMapping("/{id}")
-    public ResponseEntity<Designation> updateDesignation(@PathVariable UUID id, @Valid @RequestBody DesignationRequest request, @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(designationService.updateDesignation(id, request, organizationId));
+    public ResponseEntity<Designation> updateDesignation(@PathVariable UUID id, @Valid @RequestBody DesignationRequest request) {
+        return ResponseEntity.ok(designationService.updateDesignation(id, request));
     }
 
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_ORG_ADMIN') or hasAuthority('ROLE_COMPANY_ADMIN')")
+    @PreAuthorize("hasPermission(#id, 'Designation', 'designation.delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDesignation(@PathVariable UUID id, @RequestParam UUID organizationId) {
-        designationService.deleteDesignation(id, organizationId);
+    public ResponseEntity<Void> deleteDesignation(@PathVariable UUID id) {
+        designationService.deleteDesignation(id);
         return ResponseEntity.noContent().build();
     }
 }

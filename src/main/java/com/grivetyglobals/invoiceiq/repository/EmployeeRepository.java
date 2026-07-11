@@ -19,6 +19,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     long countByOrganizationId(@Param("organizationId") UUID organizationId);
 
     @Query("SELECT e FROM Employee e WHERE e.organization.id = :organizationId " +
+           "AND (:companyId IS NULL OR e.company.id = :companyId) " +
            "AND (:departmentId IS NULL OR e.department.id = :departmentId) " +
            "AND (:status IS NULL OR e.employmentStatus = :status) " +
            "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
@@ -26,6 +27,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
            "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')))")
     List<Employee> searchAndFilterEmployees(
             @Param("organizationId") UUID organizationId,
+            @Param("companyId") UUID companyId,
             @Param("departmentId") UUID departmentId,
             @Param("status") String status,
             @Param("keyword") String keyword);
