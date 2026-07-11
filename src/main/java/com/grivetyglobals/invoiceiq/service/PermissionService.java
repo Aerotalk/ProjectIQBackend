@@ -21,6 +21,8 @@ public class PermissionService {
     private final PermissionGroupMappingRepository permissionGroupMappingRepository;
     private final RolePermissionGroupRepository rolePermissionGroupRepository;
     private final UserPermissionRepository userPermissionRepository;
+    private final UserRepository userRepository;
+    private final org.springframework.cache.CacheManager cacheManager;
 
     // ========================================================================
     // PERMISSION MATRIX
@@ -28,6 +30,24 @@ public class PermissionService {
 
     public Map<String, List<Permission>> getPermissionMatrix() {
         List<Permission> allPermissions = permissionRepository.findAll();
+        DataScope scope = getCurrentUserMaxScope();
+        
+        java.util.Set<String> superAdminOnly = java.util.Set.of("org.create", "org.delete");
+        
+        if (scope != DataScope.GLOBAL) {
+            User currentUser = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+            java.util.Set<String> effectiveKeys = getEffectivePermissions(currentUser);
+            
+            allPermissions = allPermissions.stream()
+                    .filter(p -> effectiveKeys.contains(p.getPermissionKey()))
+                    .filter(p -> !superAdminOnly.contains(p.getPermissionKey()))
+                    .collect(Collectors.toList());
+        } else {
+            allPermissions = allPermissions.stream()
+                    .filter(p -> !superAdminOnly.contains(p.getPermissionKey()))
+                    .collect(Collectors.toList());
+        }
+
         return allPermissions.stream()
                 .collect(Collectors.groupingBy(Permission::getModule));
     }
@@ -137,7 +157,9 @@ public class PermissionService {
             UserPermission up = existing.get();
             up.setGranted(isGranted);
             up.setDataScope(dataScope);
-            return userPermissionRepository.save(up);
+            UserPermission saved = userPermissionRepository.save(up);
+            evictUserCache(userId);
+            return saved;
         }
 
         // Create new override — we need the User reference
@@ -147,7 +169,9 @@ public class PermissionService {
                 .isGranted(isGranted)
                 .dataScope(dataScope)
                 .build();
-        return userPermissionRepository.save(up);
+        UserPermission saved = userPermissionRepository.save(up);
+        evictUserCache(userId);
+        return saved;
     }
 
     /**
@@ -159,6 +183,16 @@ public class PermissionService {
                 .orElseThrow(() -> new RuntimeException(
                         "No override found for user " + userId + " and permission " + permissionId));
         userPermissionRepository.delete(up);
+        evictUserCache(userId);
+    }
+
+    private void evictUserCache(UUID userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            org.springframework.cache.Cache cache = cacheManager.getCache("users");
+            if (cache != null) {
+                cache.evict(user.getEmail());
+            }
+        });
     }
 
     // ========================================================================
@@ -197,6 +231,36 @@ public class PermissionService {
     }
 
     /**
+     * Gets all company IDs for which the user has been granted a specific permission.
+     * A null in the set indicates the permission is granted org-wide.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Set<UUID> getAllowedCompanyIdsForPermission(User detachedUser, String permissionKey) {
+        User user = userRepository.findById(detachedUser.getId()).orElse(detachedUser);
+        java.util.Set<UUID> allowedCompanyIds = new HashSet<>();
+        if (user.getUserRoles() != null) {
+            for (UserRole userRole : user.getUserRoles()) {
+                if (userRole.getRole().getRolePermissionGroups() != null) {
+                    for (RolePermissionGroup rpg : userRole.getRole().getRolePermissionGroups()) {
+                        if (rpg.getPermissionGroup() != null && rpg.getPermissionGroup().getPermissions() != null) {
+                            boolean hasPerm = rpg.getPermissionGroup().getPermissions().stream()
+                                    .anyMatch(m -> m.getPermission().getPermissionKey().equals(permissionKey));
+                            if (hasPerm) {
+                                if (userRole.getCompany() != null) {
+                                    allowedCompanyIds.add(userRole.getCompany().getId());
+                                } else {
+                                    allowedCompanyIds.add(null);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return allowedCompanyIds;
+    }
+
+    /**
      * Returns the most specific DataScope a user has for a given permission key.
      * Used by CustomPermissionEvaluator to determine "which data?" the user can access.
      *
@@ -206,7 +270,9 @@ public class PermissionService {
      *   3. Default: infer from user's highest role tier
      */
     @Transactional(readOnly = true)
-    public DataScope getDataScopeForPermission(User user, String permissionKey) {
+    public DataScope getDataScopeForPermission(User detachedUser, String permissionKey) {
+        User user = userRepository.findById(detachedUser.getId()).orElse(detachedUser);
+        
         // 1. Check UserPermission overrides first (highest priority)
         List<UserPermission> overrides = userPermissionRepository.findByUserId(user.getId());
         for (UserPermission override : overrides) {

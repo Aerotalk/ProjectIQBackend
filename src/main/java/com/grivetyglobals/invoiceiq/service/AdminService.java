@@ -99,6 +99,7 @@ public class AdminService {
         return organizationRepository.save(org);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "companiesList", allEntries = true)
     @Transactional
     public Company createCompany(CompanyCreateRequest request) {
         Organization organization = organizationRepository.findById(request.getOrganizationId())
@@ -294,6 +295,8 @@ public class AdminService {
         
         return userRepository.save(user);
     }
+    @org.springframework.cache.annotation.Cacheable(value = "companiesList", key = "T(java.util.Objects).hash(#optionalOrgId, #pageable.pageNumber, #pageable.pageSize, #pageable.sort.toString())")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Company> getAllCompanies(java.util.UUID optionalOrgId, org.springframework.data.domain.Pageable pageable) {
         java.util.UUID organizationId = optionalOrgId != null ? optionalOrgId : com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         if (organizationId != null) {

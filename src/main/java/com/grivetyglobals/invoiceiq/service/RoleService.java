@@ -22,7 +22,10 @@ public class RoleService {
     private final UserRepository userRepository;
     private final AuditService auditService;
     private final EmployeeRepository employeeRepository;
+    private final com.grivetyglobals.invoiceiq.repository.CompanyRepository companyRepository;
+    private final org.springframework.cache.CacheManager cacheManager;
 
+    @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role createRole(RoleRequest request) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
@@ -31,13 +34,22 @@ public class RoleService {
         Role role = Role.builder()
                 .roleName(request.getName())
                 .build();
+        
+        // Set organization on the role so scope checks work
+        if (currentOrgId != null) {
+            role.setOrganization(com.grivetyglobals.invoiceiq.entity.Organization.builder().id(currentOrgId).build());
+        }
+        
         Role saved = roleRepository.save(role);
         auditService.logActivity("ROLE_CREATED", "Created role " + request.getName(), saved.getId(), "Role", currentUserId, currentOrgId);
         return saved;
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "rolesList")
     public List<Role> getAllRoles() {
-        return roleRepository.findAll();
+        return roleRepository.findAll().stream()
+                .filter(role -> !"ROLE_SUPER_ADMIN".equals(role.getRoleName()))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public Role getRoleById(UUID id) {
@@ -45,6 +57,7 @@ public class RoleService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role updateRole(UUID id, RoleRequest request) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
@@ -52,21 +65,31 @@ public class RoleService {
         
         Role role = getRoleById(id);
         role.setRoleName(request.getName());
+        if (request.getDescription() != null) {
+            role.setDescription(request.getDescription());
+        }
         Role saved = roleRepository.save(role);
         auditService.logActivity("ROLE_UPDATED", "Updated role " + request.getName(), saved.getId(), "Role", currentUserId, currentOrgId);
         return saved;
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public void deleteRole(UUID id) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         
         Role role = getRoleById(id);
+        
+        if (roleRepository.countUsersByRoleId(id) > 0) {
+            throw new RuntimeException("Cannot delete this role because it is assigned to one or more users. Please reassign the users first.");
+        }
+        
         roleRepository.delete(role);
         auditService.logActivity("ROLE_DELETED", "Deleted role " + role.getRoleName(), id, "Role", currentUserId, currentOrgId);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role cloneRole(UUID id) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
@@ -97,10 +120,11 @@ public class RoleService {
         user.getUserRoles().add(userRole);
         userRepository.save(user);
         auditService.logActivity("ROLE_ASSIGNED", "Assigned role " + role.getRoleName() + " to user " + user.getEmail(), targetUserId, "User", currentUserId, currentOrgId);
+        evictUserCache(user.getEmail());
     }
 
     @Transactional
-    public void assignRolesToEmployee(UUID employeeId, List<UUID> roleIds) {
+    public void assignRolesToEmployee(UUID employeeId, UUID companyId, List<UUID> roleIds) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         
@@ -111,18 +135,52 @@ public class RoleService {
             throw new RuntimeException("No user associated with this employee");
         }
         
-        user.getUserRoles().clear();
+        com.grivetyglobals.invoiceiq.entity.Company company = null;
+        if (companyId != null) {
+            company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        }
+        
+        if (companyId != null) {
+            final UUID cId = companyId;
+            user.getUserRoles().removeIf(ur -> ur.getCompany() != null && ur.getCompany().getId().equals(cId));
+        } else {
+            user.getUserRoles().removeIf(ur -> ur.getCompany() == null);
+        }
         
         for (UUID roleId : roleIds) {
             Role role = getRoleById(roleId);
             com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
                     .user(user)
                     .role(role)
+                    .company(company)
                     .build();
             user.getUserRoles().add(userRole);
         }
         
         userRepository.save(user);
         auditService.logActivity("ROLES_ASSIGNED", "Assigned multiple roles to user " + user.getEmail(), user.getId(), "User", currentUserId, currentOrgId);
+        evictUserCache(user.getEmail());
+    }
+
+    private void evictUserCache(String email) {
+        org.springframework.cache.Cache cache = cacheManager.getCache("users");
+        if (cache != null) {
+            cache.evict(email);
+        }
+    }
+
+    public List<Role> getAssignedRolesForEmployee(UUID employeeId, UUID companyId) {
+        com.grivetyglobals.invoiceiq.entity.Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        User user = employee.getUser();
+        if (user == null || user.getUserRoles() == null) {
+            return java.util.Collections.emptyList();
+        }
+        
+        return user.getUserRoles().stream()
+                .filter(ur -> ur.getCompany() != null && ur.getCompany().getId().equals(companyId))
+                .map(com.grivetyglobals.invoiceiq.entity.UserRole::getRole)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

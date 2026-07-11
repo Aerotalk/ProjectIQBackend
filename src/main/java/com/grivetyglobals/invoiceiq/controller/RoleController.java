@@ -68,9 +68,17 @@ public class RoleController {
     @PutMapping("/employees/{employeeId}/assign")
     public ResponseEntity<Void> assignRolesToEmployee(
             @PathVariable UUID employeeId,
+            @RequestParam(required = false) UUID companyId,
             @RequestBody List<UUID> roleIds) {
-        roleService.assignRolesToEmployee(employeeId, roleIds);
+        roleService.assignRolesToEmployee(employeeId, companyId, roleIds);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/employees/{employeeId}/companies/{companyId}")
+    public ResponseEntity<List<Role>> getAssignedRolesForEmployee(
+            @PathVariable UUID employeeId,
+            @PathVariable UUID companyId) {
+        return ResponseEntity.ok(roleService.getAssignedRolesForEmployee(employeeId, companyId));
     }
 
     @PreAuthorize("hasAuthority('role.create')")
