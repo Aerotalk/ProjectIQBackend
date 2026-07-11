@@ -4,6 +4,7 @@ import com.grivetyglobals.invoiceiq.dto.AuthResponse;
 import com.grivetyglobals.invoiceiq.dto.LoginRequest;
 import com.grivetyglobals.invoiceiq.dto.RegisterRequest;
 import com.grivetyglobals.invoiceiq.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,13 +20,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/setup-super-admin")
-    public ResponseEntity<String> setupSuperAdmin(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> setupSuperAdmin(@Valid @RequestBody RegisterRequest request) {
         authService.setupSuperAdmin(request);
         return ResponseEntity.ok("Super Admin created successfully.");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 

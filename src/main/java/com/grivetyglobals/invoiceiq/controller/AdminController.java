@@ -104,4 +104,5 @@ public class AdminController {
         adminService.deleteCompany(id, organizationId);
         return ResponseEntity.noContent().build();
     }
+
 }
