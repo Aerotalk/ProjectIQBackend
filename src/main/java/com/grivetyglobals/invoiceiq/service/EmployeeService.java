@@ -35,6 +35,7 @@ public class EmployeeService {
         return String.format("EMP-%04d", currentCount + 1);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee createEmployee(EmployeeCreateRequest request) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
@@ -102,11 +103,12 @@ public class EmployeeService {
         return employee;
     }
 
-    public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String keyword) {
-        UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
-        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
-        // Here we pass the currentCompanyId. If it's null (e.g. Org Admin), it fetches for all companies in the Org.
-        return employeeRepository.searchAndFilterEmployees(currentOrgId, currentCompanyId, departmentId, status, keyword);
+    @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), #departmentId, #status, #searchTerm)")
+    @Transactional(readOnly = true)
+    public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String searchTerm) {
+        UUID organizationId = SecurityUtils.getCurrentOrganizationId();
+        UUID companyId = SecurityUtils.getCurrentCompanyId();
+        return employeeRepository.searchAndFilterEmployees(organizationId, companyId, departmentId, status, searchTerm);
     }
 
     public Employee getMyProfile(String email) {
@@ -116,6 +118,7 @@ public class EmployeeService {
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee updateEmployee(UUID employeeId, EmployeeUpdateRequest request) {
         Employee employee = getEmployeeById(employeeId);
@@ -158,6 +161,7 @@ public class EmployeeService {
         employeeRepository.delete(employee);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee changeEmploymentStatus(UUID employeeId, String status) {
         Employee employee = getEmployeeById(employeeId);

@@ -139,6 +139,12 @@ public class DataSeeder implements CommandLineRunner {
         mapPermissionToGroup(deptGroup, createPermission("department.edit", "Edit Department", "Organization"));
         mapPermissionToGroup(deptGroup, createPermission("department.delete", "Delete Department", "Organization"));
 
+        // Seed and Map Designation Permissions
+        mapPermissionToGroup(deptGroup, createPermission("designation.view", "View Designations", "Organization"));
+        mapPermissionToGroup(deptGroup, createPermission("designation.create", "Create Designation", "Organization"));
+        mapPermissionToGroup(deptGroup, createPermission("designation.edit", "Edit Designation", "Organization"));
+        mapPermissionToGroup(deptGroup, createPermission("designation.delete", "Delete Designation", "Organization"));
+
         // Seed and Map Role Permissions
         mapPermissionToGroup(roleGroup, createPermission("role.view", "View Roles", "Organization"));
         mapPermissionToGroup(roleGroup, createPermission("role.create", "Create Role", "Organization"));

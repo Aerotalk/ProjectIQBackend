@@ -20,6 +20,7 @@ public class DesignationService {
     private final DesignationRepository designationRepository;
     private final OrganizationRepository organizationRepository;
 
+    @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public Designation createDesignation(DesignationRequest request) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
@@ -38,6 +39,7 @@ public class DesignationService {
         return designationRepository.save(designation);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "designationsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId()")
     public List<Designation> getAllDesignations() {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         return designationRepository.findByOrganizationId(currentOrgId);
@@ -56,6 +58,7 @@ public class DesignationService {
         return designation;
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public Designation updateDesignation(UUID id, DesignationRequest request) {
         Designation designation = getDesignationById(id);
@@ -68,6 +71,7 @@ public class DesignationService {
         return designationRepository.save(designation);
     }
 
+    @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public void deleteDesignation(UUID id) {
         Designation designation = getDesignationById(id);

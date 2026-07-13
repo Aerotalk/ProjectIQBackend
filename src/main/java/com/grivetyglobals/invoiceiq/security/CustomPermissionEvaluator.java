@@ -70,7 +70,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         }
 
         // Step 3: Check scope against the target object
-        return checkScopeAgainstObject(user, scope, targetDomainObject);
+        return checkScopeAgainstObject(user, scope, targetDomainObject, requiredPermission);
     }
 
     /**
@@ -113,7 +113,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
 
         // Step 2: Look up the target entity and check scope
         UUID id = UUID.fromString(targetId.toString());
-        return checkScopeAgainstEntity(user, scope, targetType, id);
+        return checkScopeAgainstEntity(user, scope, targetType, id, requiredPermission);
     }
 
     // ========================================================================
@@ -123,14 +123,14 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     /**
      * Checks scope when the domain object is already available.
      */
-    private boolean checkScopeAgainstObject(User user, DataScope scope, Object target) {
+    private boolean checkScopeAgainstObject(User user, DataScope scope, Object target, String requiredPermission) {
         return switch (scope) {
             case GLOBAL -> true;
             case ORGANIZATION -> checkOrganizationScope(user, target);
-            case COMPANY -> checkCompanyScope(user, target);
-            case DEPARTMENT -> checkDepartmentScope(user, target);
-            case TEAM -> checkDepartmentScope(user, target); // TEAM uses same dept check for now
-            case OWN -> checkOwnScope(user, target);
+            case COMPANY -> checkCompanyScope(user, target, requiredPermission);
+            case DEPARTMENT -> checkDepartmentScope(user, target, requiredPermission);
+            case TEAM -> checkDepartmentScope(user, target, requiredPermission); // TEAM uses same dept check for now
+            case OWN -> checkOwnScope(user, target, requiredPermission);
             case CUSTOM -> true; // CUSTOM scope requires a rules engine — future implementation
         };
     }
@@ -138,13 +138,13 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     /**
      * Checks scope when only the entity type and ID are known (must fetch from DB).
      */
-    private boolean checkScopeAgainstEntity(User user, DataScope scope, String targetType, UUID targetId) {
+    private boolean checkScopeAgainstEntity(User user, DataScope scope, String targetType, UUID targetId, String requiredPermission) {
         Object target = fetchEntity(targetType, targetId);
         if (target == null) {
             log.warn("Entity not found: type={}, id={}", targetType, targetId);
             return false;
         }
-        return checkScopeAgainstObject(user, scope, target);
+        return checkScopeAgainstObject(user, scope, target, requiredPermission);
     }
 
     /**
@@ -175,53 +175,63 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if (userOrgId == null) return false;
 
         UUID targetOrgId = extractOrganizationId(target);
+        // If target has no org_id (unscoped entity), allow access since user already has the base permission
+        if (targetOrgId == null) return true;
         return userOrgId.equals(targetOrgId);
     }
 
     /**
-     * COMPANY scope: user.companyId == target.companyId
+     * COMPANY scope: userRole.companyId == target.companyId
      */
-    private boolean checkCompanyScope(User user, Object target) {
-        UUID userCompanyId = user.getCompany() != null ? user.getCompany().getId() : null;
-        if (userCompanyId == null) {
-            // Org admins don't have a company — fall back to org scope
+    private boolean checkCompanyScope(User user, Object target, String requiredPermission) {
+        UUID targetCompanyId = extractCompanyId(target);
+        
+        // If the target entity has no company_id (e.g. an org-level role), 
+        // fall back to organization scope check
+        if (targetCompanyId == null) {
             return checkOrganizationScope(user, target);
         }
-
-        UUID targetCompanyId = extractCompanyId(target);
-        return userCompanyId.equals(targetCompanyId);
+        
+        java.util.Set<UUID> allowedCompanyIds = permissionService.getAllowedCompanyIdsForPermission(user, requiredPermission);
+        
+        if (allowedCompanyIds.contains(null)) {
+            // Org-wide role granted this permission, fallback to org scope check if needed
+            return checkOrganizationScope(user, target);
+        }
+        
+        return allowedCompanyIds.contains(targetCompanyId);
     }
 
     /**
      * DEPARTMENT scope: user's department == target's department
      */
-    private boolean checkDepartmentScope(User user, Object target) {
+    private boolean checkDepartmentScope(User user, Object target, String requiredPermission) {
         // For department scope, we need to check if the target belongs to the same department
         // This requires the user to have a department association (via Employee)
         if (target instanceof Employee employee) {
             if (employee.getDepartment() == null) return false;
             // We'd need to look up the current user's employee record to get their department
             // For now, fall back to company scope as a reasonable approximation
-            return checkCompanyScope(user, target);
+            return checkCompanyScope(user, target, requiredPermission);
         }
         if (target instanceof Department department) {
             // A user can manage a department if it's in their company
-            return checkCompanyScope(user, department);
+            return checkCompanyScope(user, department, requiredPermission);
         }
-        return checkCompanyScope(user, target);
+        return checkCompanyScope(user, target, requiredPermission);
     }
 
     /**
      * OWN scope: the target was created by this user
      */
-    private boolean checkOwnScope(User user, Object target) {
+    private boolean checkOwnScope(User user, Object target, String requiredPermission) {
         // For Employee: check if the employee IS the current user
         if (target instanceof Employee employee) {
             return employee.getUser() != null && employee.getUser().getId().equals(user.getId());
         }
         // For other entities: fall back to company scope
         // (OWN scope on departments/roles doesn't make practical sense)
-        return checkCompanyScope(user, target);
+        return checkCompanyScope(user, target, requiredPermission);
     }
 
     // ========================================================================

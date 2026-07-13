@@ -1,79 +1,106 @@
 package com.grivetyglobals.invoiceiq.aspect;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.aspectj.lang.JoinPoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 @Aspect
 @Component
 public class LoggingAspect {
 
-    private final Logger log = LogManager.getLogger(this.getClass());
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final ObjectMapper mapper;
 
-    /**
-     * Pointcut that matches all repositories, services, and REST endpoints.
-     */
-    @Pointcut("within(com.grivetyglobals.invoiceiq.repository..*) " +
-            "|| within(com.grivetyglobals.invoiceiq.service..*) " +
-            "|| within(com.grivetyglobals.invoiceiq.controller..*)")
-    public void applicationPackagePointcut() {
-        // Method is empty as this is just a Pointcut
+    public LoggingAspect() {
+        this.mapper = new ObjectMapper();
+        this.mapper.registerModule(new JavaTimeModule());
+        this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
-    /**
-     * Advice that logs methods throwing exceptions.
-     */
-    @AfterThrowing(pointcut = "applicationPackagePointcut()", throwing = "e")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable e) {
-        log.error("❌ [ERROR] in {}.{}() with cause = '{}' and exception = '{}'",
-                joinPoint.getSignature().getDeclaringTypeName(),
-                joinPoint.getSignature().getName(),
-                e.getCause() != null ? e.getCause() : "NULL",
-                e.getMessage(),
-                e);
-    }
+    @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
+    public void controllerPointcut() {}
 
-    /**
-     * Advice that logs when a method is entered and exited.
-     */
-    @Around("applicationPackagePointcut()")
-    public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (log.isDebugEnabled()) {
-            log.debug("📥 [ENTRY] Enter: {}.{}() with argument[s] = {}",
-                    joinPoint.getSignature().getDeclaringTypeName(),
-                    joinPoint.getSignature().getName(),
-                    Arrays.toString(joinPoint.getArgs()));
-        } else {
-            // For general flow tracing at INFO level (reduced verbosity without args)
-            log.info("📥 [ENTRY] Enter: {}.{}()", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+    @Pointcut("within(@org.springframework.stereotype.Service *)")
+    public void servicePointcut() {}
+
+    @Around("controllerPointcut()")
+    public Object logControllerAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        String methodName = joinPoint.getSignature().getName();
+        Object[] args = joinPoint.getArgs();
+        
+        log.info("🚀 [CONTROLLER_ENTRY] Initiated request to {}.{}", className, methodName);
+        
+        try {
+            List<Object> safeArgs = new ArrayList<>();
+            for (Object arg : args) {
+                if (arg instanceof HttpServletRequest || arg instanceof HttpServletResponse || arg instanceof MultipartFile) {
+                    safeArgs.add("[" + arg.getClass().getSimpleName() + "]");
+                } else {
+                    safeArgs.add(arg);
+                }
+            }
+            log.info("📦 [PAYLOAD] Input Arguments: {}", mapper.writeValueAsString(safeArgs));
+        } catch (Exception e) {
+            log.info("📦 [PAYLOAD] Input Arguments: [Cannot serialize payload: {}]", e.getMessage());
         }
 
+        long start = System.currentTimeMillis();
         try {
             Object result = joinPoint.proceed();
+            long elapsedTime = System.currentTimeMillis() - start;
             
-            if (log.isDebugEnabled()) {
-                log.debug("📤 [EXIT] Exit: {}.{}() with result = {}",
-                        joinPoint.getSignature().getDeclaringTypeName(),
-                        joinPoint.getSignature().getName(),
-                        result);
-            } else {
-                log.info("📤 [EXIT] Exit: {}.{}()", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+            log.info("✨ [CONTROLLER_SUCCESS] Flawless execution in {}.{}", className, methodName);
+            try {
+                log.info("🎁 [RESULT_DATA] Outgoing Response: {}", mapper.writeValueAsString(result));
+            } catch (Exception e) {
+                log.info("🎁 [RESULT_DATA] Outgoing Response: [Cannot serialize response]");
             }
+            log.info("⏱️ [PERFORMANCE] Total API Time: {} ms", elapsedTime);
             
             return result;
         } catch (IllegalArgumentException e) {
-            log.error("❌ [ERROR] Illegal argument: {} in {}.{}()",
-                    Arrays.toString(joinPoint.getArgs()),
-                    joinPoint.getSignature().getDeclaringTypeName(),
-                    joinPoint.getSignature().getName());
+            log.warn("⚠️ [WARNING/BAD_REQUEST] Business logic issue in {}.{}: {}", className, methodName, e.getMessage());
+            throw e;
+        } catch (Throwable e) {
+            long elapsedTime = System.currentTimeMillis() - start;
+            log.error("💥 [CRASH/FAILURE] Critical error in {}.{}", className, methodName);
+            log.error("🔍 [ROOT_CAUSE] Reason for failure: {}", e.getMessage(), e);
+            log.error("⏱️ [PERFORMANCE] Failed abruptly after {} ms", elapsedTime);
+            throw e;
+        }
+    }
+
+    @Around("servicePointcut()")
+    public Object logServiceAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        String methodName = joinPoint.getSignature().getName();
+        
+        log.info("⚙️ [SERVICE_ENTRY] Processing logic in {}.{}", className, methodName);
+        long start = System.currentTimeMillis();
+        
+        try {
+            Object result = joinPoint.proceed();
+            long elapsedTime = System.currentTimeMillis() - start;
+            log.info("✅ [SERVICE_SUCCESS] Completed {}.{} in ⏱️ {} ms", className, methodName, elapsedTime);
+            return result;
+        } catch (Throwable e) {
+            long elapsedTime = System.currentTimeMillis() - start;
+            log.error("❌ [SERVICE_EXCEPTION] Error thrown in {}.{} after ⏱️ {} ms", className, methodName, elapsedTime);
+            log.error("🔍 [ROOT_CAUSE] Details: {}", e.getMessage());
             throw e;
         }
     }
