@@ -73,4 +73,15 @@ public class GlobalExceptionHandler {
         response.put("error", "Invalid email or password");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleAllUncaughtException(Exception ex, WebRequest request) {
+        log.error("🚨 [CRITICAL_FAILURE] An unhandled exception escaped the application layers.");
+        log.error("🔍 [FAILURE_DETAILS] Cause: ", ex);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Internal Server Error");
+        response.put("message", "We are experiencing technical difficulties. Our team has been notified.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 }
