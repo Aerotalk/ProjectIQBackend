@@ -349,6 +349,15 @@ public class AdminService {
 
         company = companyRepository.save(company);
 
+        // Update admin password if provided
+        if (request.getAdminPassword() != null && !request.getAdminPassword().isBlank()) {
+            userRepository.findFirstByCompanyIdAndUserRoles_Role_RoleName(company.getId(), "ROLE_COMPANY_ADMIN")
+                    .ifPresent(adminUser -> {
+                        adminUser.setPassword(passwordEncoder.encode(request.getAdminPassword()));
+                        userRepository.save(adminUser);
+                    });
+        }
+
         // Update Addresses (Simplistic approach: delete old and recreate new)
         companyAddressRepository.deleteAll(company.getAddresses());
         company.getAddresses().clear();

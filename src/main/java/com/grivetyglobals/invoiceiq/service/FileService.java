@@ -3,18 +3,20 @@ package com.grivetyglobals.invoiceiq.service;
 import com.grivetyglobals.invoiceiq.entity.File;
 import com.grivetyglobals.invoiceiq.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -22,24 +24,16 @@ import java.util.UUID;
 public class FileService {
 
     private final FileRepository fileRepository;
-    private final Path rootLocation = Paths.get("uploads");
+    private final S3Client s3Client;
+
+    @Value("${cloud.s3.bucket-name}")
+    private String bucketName;
 
     @Transactional
     public File uploadFile(MultipartFile multipartFile, UUID organizationId, UUID uploadedBy) {
         try {
             if (multipartFile.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
-            }
-
-            // Create uploads directory if it doesn't exist
-            if (!Files.exists(rootLocation)) {
-                Files.createDirectories(rootLocation);
-            }
-
-            // Organization specific directory
-            Path orgDir = rootLocation.resolve(organizationId.toString());
-            if (!Files.exists(orgDir)) {
-                Files.createDirectories(orgDir);
             }
 
             // Generate unique filename to prevent collisions
@@ -50,16 +44,16 @@ public class FileService {
             }
             String storedFilename = UUID.randomUUID().toString() + extension;
             
-            Path destinationFile = orgDir.resolve(Paths.get(storedFilename)).normalize().toAbsolutePath();
-
-            if (!destinationFile.getParent().equals(orgDir.toAbsolutePath())) {
-                throw new RuntimeException("Cannot store file outside current directory.");
-            }
-
-            Files.copy(multipartFile.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
-
             String storagePath = organizationId.toString() + "/" + storedFilename;
-            
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(storagePath)
+                    .contentType(multipartFile.getContentType())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
+
             File file = File.builder()
                     .originalName(originalFilename)
                     .storedName(storedFilename)
@@ -73,25 +67,24 @@ public class FileService {
             return fileRepository.save(file);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file.", e);
+            throw new RuntimeException("Failed to store file in S3.", e);
         }
     }
 
     public Resource loadFileAsResource(UUID fileId) {
+        File fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
         try {
-            File fileEntity = fileRepository.findById(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileEntity.getStoragePath())
+                    .build();
 
-            Path file = rootLocation.resolve(fileEntity.getStoragePath()).normalize();
-            Resource resource = new UrlResource(file.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException("Could not read file: " + fileEntity.getOriginalName());
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file.", e);
+            ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(getObjectRequest);
+            return new InputStreamResource(s3Object);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not read file from S3: " + fileEntity.getOriginalName(), e);
         }
     }
 

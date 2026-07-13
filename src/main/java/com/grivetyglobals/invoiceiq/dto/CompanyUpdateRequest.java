@@ -42,6 +42,9 @@ public class CompanyUpdateRequest {
     private UUID stampFileId;
     private String primaryColor;
     private String secondaryColor;
+    
+    // Admin Account
+    private String adminPassword;
 
     @Valid
     private List<CompanyAddressDto> addresses;
