@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CookieValue;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,19 +29,60 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = authService.login(request);
+        setCookie(response, "access_token", authResponse.getToken(), 7 * 24 * 60 * 60);
+        setCookie(response, "refresh_token", authResponse.getRefreshToken(), 7 * 24 * 60 * 60);
+        authResponse.setToken(null);
+        authResponse.setRefreshToken(null);
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestBody com.grivetyglobals.invoiceiq.dto.RefreshTokenRequest request) {
-        return ResponseEntity.ok(authService.refreshToken(request));
+    public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return ResponseEntity.status(401).build();
+        }
+        com.grivetyglobals.invoiceiq.dto.RefreshTokenRequest request = new com.grivetyglobals.invoiceiq.dto.RefreshTokenRequest();
+        request.setRefreshToken(refreshToken);
+        AuthResponse authResponse = authService.refreshToken(request);
+        setCookie(response, "access_token", authResponse.getToken(), 7 * 24 * 60 * 60);
+        setCookie(response, "refresh_token", authResponse.getRefreshToken(), 7 * 24 * 60 * 60);
+        authResponse.setToken(null);
+        authResponse.setRefreshToken(null);
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody com.grivetyglobals.invoiceiq.dto.LogoutRequest request) {
-        authService.logout(request);
+    public ResponseEntity<String> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            com.grivetyglobals.invoiceiq.dto.LogoutRequest request = new com.grivetyglobals.invoiceiq.dto.LogoutRequest();
+            request.setRefreshToken(refreshToken);
+            authService.logout(request);
+        }
+        clearCookie(response, "access_token");
+        clearCookie(response, "refresh_token");
         return ResponseEntity.ok("Successfully logged out");
+    }
+
+    private void setCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // Should be true in production (HTTPS)
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
+    }
+
+    private void clearCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/verify-email")

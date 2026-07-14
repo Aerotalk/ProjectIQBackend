@@ -206,19 +206,20 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
      * DEPARTMENT scope: user's department == target's department
      */
     private boolean checkDepartmentScope(User user, Object target, String requiredPermission) {
-        // For department scope, we need to check if the target belongs to the same department
-        // This requires the user to have a department association (via Employee)
-        if (target instanceof Employee employee) {
-            if (employee.getDepartment() == null) return false;
-            // We'd need to look up the current user's employee record to get their department
-            // For now, fall back to company scope as a reasonable approximation
-            return checkCompanyScope(user, target, requiredPermission);
+        Employee currentEmployee = employeeRepository.findByUserId(user.getId()).orElse(null);
+        if (currentEmployee == null || currentEmployee.getDepartment() == null) {
+            return false;
         }
-        if (target instanceof Department department) {
-            // A user can manage a department if it's in their company
-            return checkCompanyScope(user, department, requiredPermission);
+        UUID userDeptId = currentEmployee.getDepartment().getId();
+
+        if (target instanceof Employee targetEmployee) {
+            if (targetEmployee.getDepartment() == null) return false;
+            return userDeptId.equals(targetEmployee.getDepartment().getId());
         }
-        return checkCompanyScope(user, target, requiredPermission);
+        if (target instanceof Department targetDepartment) {
+            return userDeptId.equals(targetDepartment.getId());
+        }
+        return false;
     }
 
     /**

@@ -14,4 +14,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     org.springframework.data.domain.Page<User> findByOrganizationId(UUID organizationId, org.springframework.data.domain.Pageable pageable);
     org.springframework.data.domain.Page<User> findByCompanyId(UUID companyId, org.springframework.data.domain.Pageable pageable);
     Optional<User> findFirstByCompanyIdAndUserRoles_Role_RoleName(UUID companyId, String roleName);
+    boolean existsByUserRoles_Role_RoleName(String roleName);
 }

@@ -36,8 +36,8 @@ public class AuthService {
 
     @Transactional
     public void setupSuperAdmin(RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Super admin email already exists");
+        if (userRepository.existsByUserRoles_Role_RoleName("ROLE_SUPER_ADMIN")) {
+            throw new RuntimeException("A Super admin already exists in the system");
         }
 
         Role superAdminRole = roleRepository.findByRoleName("ROLE_SUPER_ADMIN")

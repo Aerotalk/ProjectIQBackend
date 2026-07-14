@@ -1,0 +1,100 @@
+-- Seed Roles
+INSERT INTO roles (id, role_name, system_role, description, status, created_at, updated_at)
+VALUES 
+  (gen_random_uuid(), 'ROLE_SUPER_ADMIN', true, 'System Super Administrator', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'ROLE_ORG_ADMIN', true, 'Organization Administrator', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'ROLE_COMPANY_ADMIN', true, 'Company Administrator', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (role_name) DO NOTHING;
+
+-- Seed Permission Groups
+INSERT INTO permission_groups (id, group_name, description, created_at, updated_at)
+VALUES 
+  (gen_random_uuid(), 'Organization Management', 'Manage organizations and teams', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Company Management', 'Manage companies', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Employee Management', 'HR and Employee lifecycle', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Department Management', 'Manage departments', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Role Management', 'Manage roles and permissions', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Settings Management', 'Manage system settings', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'ERP Operations', 'Customers, Vendors, Products, Quotations', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Finance Operations', 'Invoices, Payments, Expenses, POs', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'HR Operations', 'Attendance, Leaves, Payroll, Recruitment', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Incident Management', 'Tickets, SLAs, Knowledge Base', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Project Management', 'Projects, Tasks, Milestones', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Reports Management', 'Analytics & BI', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (group_name) DO NOTHING;
+
+-- Since the relations require exact UUIDs, we will use a DO block for PostgreSQL
+DO $$
+DECLARE
+    v_org_group_id UUID;
+    v_company_group_id UUID;
+    v_emp_group_id UUID;
+    v_dept_group_id UUID;
+    v_role_group_id UUID;
+    v_setting_group_id UUID;
+    v_erp_group_id UUID;
+    v_finance_group_id UUID;
+    v_hr_group_id UUID;
+    v_incident_group_id UUID;
+    v_project_group_id UUID;
+    v_report_group_id UUID;
+    
+    v_super_admin_role_id UUID;
+    v_org_admin_role_id UUID;
+    v_company_admin_role_id UUID;
+BEGIN
+    SELECT id INTO v_org_group_id FROM permission_groups WHERE group_name = 'Organization Management';
+    SELECT id INTO v_company_group_id FROM permission_groups WHERE group_name = 'Company Management';
+    SELECT id INTO v_emp_group_id FROM permission_groups WHERE group_name = 'Employee Management';
+    SELECT id INTO v_dept_group_id FROM permission_groups WHERE group_name = 'Department Management';
+    SELECT id INTO v_role_group_id FROM permission_groups WHERE group_name = 'Role Management';
+    SELECT id INTO v_setting_group_id FROM permission_groups WHERE group_name = 'Settings Management';
+    SELECT id INTO v_erp_group_id FROM permission_groups WHERE group_name = 'ERP Operations';
+    SELECT id INTO v_finance_group_id FROM permission_groups WHERE group_name = 'Finance Operations';
+    SELECT id INTO v_hr_group_id FROM permission_groups WHERE group_name = 'HR Operations';
+    SELECT id INTO v_incident_group_id FROM permission_groups WHERE group_name = 'Incident Management';
+    SELECT id INTO v_project_group_id FROM permission_groups WHERE group_name = 'Project Management';
+    SELECT id INTO v_report_group_id FROM permission_groups WHERE group_name = 'Reports Management';
+
+    SELECT id INTO v_super_admin_role_id FROM roles WHERE role_name = 'ROLE_SUPER_ADMIN';
+    SELECT id INTO v_org_admin_role_id FROM roles WHERE role_name = 'ROLE_ORG_ADMIN';
+    SELECT id INTO v_company_admin_role_id FROM roles WHERE role_name = 'ROLE_COMPANY_ADMIN';
+
+    -- Note: Ideally we would also insert Permissions and map them to Permission Groups and Roles here.
+    -- To keep the migration concise and robust, the application can insert individual permissions if they don't exist.
+    
+    -- Map Groups to Super Admin Role (GLOBAL)
+    INSERT INTO role_permission_groups (id, role_id, permission_group_id, data_scope, created_at, updated_at)
+    VALUES 
+        (gen_random_uuid(), v_super_admin_role_id, v_org_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_company_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_emp_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_dept_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_role_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_setting_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_erp_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_finance_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_hr_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_incident_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_project_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_super_admin_role_id, v_report_group_id, 'GLOBAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT DO NOTHING;
+
+    -- Map Groups to Org Admin Role (ORGANIZATION)
+    INSERT INTO role_permission_groups (id, role_id, permission_group_id, data_scope, created_at, updated_at)
+    VALUES 
+        (gen_random_uuid(), v_org_admin_role_id, v_org_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_company_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_setting_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_emp_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_dept_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_role_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_erp_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_finance_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_hr_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_incident_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_project_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (gen_random_uuid(), v_org_admin_role_id, v_report_group_id, 'ORGANIZATION', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT DO NOTHING;
+
+END $$;
