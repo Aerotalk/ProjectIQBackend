@@ -17,7 +17,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost:5173,https://bumblecrm4.vercel.app}")
+    @Value("${cors.allowed-origins:http://localhost:5173,https://bumblecrm4.vercel.app,https://*.vercel.app}")
     private String allowedOrigins;
 
     @Bean
@@ -25,7 +25,7 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        config.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         source.registerCorsConfiguration("/**", config);
