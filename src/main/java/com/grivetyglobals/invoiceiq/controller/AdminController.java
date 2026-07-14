@@ -48,7 +48,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateOrganization(id, request));
     }
 
-    @PreAuthorize("hasAuthority('org.create')")
+    @PreAuthorize("hasAuthority('company.create')")
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(@Valid @RequestBody CompanyCreateRequest request) {
         return ResponseEntity.ok(adminService.createCompany(request));
@@ -72,13 +72,13 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateUser(userId, request));
     }
 
-    @PreAuthorize("hasAuthority('org.view')")
+    @PreAuthorize("hasAuthority('company.view')")
     @GetMapping("/companies")
     public ResponseEntity<Page<Company>> getAllCompanies(@RequestParam(required = false) UUID organizationId, Pageable pageable) {
         return ResponseEntity.ok(adminService.getAllCompanies(organizationId, pageable));
     }
 
-    @PreAuthorize("hasAuthority('org.view')")
+    @PreAuthorize("hasAuthority('company.view')")
     @GetMapping("/companies/{id}")
     public ResponseEntity<Company> getCompanyById(@PathVariable UUID id, @RequestParam(required = false) UUID organizationId) {
         return ResponseEntity.ok(adminService.getCompanyById(id, organizationId));
@@ -99,19 +99,19 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateCompany(company.getId(), request, null));
     }
 
-    @PreAuthorize("hasAuthority('org.edit')")
+    @PreAuthorize("hasAuthority('company.edit')")
     @PutMapping("/companies/{id}")
     public ResponseEntity<Company> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyUpdateRequest request, @RequestParam(required = false) UUID organizationId) {
         return ResponseEntity.ok(adminService.updateCompany(id, request, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('org.edit')")
+    @PreAuthorize("hasAuthority('company.edit')")
     @PatchMapping("/companies/{id}/status")
     public ResponseEntity<Company> updateCompanyStatus(@PathVariable UUID id, @RequestParam String status, @RequestParam(required = false) UUID organizationId) {
         return ResponseEntity.ok(adminService.updateCompanyStatus(id, status, organizationId));
     }
 
-    @PreAuthorize("hasAuthority('org.delete')")
+    @PreAuthorize("hasAuthority('company.delete')")
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable UUID id, @RequestParam(required = false) UUID organizationId) {
         adminService.deleteCompany(id, organizationId);

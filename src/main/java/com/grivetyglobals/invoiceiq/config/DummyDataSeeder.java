@@ -17,6 +17,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.grivetyglobals.invoiceiq.entity.project.Project;
+import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
+import com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrder;
+import com.grivetyglobals.invoiceiq.entity.finance.Expense;
+import com.grivetyglobals.invoiceiq.entity.finance.Challan;
+import com.grivetyglobals.invoiceiq.repository.project.ProjectRepository;
+import com.grivetyglobals.invoiceiq.repository.sales.VendorRepository;
+import com.grivetyglobals.invoiceiq.repository.finance.PurchaseOrderRepository;
+import com.grivetyglobals.invoiceiq.repository.finance.ExpenseRepository;
+import com.grivetyglobals.invoiceiq.repository.finance.ChallanRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
@@ -28,12 +42,21 @@ public class DummyDataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProjectRepository projectRepository;
+    private final VendorRepository vendorRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final ExpenseRepository expenseRepository;
+    private final ChallanRepository challanRepository;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         if (organizationRepository.count() > 0) {
-            log.info("Dummy data already exists. Skipping dummy seeder.");
+            log.info("Organizations exist. Checking if finance data needs seeding...");
+            if (projectRepository.count() == 0 && companyRepository.count() > 0) {
+                Company company1 = companyRepository.findAll().get(0);
+                seedFinanceData(company1);
+            }
             return;
         }
 
@@ -122,6 +145,66 @@ public class DummyDataSeeder implements CommandLineRunner {
         company2Admin.getUserRoles().add(UserRole.builder().user(company2Admin).role(companyAdminRole).build());
         userRepository.save(company2Admin);
 
+        seedFinanceData(company1);
+
         log.info("Dummy data seeding complete!");
+    }
+
+    private void seedFinanceData(Company company) {
+        log.info("Seeding Finance Data...");
+        
+        // 4. Create Vendor
+        Vendor vendor = new Vendor();
+        vendor.setCompany(company);
+        vendor.setVendorNo("VEND-001");
+        vendor.setCompanyName("Tech Solutions Inc");
+        vendor.setPrimaryContactPerson("John Doe");
+        vendor.setEmail("john@techsolutions.com");
+        vendor.setPhone("1234567890");
+        vendor.setStatus("ACTIVE");
+        vendor = vendorRepository.save(vendor);
+
+        // 5. Create Project
+        Project project = new Project();
+        project.setCompany(company);
+        project.setProjectCode("PRJ-001");
+        project.setProjectName("Website Redesign");
+        project.setDescription("Redesigning the corporate website");
+        project.setStatus("IN_PROGRESS");
+        project = projectRepository.save(project);
+
+        // 6. Create Purchase Order
+        PurchaseOrder po = new PurchaseOrder();
+        po.setCompany(company);
+        po.setVendor(vendor);
+        po.setProject(project);
+        po.setPoNumber("PO-2025-001");
+        po.setPoDate(LocalDate.now());
+        po.setAmount(new BigDecimal("15000.00"));
+        po.setRemarks("Initial setup fee");
+        po.setStatus("Approved");
+        purchaseOrderRepository.save(po);
+
+        // 7. Create Expense
+        Expense expense = new Expense();
+        expense.setCompany(company);
+        expense.setProject(project);
+        expense.setExpenseType("Software License");
+        expense.setExpenseDate(LocalDate.now());
+        expense.setAmount(new BigDecimal("500.00"));
+        expense.setRemarks("Figma license");
+        expense.setStatus("Approved");
+        expenseRepository.save(expense);
+
+        // 8. Create Challan
+        Challan challan = new Challan();
+        challan.setCompany(company);
+        challan.setVendor(vendor);
+        challan.setProject(project);
+        challan.setChallanNumber("CH-1001");
+        challan.setChallanDate(LocalDate.now());
+        challan.setRemarks("Delivered 2 laptops");
+        challan.setStatus("Received");
+        challanRepository.save(challan);
     }
 }

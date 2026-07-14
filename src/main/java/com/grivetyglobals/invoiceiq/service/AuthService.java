@@ -178,6 +178,8 @@ public class AuthService {
                 .map(userRole -> userRole.getRole().getRoleName())
                 .collect(java.util.stream.Collectors.toList());
 
+        java.util.Set<String> effectivePermissions = permissionService.getEffectivePermissions(user);
+
         return AuthResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken.getToken())
@@ -185,6 +187,9 @@ public class AuthService {
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
+                .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
+                .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
+                .effectivePermissions(effectivePermissions)
                 .build();
     }
 
@@ -213,5 +218,34 @@ public class AuthService {
                 .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
                 .effectivePermissions(effectivePermissions)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<java.util.Map<String, Object>> getMyCompanies() {
+        User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Collect distinct companies from the user's role assignments
+        java.util.Map<java.util.UUID, com.grivetyglobals.invoiceiq.entity.Company> companyMap = new java.util.LinkedHashMap<>();
+        for (com.grivetyglobals.invoiceiq.entity.UserRole ur : user.getUserRoles()) {
+            if (ur.getCompany() != null) {
+                companyMap.putIfAbsent(ur.getCompany().getId(), ur.getCompany());
+            }
+        }
+
+        // If the user has a direct company association (e.g. auto-created company admin), include it too
+        if (user.getCompany() != null) {
+            companyMap.putIfAbsent(user.getCompany().getId(), user.getCompany());
+        }
+
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (com.grivetyglobals.invoiceiq.entity.Company c : companyMap.values()) {
+            java.util.Map<String, Object> entry = new java.util.LinkedHashMap<>();
+            entry.put("id", c.getId());
+            entry.put("companyName", c.getCompanyName());
+            result.add(entry);
+        }
+        return result;
     }
 }

@@ -139,6 +139,7 @@ public class AdminService {
                     .emailVerified(true)
                     .status("ACTIVE")
                     .organization(organization)
+                    .company(company)
                     .build();
 
             Role companyAdminRole = roleRepository.findByRoleName("ROLE_COMPANY_ADMIN")
@@ -148,12 +149,16 @@ public class AdminService {
                             .description("Company Administrator")
                             .status("ACTIVE")
                             .build()));
+            companyAdmin.getUserRoles().add(UserRole.builder().user(companyAdmin).role(companyAdminRole).build());
 
-            com.grivetyglobals.invoiceiq.entity.UserRole companyAdminUserRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
-                    .user(companyAdmin)
-                    .role(companyAdminRole)
-                    .build();
-            companyAdmin.getUserRoles().add(companyAdminUserRole);
+            Role employeeRole = roleRepository.findByRoleName("ROLE_EMPLOYEE")
+                    .orElseGet(() -> roleRepository.save(Role.builder()
+                            .roleName("ROLE_EMPLOYEE")
+                            .systemRole(true)
+                            .description("Employee")
+                            .status("ACTIVE")
+                            .build()));
+            companyAdmin.getUserRoles().add(UserRole.builder().user(companyAdmin).role(employeeRole).build());
 
             userRepository.save(companyAdmin);
         }
