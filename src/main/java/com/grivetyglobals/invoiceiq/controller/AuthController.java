@@ -58,4 +58,14 @@ public class AuthController {
         authService.resetPassword(request);
         return ResponseEntity.ok("Password successfully reset. You can now log in with your new password.");
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<com.grivetyglobals.invoiceiq.dto.MeResponse> getMe() {
+        return ResponseEntity.ok(authService.getMe());
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/my-companies")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getMyCompanies() {
+        return ResponseEntity.ok(authService.getMyCompanies());
+    }
 }

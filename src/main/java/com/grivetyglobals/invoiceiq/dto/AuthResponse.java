@@ -16,4 +16,7 @@ public class AuthResponse {
     private java.util.List<String> roles;
     private java.util.UUID organizationId;
     private String organizationName;
+    private java.util.UUID companyId;
+    private String companyName;
+    private java.util.Set<String> effectivePermissions;
 }

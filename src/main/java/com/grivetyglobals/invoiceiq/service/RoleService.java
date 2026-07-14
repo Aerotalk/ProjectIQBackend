@@ -24,6 +24,7 @@ public class RoleService {
     private final EmployeeRepository employeeRepository;
     private final com.grivetyglobals.invoiceiq.repository.CompanyRepository companyRepository;
     private final org.springframework.cache.CacheManager cacheManager;
+    private final PermissionService permissionService;
 
     @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
@@ -45,11 +46,61 @@ public class RoleService {
         return saved;
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "rolesList")
     public List<Role> getAllRoles() {
+        User currentUser = SecurityUtils.getCurrentUser();
+        currentUser = userRepository.findById(currentUser.getId()).orElse(currentUser);
+        java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
+
+        // Super admins and org admins can see all roles (except ROLE_SUPER_ADMIN for non-super-admins)
+        boolean isSuperAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_SUPER_ADMIN".equals(ur.getRole().getRoleName()));
+        boolean isOrgAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
+
         return roleRepository.findAll().stream()
                 .filter(role -> !"ROLE_SUPER_ADMIN".equals(role.getRoleName()))
+                .filter(role -> {
+                    // Super admins and org admins can see all non-super-admin roles
+                    if (isSuperAdmin || isOrgAdmin) return true;
+
+                    // For other users, only show roles whose permissions are a subset of theirs
+                    java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
+                    return myPermissions.containsAll(rolePermKeys);
+                })
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Computes the effective permission keys for a given Role by collecting:
+     * 1. Direct RolePermission entries
+     * 2. Permissions from RolePermissionGroups
+     */
+    private java.util.Set<String> getEffectivePermissionKeysForRole(Role role) {
+        java.util.Set<String> keys = new java.util.HashSet<>();
+
+        // Direct permissions
+        if (role.getRolePermissions() != null) {
+            for (com.grivetyglobals.invoiceiq.entity.RolePermission rp : role.getRolePermissions()) {
+                if (rp.getPermission() != null) {
+                    keys.add(rp.getPermission().getPermissionKey());
+                }
+            }
+        }
+
+        // Permissions via permission groups
+        if (role.getRolePermissionGroups() != null) {
+            for (com.grivetyglobals.invoiceiq.entity.RolePermissionGroup rpg : role.getRolePermissionGroups()) {
+                if (rpg.getPermissionGroup() != null && rpg.getPermissionGroup().getPermissions() != null) {
+                    for (com.grivetyglobals.invoiceiq.entity.PermissionGroupMapping m : rpg.getPermissionGroup().getPermissions()) {
+                        if (m.getPermission() != null) {
+                            keys.add(m.getPermission().getPermissionKey());
+                        }
+                    }
+                }
+            }
+        }
+
+        return keys;
     }
 
     public Role getRoleById(UUID id) {
@@ -110,6 +161,23 @@ public class RoleService {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         
         Role role = getRoleById(roleId);
+        
+        // Privilege escalation check
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("Current user not found"));
+        boolean isSuperAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_SUPER_ADMIN".equals(ur.getRole().getRoleName()));
+        boolean isOrgAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
+        
+        if (!isSuperAdmin && !isOrgAdmin) {
+            java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
+            java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
+            if (!myPermissions.containsAll(rolePermKeys)) {
+                throw new RuntimeException("Security Violation: Cannot assign role '" + role.getRoleName() 
+                    + "' because it contains permissions you do not have.");
+            }
+        }
+        
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
@@ -127,6 +195,25 @@ public class RoleService {
     public void assignRolesToEmployee(UUID employeeId, UUID companyId, List<UUID> roleIds) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        
+        // Privilege escalation check: ensure the assigner can't grant roles with more permissions than they have
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("Current user not found"));
+        boolean isSuperAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_SUPER_ADMIN".equals(ur.getRole().getRoleName()));
+        boolean isOrgAdmin = currentUser.getUserRoles().stream()
+                .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
+        
+        if (!isSuperAdmin && !isOrgAdmin) {
+            java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
+            for (UUID roleId : roleIds) {
+                Role role = getRoleById(roleId);
+                java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
+                if (!myPermissions.containsAll(rolePermKeys)) {
+                    throw new RuntimeException("Security Violation: Cannot assign role '" + role.getRoleName() 
+                        + "' because it contains permissions you do not have.");
+                }
+            }
+        }
         
         com.grivetyglobals.invoiceiq.entity.Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
