@@ -47,8 +47,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
-        log.error("💥 [RUNTIME_ERROR] An unexpected issue occurred during execution.");
-        log.error("🔍 [ISSUE_DETAILS] What happened: {}", ex.getMessage());
+        log.error("💥 [RUNTIME_ERROR] An unexpected issue occurred during execution.", ex);
         
         Map<String, String> response = new HashMap<>();
         response.put("error", ex.getMessage());
