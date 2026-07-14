@@ -1,27 +1,37 @@
 -- Seed Roles
 INSERT INTO roles (role_id, role_name, system_role, description, status)
-VALUES 
-  (gen_random_uuid(), 'ROLE_SUPER_ADMIN', true, 'System Super Administrator', 'ACTIVE'),
-  (gen_random_uuid(), 'ROLE_ORG_ADMIN', true, 'Organization Administrator', 'ACTIVE'),
-  (gen_random_uuid(), 'ROLE_COMPANY_ADMIN', true, 'Company Administrator', 'ACTIVE')
-ON CONFLICT (role_name) DO NOTHING;
+SELECT gen_random_uuid(), v.role_name, v.system_role, v.description, v.status
+FROM (
+  VALUES 
+    ('ROLE_SUPER_ADMIN', true, 'System Super Administrator', 'ACTIVE'),
+    ('ROLE_ORG_ADMIN', true, 'Organization Administrator', 'ACTIVE'),
+    ('ROLE_COMPANY_ADMIN', true, 'Company Administrator', 'ACTIVE')
+) AS v(role_name, system_role, description, status)
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles r WHERE r.role_name = v.role_name
+);
 
 -- Seed Permission Groups
 INSERT INTO permission_groups (permission_group_id, group_name, description)
-VALUES 
-  (gen_random_uuid(), 'Organization Management', 'Manage organizations and teams'),
-  (gen_random_uuid(), 'Company Management', 'Manage companies'),
-  (gen_random_uuid(), 'Employee Management', 'HR and Employee lifecycle'),
-  (gen_random_uuid(), 'Department Management', 'Manage departments'),
-  (gen_random_uuid(), 'Role Management', 'Manage roles and permissions'),
-  (gen_random_uuid(), 'Settings Management', 'Manage system settings'),
-  (gen_random_uuid(), 'ERP Operations', 'Customers, Vendors, Products, Quotations'),
-  (gen_random_uuid(), 'Finance Operations', 'Invoices, Payments, Expenses, POs'),
-  (gen_random_uuid(), 'HR Operations', 'Attendance, Leaves, Payroll, Recruitment'),
-  (gen_random_uuid(), 'Incident Management', 'Tickets, SLAs, Knowledge Base'),
-  (gen_random_uuid(), 'Project Management', 'Projects, Tasks, Milestones'),
-  (gen_random_uuid(), 'Reports Management', 'Analytics & BI')
-ON CONFLICT (group_name) DO NOTHING;
+SELECT gen_random_uuid(), v.group_name, v.description
+FROM (
+  VALUES 
+    ('Organization Management', 'Manage organizations and teams'),
+    ('Company Management', 'Manage companies'),
+    ('Employee Management', 'HR and Employee lifecycle'),
+    ('Department Management', 'Manage departments'),
+    ('Role Management', 'Manage roles and permissions'),
+    ('Settings Management', 'Manage system settings'),
+    ('ERP Operations', 'Customers, Vendors, Products, Quotations'),
+    ('Finance Operations', 'Invoices, Payments, Expenses, POs'),
+    ('HR Operations', 'Attendance, Leaves, Payroll, Recruitment'),
+    ('Incident Management', 'Tickets, SLAs, Knowledge Base'),
+    ('Project Management', 'Projects, Tasks, Milestones'),
+    ('Reports Management', 'Analytics & BI')
+) AS v(group_name, description)
+WHERE NOT EXISTS (
+  SELECT 1 FROM permission_groups pg WHERE pg.group_name = v.group_name
+);
 
 -- Since the relations require exact UUIDs, we will use a DO block for PostgreSQL
 DO $$
@@ -63,38 +73,36 @@ BEGIN
     -- Note: Ideally we would also insert Permissions and map them to Permission Groups and Roles here.
     -- To keep the migration concise and robust, the application can insert individual permissions if they don't exist.
     
-    -- Map Groups to Super Admin Role (GLOBAL)
     INSERT INTO role_permission_groups (role_group_id, role_id, permission_group_id, data_scope)
-    VALUES 
-        (gen_random_uuid(), v_super_admin_role_id, v_org_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_company_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_emp_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_dept_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_role_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_setting_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_erp_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_finance_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_hr_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_incident_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_project_group_id, 'GLOBAL'),
-        (gen_random_uuid(), v_super_admin_role_id, v_report_group_id, 'GLOBAL')
-    ON CONFLICT DO NOTHING;
+    SELECT gen_random_uuid(), v_super_admin_role_id, v.pg_id, 'GLOBAL'
+    FROM (
+        VALUES 
+            (v_org_group_id), (v_company_group_id), (v_emp_group_id),
+            (v_dept_group_id), (v_role_group_id), (v_setting_group_id),
+            (v_erp_group_id), (v_finance_group_id), (v_hr_group_id),
+            (v_incident_group_id), (v_project_group_id), (v_report_group_id)
+    ) AS v(pg_id)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM role_permission_groups rpg 
+        WHERE rpg.role_id = v_super_admin_role_id 
+        AND rpg.permission_group_id = v.pg_id 
+        AND rpg.data_scope = 'GLOBAL'
+    );
 
-    -- Map Groups to Org Admin Role (ORGANIZATION)
     INSERT INTO role_permission_groups (role_group_id, role_id, permission_group_id, data_scope)
-    VALUES 
-        (gen_random_uuid(), v_org_admin_role_id, v_org_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_company_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_setting_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_emp_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_dept_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_role_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_erp_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_finance_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_hr_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_incident_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_project_group_id, 'ORGANIZATION'),
-        (gen_random_uuid(), v_org_admin_role_id, v_report_group_id, 'ORGANIZATION')
-    ON CONFLICT DO NOTHING;
+    SELECT gen_random_uuid(), v_org_admin_role_id, v.pg_id, 'ORGANIZATION'
+    FROM (
+        VALUES 
+            (v_org_group_id), (v_company_group_id), (v_setting_group_id),
+            (v_emp_group_id), (v_dept_group_id), (v_role_group_id),
+            (v_erp_group_id), (v_finance_group_id), (v_hr_group_id),
+            (v_incident_group_id), (v_project_group_id), (v_report_group_id)
+    ) AS v(pg_id)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM role_permission_groups rpg 
+        WHERE rpg.role_id = v_org_admin_role_id 
+        AND rpg.permission_group_id = v.pg_id 
+        AND rpg.data_scope = 'ORGANIZATION'
+    );
 
 END $$;
