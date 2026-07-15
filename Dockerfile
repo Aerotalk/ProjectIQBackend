@@ -8,6 +8,9 @@ COPY gradle gradle
 COPY gradlew ./
 COPY gradle.lockfile ./
 
+# Ensure the gradlew script is executable (solves Windows to Linux permission issues)
+RUN chmod +x gradlew
+
 # Resolve dependencies first to cache them in a separate Docker layer
 RUN ./gradlew dependencies --no-daemon
 
