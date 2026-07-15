@@ -2,6 +2,7 @@ package com.grivetyglobals.invoiceiq.controller;
 
 import com.grivetyglobals.invoiceiq.dto.RoleRequest;
 import com.grivetyglobals.invoiceiq.entity.Role;
+import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import com.grivetyglobals.invoiceiq.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -74,10 +75,10 @@ public class RoleController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/employees/{employeeId}/companies/{companyId}")
+    @GetMapping("/employees/{employeeId}/roles")
     public ResponseEntity<List<Role>> getAssignedRolesForEmployee(
             @PathVariable UUID employeeId,
-            @PathVariable UUID companyId) {
+            @RequestParam(required = false) UUID companyId) {
         return ResponseEntity.ok(roleService.getAssignedRolesForEmployee(employeeId, companyId));
     }
 

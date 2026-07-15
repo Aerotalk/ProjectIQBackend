@@ -18,7 +18,7 @@ public class DashboardController {
 
     @PreAuthorize("hasAuthority('dashboard.view')")
     @GetMapping("/metrics")
-    public ResponseEntity<DashboardMetricsResponse> getDashboardMetrics(@RequestParam UUID organizationId) {
-        return ResponseEntity.ok(dashboardService.getDashboardMetrics(organizationId));
+    public ResponseEntity<DashboardMetricsResponse> getDashboardMetrics() {
+        return ResponseEntity.ok(dashboardService.getDashboardMetrics());
     }
 }

@@ -257,6 +257,7 @@ public class RoleService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<Role> getAssignedRolesForEmployee(UUID employeeId, UUID companyId) {
         com.grivetyglobals.invoiceiq.entity.Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -265,9 +266,17 @@ public class RoleService {
             return java.util.Collections.emptyList();
         }
         
-        return user.getUserRoles().stream()
-                .filter(ur -> ur.getCompany() != null && ur.getCompany().getId().equals(companyId))
-                .map(com.grivetyglobals.invoiceiq.entity.UserRole::getRole)
-                .collect(java.util.stream.Collectors.toList());
+        if (companyId != null) {
+            return user.getUserRoles().stream()
+                    .filter(ur -> ur.getCompany() != null && ur.getCompany().getId().equals(companyId))
+                    .map(com.grivetyglobals.invoiceiq.entity.UserRole::getRole)
+                    .collect(java.util.stream.Collectors.toList());
+        } else {
+            // Org-level roles: those assigned without a company
+            return user.getUserRoles().stream()
+                    .filter(ur -> ur.getCompany() == null)
+                    .map(com.grivetyglobals.invoiceiq.entity.UserRole::getRole)
+                    .collect(java.util.stream.Collectors.toList());
+        }
     }
 }

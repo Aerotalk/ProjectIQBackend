@@ -23,7 +23,7 @@ public class ApplicationRegistryService {
     private final AuditService auditService;
 
     @Transactional
-    public Application createApplication(ApplicationRequest request, UUID userId, UUID organizationId) {
+    public Application createApplication(ApplicationRequest request) {
         if (applicationRepository.existsByApplicationName(request.getApplicationName())) {
             throw new RuntimeException("Application with name " + request.getApplicationName() + " already exists.");
         }
@@ -36,6 +36,9 @@ public class ApplicationRegistryService {
                 .status(request.getStatus())
                 .build();
         Application saved = applicationRepository.save(app);
+        
+        UUID userId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser().getId();
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         auditService.logActivity("APPLICATION_CREATED", "Created application: " + request.getApplicationName(), saved.getId(), "Application", userId, organizationId);
         return saved;
     }
@@ -45,7 +48,7 @@ public class ApplicationRegistryService {
     }
 
     @Transactional
-    public void assignApplicationsToEmployee(UUID employeeId, List<UUID> applicationIds, UUID userId, UUID organizationId) {
+    public void assignApplicationsToEmployee(UUID employeeId, List<UUID> applicationIds) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
@@ -68,11 +71,14 @@ public class ApplicationRegistryService {
                     .build());
         }
         
+        UUID userId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser().getId();
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         auditService.logActivity("EMPLOYEE_APPLICATIONS_UPDATED", "Updated application access for employee " + employee.getFirstName(), employeeId, "Employee", userId, organizationId);
     }
 
     @Transactional
-    public void assignApplicationsToCompany(UUID companyId, List<UUID> applicationIds, UUID userId, UUID organizationId) {
+    public void assignApplicationsToCompany(UUID companyId, List<UUID> applicationIds) {
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         com.grivetyglobals.invoiceiq.entity.Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
         
@@ -94,6 +100,7 @@ public class ApplicationRegistryService {
                     .build());
         }
 
+        UUID userId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser().getId();
         auditService.logActivity("COMPANY_APPLICATIONS_UPDATED", "Updated module assignments for company " + company.getCompanyName(), companyId, "Company", userId, organizationId);
     }
 }

@@ -32,6 +32,7 @@ public class Designation {
     @Column(name = "designation_id", updatable = false, nullable = false)
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;

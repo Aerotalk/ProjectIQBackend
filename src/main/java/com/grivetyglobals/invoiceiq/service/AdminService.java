@@ -102,7 +102,12 @@ public class AdminService {
     @org.springframework.cache.annotation.CacheEvict(value = "companiesList", allEntries = true)
     @Transactional
     public Company createCompany(CompanyCreateRequest request) {
-        Organization organization = organizationRepository.findById(request.getOrganizationId())
+        java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            orgId = request.getOrganizationId();
+        }
+        
+        Organization organization = organizationRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
         Company company = Company.builder()
@@ -205,7 +210,7 @@ public class AdminService {
     @Transactional
     public User createUser(UserCreateRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("User email already exists");
+            throw new com.grivetyglobals.invoiceiq.exception.BusinessValidationException("An account with this email address already exists in the system.");
         }
 
         java.util.UUID currentOrgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
@@ -239,7 +244,7 @@ public class AdminService {
                 .mobile(request.getMobile())
                 .build();
 
-        if (request.getRoleIds() != null) {
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
             for (UUID roleId : request.getRoleIds()) {
                 Role role = roleRepository.findById(roleId).orElseThrow(() -> new RuntimeException("Role not found"));
                 com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
@@ -248,6 +253,13 @@ public class AdminService {
                         .build();
                 user.getUserRoles().add(userRole);
             }
+        } else if (request.getRole() != null) {
+            Role role = roleRepository.findByRoleName(request.getRole()).orElseThrow(() -> new RuntimeException("Role not found: " + request.getRole()));
+            com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                    .user(user)
+                    .role(role)
+                    .build();
+            user.getUserRoles().add(userRole);
         }
         return userRepository.save(user);
     }
@@ -300,24 +312,37 @@ public class AdminService {
         
         return userRepository.save(user);
     }
-    @org.springframework.cache.annotation.Cacheable(value = "companiesList", key = "T(java.util.Objects).hash(#optionalOrgId, #pageable.pageNumber, #pageable.pageSize, #pageable.sort.toString())")
+    @org.springframework.cache.annotation.Cacheable(value = "companiesList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Company> getAllCompanies(java.util.UUID optionalOrgId, org.springframework.data.domain.Pageable pageable) {
-        java.util.UUID organizationId = optionalOrgId != null ? optionalOrgId : com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+    public org.springframework.data.domain.Page<Company> getAllCompanies(org.springframework.data.domain.Pageable pageable) {
+        java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+        org.springframework.data.domain.Page<Company> companies;
         if (organizationId != null) {
-            return companyRepository.findByOrganizationId(organizationId, pageable);
+            companies = companyRepository.findByOrganizationId(organizationId, pageable);
+        } else {
+            companies = companyRepository.findAll(pageable);
         }
-        return companyRepository.findAll(pageable);
+        
+        companies.forEach(company -> {
+            if (company.getAddresses() != null) company.getAddresses().size();
+            if (company.getBankAccounts() != null) company.getBankAccounts().size();
+        });
+        
+        return companies;
     }
 
-    public Company getCompanyById(java.util.UUID companyId, java.util.UUID optionalOrgId) {
-        java.util.UUID organizationId = optionalOrgId != null ? optionalOrgId : com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Company getCompanyById(java.util.UUID companyId) {
+        java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
         
         if (organizationId != null && !company.getOrganization().getId().equals(organizationId)) {
             throw new RuntimeException("Access Denied: Company belongs to another organization");
         }
+        
+        if (company.getAddresses() != null) company.getAddresses().size();
+        if (company.getBankAccounts() != null) company.getBankAccounts().size();
         
         return company;
     }
@@ -332,8 +357,8 @@ public class AdminService {
     }
 
     @Transactional
-    public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request, java.util.UUID optionalOrgId) {
-        Company company = getCompanyById(companyId, optionalOrgId);
+    public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request) {
+        Company company = getCompanyById(companyId);
 
         company.setCompanyName(request.getCompanyName());
         company.setLegalName(request.getLegalName());
@@ -407,14 +432,14 @@ public class AdminService {
     }
 
     @Transactional
-    public void deleteCompany(java.util.UUID companyId, java.util.UUID optionalOrgId) {
-        Company company = getCompanyById(companyId, optionalOrgId);
+    public void deleteCompany(java.util.UUID companyId) {
+        Company company = getCompanyById(companyId);
         companyRepository.delete(company);
     }
 
     @Transactional
-    public Company updateCompanyStatus(java.util.UUID companyId, String status, java.util.UUID optionalOrgId) {
-        Company company = getCompanyById(companyId, optionalOrgId);
+    public Company updateCompanyStatus(java.util.UUID companyId, String status) {
+        Company company = getCompanyById(companyId);
         company.setStatus(status);
         return companyRepository.save(company);
     }

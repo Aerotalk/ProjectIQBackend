@@ -21,10 +21,9 @@ public class AuditController {
     @PreAuthorize("hasAuthority('org.view')")
     @GetMapping
     public ResponseEntity<Page<AuditLog>> getPaginatedActivity(
-            @RequestParam UUID organizationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
-        return ResponseEntity.ok(auditService.getPaginatedActivity(organizationId, PageRequest.of(page, size)));
+        return ResponseEntity.ok(auditService.getPaginatedActivity(PageRequest.of(page, size)));
     }
 }

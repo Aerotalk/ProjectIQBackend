@@ -17,7 +17,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompanyCreateRequest {
-    @NotNull(message = "Organization ID is required")
     private UUID organizationId;
     
     @NotBlank(message = "Company Code is required")
