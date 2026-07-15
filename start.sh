@@ -36,7 +36,7 @@ java -jar "$FOUND_JAR" &
 APP_PID=$!
 
 echo "⏳ Performing startup health check..."
-MAX_ATTEMPTS=30
+MAX_ATTEMPTS=100
 ATTEMPT=1
 HEALTHY=false
 
