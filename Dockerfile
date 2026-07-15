@@ -34,9 +34,6 @@ RUN chmod +x start.sh
 
 # Environment variables for our start script
 ENV JAR_PATH="app.jar"
-ENV PORT=8080
-
-EXPOSE 8080
 
 # Use start.sh as the entrypoint so it enforces the health check loop
 CMD ["bash", "start.sh"]
