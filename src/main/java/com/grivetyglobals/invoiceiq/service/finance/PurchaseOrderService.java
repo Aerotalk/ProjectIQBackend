@@ -97,11 +97,33 @@ public class PurchaseOrderService {
         if (po.getLineItems() == null) {
             po.setLineItems(new java.util.ArrayList<>());
         }
-        po.getLineItems().clear();
-        if (dto.getLineItems() != null) {
+        
+        if (dto.getLineItems() == null || dto.getLineItems().isEmpty()) {
+            po.getLineItems().clear();
+        } else {
+            java.util.Set<UUID> incomingIds = dto.getLineItems().stream()
+                    .map(PurchaseOrderLineItemDto::getId)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            po.getLineItems().removeIf(item -> item.getId() != null && !incomingIds.contains(item.getId()));
+
+            java.util.Map<UUID, PurchaseOrderLineItem> existingMap = po.getLineItems().stream()
+                    .filter(i -> i.getId() != null)
+                    .collect(Collectors.toMap(PurchaseOrderLineItem::getId, i -> i));
+
             for (PurchaseOrderLineItemDto itemDto : dto.getLineItems()) {
-                PurchaseOrderLineItem item = new PurchaseOrderLineItem();
-                item.setPurchaseOrder(po);
+                PurchaseOrderLineItem item = null;
+                if (itemDto.getId() != null) {
+                    item = existingMap.get(itemDto.getId());
+                    if (item == null) {
+                        throw new ResourceNotFoundException("Line item not found or does not belong to this purchase order: " + itemDto.getId());
+                    }
+                } else {
+                    item = new PurchaseOrderLineItem();
+                    item.setPurchaseOrder(po);
+                    po.getLineItems().add(item);
+                }
                 item.setProductId(itemDto.getProductId());
                 item.setItemName(itemDto.getItemName());
                 item.setDescription(itemDto.getDescription());
@@ -113,7 +135,6 @@ public class PurchaseOrderService {
                 item.setGstRate(itemDto.getGstRate());
                 item.setGstAmount(itemDto.getGstAmount());
                 item.setTotalAmount(itemDto.getTotalAmount());
-                po.getLineItems().add(item);
             }
         }
     }

@@ -89,6 +89,9 @@ public class ChallanService {
         if (dto.getLinkedVendorPoId() != null) {
             com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrder po = purchaseOrderRepository.findById(dto.getLinkedVendorPoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Purchase Order not found"));
+            if (!po.getCompany().getId().equals(challan.getCompany().getId())) {
+                throw new ResourceNotFoundException("Purchase Order not found");
+            }
             challan.setLinkedVendorPo(po);
         } else {
             challan.setLinkedVendorPo(null);
@@ -106,15 +109,36 @@ public class ChallanService {
         if (challan.getLineItems() == null) {
             challan.setLineItems(new java.util.ArrayList<>());
         }
-        challan.getLineItems().clear();
-        if (dto.getLineItems() != null) {
+        
+        if (dto.getLineItems() == null || dto.getLineItems().isEmpty()) {
+            challan.getLineItems().clear();
+        } else {
+            java.util.Set<UUID> incomingIds = dto.getLineItems().stream()
+                    .map(ChallanLineItemDto::getId)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            challan.getLineItems().removeIf(item -> item.getId() != null && !incomingIds.contains(item.getId()));
+
+            java.util.Map<UUID, ChallanLineItem> existingMap = challan.getLineItems().stream()
+                    .filter(i -> i.getId() != null)
+                    .collect(Collectors.toMap(ChallanLineItem::getId, i -> i));
+
             for (ChallanLineItemDto itemDto : dto.getLineItems()) {
-                ChallanLineItem item = new ChallanLineItem();
-                item.setChallan(challan);
+                ChallanLineItem item = null;
+                if (itemDto.getId() != null) {
+                    item = existingMap.get(itemDto.getId());
+                    if (item == null) {
+                        throw new ResourceNotFoundException("Line item not found or does not belong to this challan: " + itemDto.getId());
+                    }
+                } else {
+                    item = new ChallanLineItem();
+                    item.setChallan(challan);
+                    challan.getLineItems().add(item);
+                }
                 item.setDescription(itemDto.getDescription());
                 item.setDispatchedQuantity(itemDto.getDispatchedQuantity());
                 item.setUnit(itemDto.getUnit());
-                challan.getLineItems().add(item);
             }
         }
     }
@@ -140,6 +164,7 @@ public class ChallanService {
         
         if (challan.getLinkedVendorPo() != null) {
             dto.setLinkedVendorPoId(challan.getLinkedVendorPo().getId());
+            dto.setLinkedVendorPoNumber(challan.getLinkedVendorPo().getPoNumber());
         }
         dto.setRemarks(challan.getRemarks());
         dto.setStatus(challan.getStatus());

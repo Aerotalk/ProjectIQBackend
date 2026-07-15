@@ -18,7 +18,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "challans")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
