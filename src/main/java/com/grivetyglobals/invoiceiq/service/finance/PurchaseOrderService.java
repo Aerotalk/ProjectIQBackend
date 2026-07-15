@@ -108,14 +108,18 @@ public class PurchaseOrderService {
             
             po.getLineItems().removeIf(item -> item.getId() != null && !incomingIds.contains(item.getId()));
 
+            java.util.Map<UUID, PurchaseOrderLineItem> existingMap = po.getLineItems().stream()
+                    .filter(i -> i.getId() != null)
+                    .collect(Collectors.toMap(PurchaseOrderLineItem::getId, i -> i));
+
             for (PurchaseOrderLineItemDto itemDto : dto.getLineItems()) {
                 PurchaseOrderLineItem item = null;
                 if (itemDto.getId() != null) {
-                    item = po.getLineItems().stream()
-                            .filter(i -> itemDto.getId().equals(i.getId()))
-                            .findFirst().orElse(null);
-                }
-                if (item == null) {
+                    item = existingMap.get(itemDto.getId());
+                    if (item == null) {
+                        throw new ResourceNotFoundException("Line item not found or does not belong to this purchase order: " + itemDto.getId());
+                    }
+                } else {
                     item = new PurchaseOrderLineItem();
                     item.setPurchaseOrder(po);
                     po.getLineItems().add(item);

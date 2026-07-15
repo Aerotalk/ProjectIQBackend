@@ -120,14 +120,18 @@ public class ChallanService {
             
             challan.getLineItems().removeIf(item -> item.getId() != null && !incomingIds.contains(item.getId()));
 
+            java.util.Map<UUID, ChallanLineItem> existingMap = challan.getLineItems().stream()
+                    .filter(i -> i.getId() != null)
+                    .collect(Collectors.toMap(ChallanLineItem::getId, i -> i));
+
             for (ChallanLineItemDto itemDto : dto.getLineItems()) {
                 ChallanLineItem item = null;
                 if (itemDto.getId() != null) {
-                    item = challan.getLineItems().stream()
-                            .filter(i -> itemDto.getId().equals(i.getId()))
-                            .findFirst().orElse(null);
-                }
-                if (item == null) {
+                    item = existingMap.get(itemDto.getId());
+                    if (item == null) {
+                        throw new ResourceNotFoundException("Line item not found or does not belong to this challan: " + itemDto.getId());
+                    }
+                } else {
                     item = new ChallanLineItem();
                     item.setChallan(challan);
                     challan.getLineItems().add(item);
