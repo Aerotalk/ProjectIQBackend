@@ -32,10 +32,14 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
         } else if (request.getCookies() != null) {
-            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-                if ("access_token".equals(cookie.getName())) {
-                    jwt = cookie.getValue();
-                    break;
+            // CSRF mitigation: only accept cookie auth for non-simple content types
+            String contentType = request.getContentType();
+            if (contentType != null && contentType.contains("application/json")) {
+                for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                    if ("access_token".equals(cookie.getName())) {
+                        jwt = cookie.getValue();
+                        break;
+                    }
                 }
             }
         }

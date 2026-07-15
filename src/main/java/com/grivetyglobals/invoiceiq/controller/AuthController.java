@@ -6,6 +6,7 @@ import com.grivetyglobals.invoiceiq.dto.RegisterRequest;
 import com.grivetyglobals.invoiceiq.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,7 +39,7 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @PostMapping("/refresh")
+    @PostMapping(value = "/refresh", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return ResponseEntity.status(401).build();
@@ -53,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @PostMapping("/logout")
+    @PostMapping(value = "/logout", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             com.grivetyglobals.invoiceiq.dto.LogoutRequest request = new com.grivetyglobals.invoiceiq.dto.LogoutRequest();
