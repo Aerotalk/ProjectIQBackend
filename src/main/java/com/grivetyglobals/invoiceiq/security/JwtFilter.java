@@ -32,9 +32,12 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
         } else if (request.getCookies() != null) {
-            // CSRF mitigation: only accept cookie auth for non-simple content types
+            // CSRF mitigation: safe methods (GET/HEAD/OPTIONS) are exempt; state-changing methods
+            // require non-simple Content-Type to block form-based CSRF
+            String method = request.getMethod();
+            boolean safeMethod = "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method) || "OPTIONS".equalsIgnoreCase(method);
             String contentType = request.getContentType();
-            if (contentType != null && contentType.contains("application/json")) {
+            if (safeMethod || (contentType != null && contentType.contains("application/json"))) {
                 for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                     if ("access_token".equals(cookie.getName())) {
                         jwt = cookie.getValue();

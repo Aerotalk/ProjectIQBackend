@@ -39,7 +39,7 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @PostMapping(value = "/refresh", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return ResponseEntity.status(401).build();
@@ -54,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @PostMapping(value = "/logout", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping("/logout")
     public ResponseEntity<String> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             com.grivetyglobals.invoiceiq.dto.LogoutRequest request = new com.grivetyglobals.invoiceiq.dto.LogoutRequest();
