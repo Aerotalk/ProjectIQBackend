@@ -23,7 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
-
+import java.util.Collections;
+import com.grivetyglobals.invoiceiq.service.PermissionService;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -47,6 +48,8 @@ class AuthServiceTest {
     private AuthenticationManager authenticationManager;
     @Mock
     private EmailService emailService;
+    @Mock
+    private PermissionService permissionService;
 
     @InjectMocks
     private AuthService authService;
@@ -73,6 +76,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(testUser));
         when(jwtUtil.generateToken(testUser)).thenReturn("mocked_jwt_token");
+        when(permissionService.getEffectivePermissions(testUser)).thenReturn(Collections.emptySet());
 
         // Act
         AuthResponse response = authService.login(request);

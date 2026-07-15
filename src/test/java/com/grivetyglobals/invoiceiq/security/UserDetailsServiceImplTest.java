@@ -11,7 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Optional;
-
+import java.util.Collections;
+import com.grivetyglobals.invoiceiq.service.PermissionService;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -21,6 +22,9 @@ class UserDetailsServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PermissionService permissionService;
 
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
@@ -32,6 +36,7 @@ class UserDetailsServiceImplTest {
         User user = User.builder().email(email).build();
         
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(permissionService.getEffectivePermissions(user)).thenReturn(Collections.emptySet());
 
         // Act
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);

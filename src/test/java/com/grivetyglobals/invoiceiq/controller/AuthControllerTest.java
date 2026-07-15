@@ -74,8 +74,12 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
-                .andExpect(jsonPath("$.username").value("user@example.com"));
+                .andExpect(cookie().exists("access_token"))
+                .andExpect(cookie().value("access_token", "jwt-token"))
+                .andExpect(cookie().exists("refresh_token"))
+                .andExpect(cookie().value("refresh_token", "refresh-token"))
+                .andExpect(jsonPath("$.username").value("user@example.com"))
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist());
     }
 }

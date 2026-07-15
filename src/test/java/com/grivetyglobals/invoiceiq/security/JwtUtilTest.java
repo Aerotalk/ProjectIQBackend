@@ -75,7 +75,7 @@ class JwtUtilTest {
         org.setId(UUID.randomUUID());
 
         com.grivetyglobals.invoiceiq.entity.Role role = new com.grivetyglobals.invoiceiq.entity.Role();
-        role.setRoleName("ROLE_ADMIN");
+        role.setRoleName("ADMIN");
         
         com.grivetyglobals.invoiceiq.entity.UserRole userRole = new com.grivetyglobals.invoiceiq.entity.UserRole();
         userRole.setRole(role);
