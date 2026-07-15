@@ -12,7 +12,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "challan_line_items")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
