@@ -17,10 +17,16 @@ public class ExpenseDto {
     private UUID id;
     private UUID projectId;
     private String projectName;
-    private String expenseType;
+    private String category;
     private LocalDate expenseDate;
     private BigDecimal amount;
+    private String description;
+    private String paidBy;
+    private Boolean isGstApplicable;
+    private BigDecimal gstAmount;
+    private Boolean isInputCreditClaimable;
     private String remarks;
     private String status;
     private UUID attachmentFileId;
+    private String receiptName;
 }

@@ -110,6 +110,8 @@ public class ClientService {
         client.setEmail(dto.getEmail());
         client.setPhone(dto.getPhone());
         client.setAlternatePhone(dto.getAlternatePhone());
+        client.setBillingAttention(dto.getBillingAttention());
+        client.setBillingPhone(dto.getBillingPhone());
         client.setBillingAddressLine1(dto.getBillingAddressLine1());
         client.setBillingAddressLine2(dto.getBillingAddressLine2());
         client.setBillingCity(dto.getBillingCity());
@@ -117,6 +119,8 @@ public class ClientService {
         client.setBillingPinCode(dto.getBillingPinCode());
         client.setBillingCountry(dto.getBillingCountry());
         client.setSameAsBillingAddress(dto.getSameAsBillingAddress());
+        client.setShippingAttention(dto.getShippingAttention());
+        client.setShippingPhone(dto.getShippingPhone());
         client.setShippingAddressLine1(dto.getShippingAddressLine1());
         client.setShippingAddressLine2(dto.getShippingAddressLine2());
         client.setShippingCity(dto.getShippingCity());
@@ -153,6 +157,8 @@ public class ClientService {
         dto.setEmail(client.getEmail());
         dto.setPhone(client.getPhone());
         dto.setAlternatePhone(client.getAlternatePhone());
+        dto.setBillingAttention(client.getBillingAttention());
+        dto.setBillingPhone(client.getBillingPhone());
         dto.setBillingAddressLine1(client.getBillingAddressLine1());
         dto.setBillingAddressLine2(client.getBillingAddressLine2());
         dto.setBillingCity(client.getBillingCity());
@@ -160,6 +166,8 @@ public class ClientService {
         dto.setBillingPinCode(client.getBillingPinCode());
         dto.setBillingCountry(client.getBillingCountry());
         dto.setSameAsBillingAddress(client.getSameAsBillingAddress());
+        dto.setShippingAttention(client.getShippingAttention());
+        dto.setShippingPhone(client.getShippingPhone());
         dto.setShippingAddressLine1(client.getShippingAddressLine1());
         dto.setShippingAddressLine2(client.getShippingAddressLine2());
         dto.setShippingCity(client.getShippingCity());

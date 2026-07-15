@@ -36,14 +36,29 @@ public class Expense {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @Column(name = "expense_type", length = 100)
-    private String expenseType;
+    @Column(length = 100)
+    private String category;
 
     @Column(name = "expense_date")
     private LocalDate expenseDate;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal amount;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "paid_by", length = 255)
+    private String paidBy;
+
+    @Column(name = "is_gst_applicable")
+    private Boolean isGstApplicable;
+
+    @Column(name = "gst_amount", precision = 15, scale = 2)
+    private BigDecimal gstAmount;
+
+    @Column(name = "is_input_credit_claimable")
+    private Boolean isInputCreditClaimable;
 
     @Column(columnDefinition = "TEXT")
     private String remarks;
@@ -53,6 +68,9 @@ public class Expense {
 
     @Column(name = "attachment_file_id")
     private UUID attachmentFileId;
+
+    @Column(name = "receipt_name", length = 255)
+    private String receiptName;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

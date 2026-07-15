@@ -1,13 +1,16 @@
 package com.grivetyglobals.invoiceiq.service.finance;
 
 import com.grivetyglobals.invoiceiq.dto.finance.ChallanDto;
+import com.grivetyglobals.invoiceiq.dto.finance.ChallanLineItemDto;
 import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.finance.Challan;
+import com.grivetyglobals.invoiceiq.entity.finance.ChallanLineItem;
 import com.grivetyglobals.invoiceiq.entity.project.Project;
 import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
 import com.grivetyglobals.invoiceiq.exception.ResourceNotFoundException;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.finance.ChallanRepository;
+import com.grivetyglobals.invoiceiq.repository.finance.PurchaseOrderRepository;
 import com.grivetyglobals.invoiceiq.repository.project.ProjectRepository;
 import com.grivetyglobals.invoiceiq.repository.sales.VendorRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class ChallanService {
     private final CompanyRepository companyRepository;
     private final VendorRepository vendorRepository;
     private final ProjectRepository projectRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
 
     public List<ChallanDto> getChallansByCompany(UUID companyId) {
         return challanRepository.findByCompanyId(companyId).stream()
@@ -82,11 +86,37 @@ public class ChallanService {
             challan.setProject(null);
         }
 
+        if (dto.getLinkedVendorPoId() != null) {
+            com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrder po = purchaseOrderRepository.findById(dto.getLinkedVendorPoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Purchase Order not found"));
+            challan.setLinkedVendorPo(po);
+        } else {
+            challan.setLinkedVendorPo(null);
+        }
+
         challan.setChallanNumber(dto.getChallanNumber());
+        challan.setEwayBillNo(dto.getEwayBillNo());
         challan.setChallanDate(dto.getChallanDate());
+        challan.setDescription(dto.getDescription());
         challan.setRemarks(dto.getRemarks());
         challan.setStatus(dto.getStatus());
         challan.setAttachmentFileId(dto.getAttachmentFileId());
+        challan.setAttachmentName(dto.getAttachmentName());
+
+        if (challan.getLineItems() == null) {
+            challan.setLineItems(new java.util.ArrayList<>());
+        }
+        challan.getLineItems().clear();
+        if (dto.getLineItems() != null) {
+            for (ChallanLineItemDto itemDto : dto.getLineItems()) {
+                ChallanLineItem item = new ChallanLineItem();
+                item.setChallan(challan);
+                item.setDescription(itemDto.getDescription());
+                item.setDispatchedQuantity(itemDto.getDispatchedQuantity());
+                item.setUnit(itemDto.getUnit());
+                challan.getLineItems().add(item);
+            }
+        }
     }
 
     private ChallanDto mapToDto(Challan challan) {
@@ -104,10 +134,28 @@ public class ChallanService {
         }
 
         dto.setChallanNumber(challan.getChallanNumber());
+        dto.setEwayBillNo(challan.getEwayBillNo());
         dto.setChallanDate(challan.getChallanDate());
+        dto.setDescription(challan.getDescription());
+        
+        if (challan.getLinkedVendorPo() != null) {
+            dto.setLinkedVendorPoId(challan.getLinkedVendorPo().getId());
+        }
         dto.setRemarks(challan.getRemarks());
         dto.setStatus(challan.getStatus());
         dto.setAttachmentFileId(challan.getAttachmentFileId());
+        dto.setAttachmentName(challan.getAttachmentName());
+
+        if (challan.getLineItems() != null) {
+            dto.setLineItems(challan.getLineItems().stream().map(item -> {
+                ChallanLineItemDto itemDto = new ChallanLineItemDto();
+                itemDto.setId(item.getId());
+                itemDto.setDescription(item.getDescription());
+                itemDto.setDispatchedQuantity(item.getDispatchedQuantity());
+                itemDto.setUnit(item.getUnit());
+                return itemDto;
+            }).collect(Collectors.toList()));
+        }
         
         return dto;
     }
