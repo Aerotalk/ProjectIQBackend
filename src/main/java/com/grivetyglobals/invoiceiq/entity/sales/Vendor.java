@@ -97,6 +97,12 @@ public class Vendor {
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VendorAdditionalContact> additionalContacts;
 
+    @Column(name = "billing_attention", length = 255)
+    private String billingAttention;
+
+    @Column(name = "billing_phone", length = 50)
+    private String billingPhone;
+
     @Column(name = "billing_address_line1", length = 255)
     private String billingAddressLine1;
 
@@ -117,6 +123,12 @@ public class Vendor {
 
     @Column(name = "same_as_billing_address")
     private Boolean sameAsBillingAddress;
+
+    @Column(name = "shipping_attention", length = 255)
+    private String shippingAttention;
+
+    @Column(name = "shipping_phone", length = 50)
+    private String shippingPhone;
 
     @Column(name = "shipping_address_line1", length = 255)
     private String shippingAddressLine1;

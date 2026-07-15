@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -21,8 +22,12 @@ public class PurchaseOrderDto {
     private String projectName;
     private String poNumber;
     private LocalDate poDate;
-    private BigDecimal amount;
-    private String remarks;
+    private BigDecimal grandTotal;
+    private String description;
+    private String internalNotes;
+    private LocalDate expectedDelivery;
     private String status;
     private UUID attachmentFileId;
+    private String attachmentName;
+    private List<PurchaseOrderLineItemDto> lineItems;
 }

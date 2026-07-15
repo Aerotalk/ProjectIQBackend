@@ -29,6 +29,7 @@ public class QuotationDto {
     // Totals
     private BigDecimal subTotal;
     private BigDecimal totalDiscount;
+    private BigDecimal deliveryCost;
     private BigDecimal totalTaxableAmount;
     private BigDecimal totalGstAmount;
     private BigDecimal grandTotal;
