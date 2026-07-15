@@ -32,7 +32,8 @@ export JWT_SECRET=$(strip_quotes "$JWT_SECRET")
 export CORS_ALLOWED_ORIGINS=$(strip_quotes "$CORS_ALLOWED_ORIGINS")
 
 echo "🚀 Starting InvoiceIQ Backend from $FOUND_JAR..."
-java -jar "$FOUND_JAR" &
+# We use JVM flags optimized for fast startup on low-CPU/low-RAM cloud environments like Railway
+java -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Xverify:none -jar "$FOUND_JAR" &
 APP_PID=$!
 
 echo "⏳ Performing startup health check..."
