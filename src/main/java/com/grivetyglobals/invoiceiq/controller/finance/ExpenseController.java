@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/admin/finance/expenses")
+@RequestMapping("/api/admin/projects/expenses")
 @RequiredArgsConstructor
 public class ExpenseController {
 

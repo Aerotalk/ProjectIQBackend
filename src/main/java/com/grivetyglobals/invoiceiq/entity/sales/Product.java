@@ -33,7 +33,7 @@ public class Product {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(name = "item_code", length = 50, nullable = false)
+    @Column(name = "item_code", length = 50)
     private String itemCode; // e.g., PROD-0001 or ITEM-001
 
     @Column(name = "item_name", length = 255, nullable = false)

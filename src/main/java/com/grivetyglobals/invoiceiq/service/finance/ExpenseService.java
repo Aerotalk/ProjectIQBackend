@@ -71,12 +71,18 @@ public class ExpenseService {
             expense.setProject(null);
         }
 
-        expense.setExpenseType(dto.getExpenseType());
+        expense.setCategory(dto.getCategory());
         expense.setExpenseDate(dto.getExpenseDate());
         expense.setAmount(dto.getAmount());
+        expense.setDescription(dto.getDescription());
+        expense.setPaidBy(dto.getPaidBy());
+        expense.setIsGstApplicable(dto.getIsGstApplicable());
+        expense.setGstAmount(dto.getGstAmount());
+        expense.setIsInputCreditClaimable(dto.getIsInputCreditClaimable());
         expense.setRemarks(dto.getRemarks());
         expense.setStatus(dto.getStatus());
         expense.setAttachmentFileId(dto.getAttachmentFileId());
+        expense.setReceiptName(dto.getReceiptName());
     }
 
     private ExpenseDto mapToDto(Expense expense) {
@@ -88,12 +94,18 @@ public class ExpenseService {
             dto.setProjectName(expense.getProject().getProjectName());
         }
 
-        dto.setExpenseType(expense.getExpenseType());
+        dto.setCategory(expense.getCategory());
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setAmount(expense.getAmount());
+        dto.setDescription(expense.getDescription());
+        dto.setPaidBy(expense.getPaidBy());
+        dto.setIsGstApplicable(expense.getIsGstApplicable());
+        dto.setGstAmount(expense.getGstAmount());
+        dto.setIsInputCreditClaimable(expense.getIsInputCreditClaimable());
         dto.setRemarks(expense.getRemarks());
         dto.setStatus(expense.getStatus());
         dto.setAttachmentFileId(expense.getAttachmentFileId());
+        dto.setReceiptName(expense.getReceiptName());
         
         return dto;
     }

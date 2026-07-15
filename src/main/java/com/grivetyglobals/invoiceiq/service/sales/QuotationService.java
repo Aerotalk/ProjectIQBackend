@@ -123,6 +123,7 @@ public class QuotationService {
         quotation.setReference(dto.getReference());
         quotation.setSubTotal(dto.getSubTotal());
         quotation.setTotalDiscount(dto.getTotalDiscount());
+        quotation.setDeliveryCost(dto.getDeliveryCost());
         quotation.setTotalTaxableAmount(dto.getTotalTaxableAmount());
         quotation.setTotalGstAmount(dto.getTotalGstAmount());
         quotation.setGrandTotal(dto.getGrandTotal());
@@ -146,6 +147,7 @@ public class QuotationService {
         dto.setReference(quotation.getReference());
         dto.setSubTotal(quotation.getSubTotal());
         dto.setTotalDiscount(quotation.getTotalDiscount());
+        dto.setDeliveryCost(quotation.getDeliveryCost());
         dto.setTotalTaxableAmount(quotation.getTotalTaxableAmount());
         dto.setTotalGstAmount(quotation.getTotalGstAmount());
         dto.setGrandTotal(quotation.getGrandTotal());

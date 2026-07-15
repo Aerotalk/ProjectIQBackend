@@ -1,8 +1,10 @@
 package com.grivetyglobals.invoiceiq.service.finance;
 
 import com.grivetyglobals.invoiceiq.dto.finance.PurchaseOrderDto;
+import com.grivetyglobals.invoiceiq.dto.finance.PurchaseOrderLineItemDto;
 import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrder;
+import com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrderLineItem;
 import com.grivetyglobals.invoiceiq.entity.project.Project;
 import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
 import com.grivetyglobals.invoiceiq.exception.ResourceNotFoundException;
@@ -84,10 +86,57 @@ public class PurchaseOrderService {
 
         po.setPoNumber(dto.getPoNumber());
         po.setPoDate(dto.getPoDate());
-        po.setAmount(dto.getAmount());
-        po.setRemarks(dto.getRemarks());
+        po.setGrandTotal(dto.getGrandTotal());
+        po.setDescription(dto.getDescription());
+        po.setInternalNotes(dto.getInternalNotes());
+        po.setExpectedDelivery(dto.getExpectedDelivery());
         po.setStatus(dto.getStatus());
         po.setAttachmentFileId(dto.getAttachmentFileId());
+        po.setAttachmentName(dto.getAttachmentName());
+
+        if (po.getLineItems() == null) {
+            po.setLineItems(new java.util.ArrayList<>());
+        }
+        
+        if (dto.getLineItems() == null || dto.getLineItems().isEmpty()) {
+            po.getLineItems().clear();
+        } else {
+            java.util.Set<UUID> incomingIds = dto.getLineItems().stream()
+                    .map(PurchaseOrderLineItemDto::getId)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            po.getLineItems().removeIf(item -> item.getId() != null && !incomingIds.contains(item.getId()));
+
+            java.util.Map<UUID, PurchaseOrderLineItem> existingMap = po.getLineItems().stream()
+                    .filter(i -> i.getId() != null)
+                    .collect(Collectors.toMap(PurchaseOrderLineItem::getId, i -> i));
+
+            for (PurchaseOrderLineItemDto itemDto : dto.getLineItems()) {
+                PurchaseOrderLineItem item = null;
+                if (itemDto.getId() != null) {
+                    item = existingMap.get(itemDto.getId());
+                    if (item == null) {
+                        throw new ResourceNotFoundException("Line item not found or does not belong to this purchase order: " + itemDto.getId());
+                    }
+                } else {
+                    item = new PurchaseOrderLineItem();
+                    item.setPurchaseOrder(po);
+                    po.getLineItems().add(item);
+                }
+                item.setProductId(itemDto.getProductId());
+                item.setItemName(itemDto.getItemName());
+                item.setDescription(itemDto.getDescription());
+                item.setQuantity(itemDto.getQuantity());
+                item.setUnit(itemDto.getUnit());
+                item.setRate(itemDto.getRate());
+                item.setDiscount(itemDto.getDiscount());
+                item.setTaxableAmount(itemDto.getTaxableAmount());
+                item.setGstRate(itemDto.getGstRate());
+                item.setGstAmount(itemDto.getGstAmount());
+                item.setTotalAmount(itemDto.getTotalAmount());
+            }
+        }
     }
 
     private PurchaseOrderDto mapToDto(PurchaseOrder po) {
@@ -106,10 +155,32 @@ public class PurchaseOrderService {
 
         dto.setPoNumber(po.getPoNumber());
         dto.setPoDate(po.getPoDate());
-        dto.setAmount(po.getAmount());
-        dto.setRemarks(po.getRemarks());
+        dto.setGrandTotal(po.getGrandTotal());
+        dto.setDescription(po.getDescription());
+        dto.setInternalNotes(po.getInternalNotes());
+        dto.setExpectedDelivery(po.getExpectedDelivery());
         dto.setStatus(po.getStatus());
         dto.setAttachmentFileId(po.getAttachmentFileId());
+        dto.setAttachmentName(po.getAttachmentName());
+
+        if (po.getLineItems() != null) {
+            dto.setLineItems(po.getLineItems().stream().map(item -> {
+                PurchaseOrderLineItemDto itemDto = new PurchaseOrderLineItemDto();
+                itemDto.setId(item.getId());
+                itemDto.setProductId(item.getProductId());
+                itemDto.setItemName(item.getItemName());
+                itemDto.setDescription(item.getDescription());
+                itemDto.setQuantity(item.getQuantity());
+                itemDto.setUnit(item.getUnit());
+                itemDto.setRate(item.getRate());
+                itemDto.setDiscount(item.getDiscount());
+                itemDto.setTaxableAmount(item.getTaxableAmount());
+                itemDto.setGstRate(item.getGstRate());
+                itemDto.setGstAmount(item.getGstAmount());
+                itemDto.setTotalAmount(item.getTotalAmount());
+                return itemDto;
+            }).collect(Collectors.toList()));
+        }
         
         return dto;
     }

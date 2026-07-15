@@ -129,6 +129,8 @@ public class VendorService {
         vendor.setEmail(dto.getEmail());
         vendor.setPhone(dto.getPhone());
         vendor.setAlternatePhone(dto.getAlternatePhone());
+        vendor.setBillingAttention(dto.getBillingAttention());
+        vendor.setBillingPhone(dto.getBillingPhone());
         vendor.setBillingAddressLine1(dto.getBillingAddressLine1());
         vendor.setBillingAddressLine2(dto.getBillingAddressLine2());
         vendor.setBillingCity(dto.getBillingCity());
@@ -136,6 +138,8 @@ public class VendorService {
         vendor.setBillingPinCode(dto.getBillingPinCode());
         vendor.setBillingCountry(dto.getBillingCountry());
         vendor.setSameAsBillingAddress(dto.getSameAsBillingAddress());
+        vendor.setShippingAttention(dto.getShippingAttention());
+        vendor.setShippingPhone(dto.getShippingPhone());
         vendor.setShippingAddressLine1(dto.getShippingAddressLine1());
         vendor.setShippingAddressLine2(dto.getShippingAddressLine2());
         vendor.setShippingCity(dto.getShippingCity());
@@ -173,6 +177,8 @@ public class VendorService {
         dto.setEmail(vendor.getEmail());
         dto.setPhone(vendor.getPhone());
         dto.setAlternatePhone(vendor.getAlternatePhone());
+        dto.setBillingAttention(vendor.getBillingAttention());
+        dto.setBillingPhone(vendor.getBillingPhone());
         dto.setBillingAddressLine1(vendor.getBillingAddressLine1());
         dto.setBillingAddressLine2(vendor.getBillingAddressLine2());
         dto.setBillingCity(vendor.getBillingCity());
@@ -180,6 +186,8 @@ public class VendorService {
         dto.setBillingPinCode(vendor.getBillingPinCode());
         dto.setBillingCountry(vendor.getBillingCountry());
         dto.setSameAsBillingAddress(vendor.getSameAsBillingAddress());
+        dto.setShippingAttention(vendor.getShippingAttention());
+        dto.setShippingPhone(vendor.getShippingPhone());
         dto.setShippingAddressLine1(vendor.getShippingAddressLine1());
         dto.setShippingAddressLine2(vendor.getShippingAddressLine2());
         dto.setShippingCity(vendor.getShippingCity());

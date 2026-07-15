@@ -62,6 +62,9 @@ public class Quotation {
     @Column(name = "total_discount", precision = 19, scale = 4)
     private BigDecimal totalDiscount;
 
+    @Column(name = "delivery_cost", precision = 19, scale = 4)
+    private BigDecimal deliveryCost;
+
     @Column(name = "total_taxable_amount", precision = 19, scale = 4)
     private BigDecimal totalTaxableAmount;
 

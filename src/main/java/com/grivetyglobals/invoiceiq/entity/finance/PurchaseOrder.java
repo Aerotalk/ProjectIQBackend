@@ -14,11 +14,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "purchase_orders")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,17 +49,29 @@ public class PurchaseOrder {
     @Column(name = "po_date")
     private LocalDate poDate;
 
-    @Column(precision = 15, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "grand_total", precision = 15, scale = 2)
+    private BigDecimal grandTotal;
 
     @Column(columnDefinition = "TEXT")
-    private String remarks;
+    private String description;
+
+    @Column(name = "internal_notes", columnDefinition = "TEXT")
+    private String internalNotes;
+
+    @Column(name = "expected_delivery")
+    private LocalDate expectedDelivery;
 
     @Column(length = 50)
     private String status;
 
     @Column(name = "attachment_file_id")
     private UUID attachmentFileId;
+
+    @Column(name = "attachment_name", length = 255)
+    private String attachmentName;
+
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchaseOrderLineItem> lineItems;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

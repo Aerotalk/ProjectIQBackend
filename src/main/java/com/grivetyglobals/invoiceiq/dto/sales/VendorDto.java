@@ -42,6 +42,8 @@ public class VendorDto {
     private List<VendorAdditionalContactDto> additionalContacts;
 
     // Address Details
+    private String billingAttention;
+    private String billingPhone;
     private String billingAddressLine1;
     private String billingAddressLine2;
     private String billingCity;
@@ -50,6 +52,8 @@ public class VendorDto {
     private String billingCountry;
 
     private Boolean sameAsBillingAddress;
+    private String shippingAttention;
+    private String shippingPhone;
     private String shippingAddressLine1;
     private String shippingAddressLine2;
     private String shippingCity;

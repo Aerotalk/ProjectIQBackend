@@ -13,11 +13,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "challans")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -43,8 +45,18 @@ public class Challan {
     @Column(name = "challan_number", length = 100)
     private String challanNumber;
 
+    @Column(name = "eway_bill_no", length = 100)
+    private String ewayBillNo;
+
     @Column(name = "challan_date")
     private LocalDate challanDate;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_vendor_po_id")
+    private PurchaseOrder linkedVendorPo;
 
     @Column(columnDefinition = "TEXT")
     private String remarks;
@@ -54,6 +66,12 @@ public class Challan {
 
     @Column(name = "attachment_file_id")
     private UUID attachmentFileId;
+
+    @Column(name = "attachment_name", length = 255)
+    private String attachmentName;
+
+    @OneToMany(mappedBy = "challan", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChallanLineItem> lineItems;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
