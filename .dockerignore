@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+build/
+bin/
+logs/
+.env
+railway.toml
+*.log
+*.jar
