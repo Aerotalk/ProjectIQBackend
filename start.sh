@@ -45,6 +45,12 @@ sleep 5
 
 # 2. Loop and ping the /health endpoint
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+    # Check if the Java process actually crashed!
+    if ! kill -0 $APP_PID 2>/dev/null; then
+        echo "❌ FATAL: The Spring Boot application crashed! Please check Railway App Logs."
+        exit 1
+    fi
+
     # The PORT variable is usually provided by deployment platforms (Render, Railway, etc).
     # If it's not set, we default to 8080.
     TARGET_PORT=${PORT:-8080}
