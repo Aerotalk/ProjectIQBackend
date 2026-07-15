@@ -3,11 +3,21 @@
 # This script acts as the entrypoint for deployments. It starts the app, pings the health check, 
 # and automatically crashes/rolls back if the app doesn't become healthy in time.
 
-# 1. Start the Spring Boot application in the background
-# We assume the jar has been built and is located in build/libs or provided via JAR_PATH.
-JAR_PATH=${JAR_PATH:-"build/libs/invoiceiq-0.0.1-SNAPSHOT.jar"}
-echo "🚀 Starting InvoiceIQ Backend from $JAR_PATH..."
-java -jar $JAR_PATH &
+# We dynamically find the jar file. Nixpacks, Docker, and local builds might place it differently.
+if [ -n "$JAR_PATH" ] && [ -f "$JAR_PATH" ]; then
+    FOUND_JAR="$JAR_PATH"
+else
+    # Search for the jar, excluding plain jars which are not executable
+    FOUND_JAR=$(find . -name "*.jar" ! -name "*-plain.jar" | head -n 1)
+fi
+
+if [ -z "$FOUND_JAR" ]; then
+    echo "❌ Error: Could not find any executable Spring Boot .jar file!"
+    exit 1
+fi
+
+echo "🚀 Starting InvoiceIQ Backend from $FOUND_JAR..."
+java -jar "$FOUND_JAR" &
 APP_PID=$!
 
 echo "⏳ Performing startup health check..."
