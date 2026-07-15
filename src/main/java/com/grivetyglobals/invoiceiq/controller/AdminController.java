@@ -74,14 +74,14 @@ public class AdminController {
 
     @PreAuthorize("hasAuthority('company.view')")
     @GetMapping("/companies")
-    public ResponseEntity<Page<Company>> getAllCompanies(@RequestParam(required = false) UUID organizationId, Pageable pageable) {
-        return ResponseEntity.ok(adminService.getAllCompanies(organizationId, pageable));
+    public ResponseEntity<Page<Company>> getAllCompanies(Pageable pageable) {
+        return ResponseEntity.ok(adminService.getAllCompanies(pageable));
     }
 
     @PreAuthorize("hasAuthority('company.view')")
     @GetMapping("/companies/{id}")
-    public ResponseEntity<Company> getCompanyById(@PathVariable UUID id, @RequestParam(required = false) UUID organizationId) {
-        return ResponseEntity.ok(adminService.getCompanyById(id, organizationId));
+    public ResponseEntity<Company> getCompanyById(@PathVariable UUID id) {
+        return ResponseEntity.ok(adminService.getCompanyById(id));
     }
 
     @PreAuthorize("hasAnyAuthority('org.view', 'setting.view')")
@@ -96,25 +96,25 @@ public class AdminController {
             java.security.Principal principal,
             @RequestBody com.grivetyglobals.invoiceiq.dto.CompanyUpdateRequest request) {
         Company company = adminService.getMyCompanyProfile(principal.getName());
-        return ResponseEntity.ok(adminService.updateCompany(company.getId(), request, null));
+        return ResponseEntity.ok(adminService.updateCompany(company.getId(), request));
     }
 
     @PreAuthorize("hasAuthority('company.edit')")
     @PutMapping("/companies/{id}")
-    public ResponseEntity<Company> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyUpdateRequest request, @RequestParam(required = false) UUID organizationId) {
-        return ResponseEntity.ok(adminService.updateCompany(id, request, organizationId));
+    public ResponseEntity<Company> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyUpdateRequest request) {
+        return ResponseEntity.ok(adminService.updateCompany(id, request));
     }
 
     @PreAuthorize("hasAuthority('company.edit')")
     @PatchMapping("/companies/{id}/status")
-    public ResponseEntity<Company> updateCompanyStatus(@PathVariable UUID id, @RequestParam String status, @RequestParam(required = false) UUID organizationId) {
-        return ResponseEntity.ok(adminService.updateCompanyStatus(id, status, organizationId));
+    public ResponseEntity<Company> updateCompanyStatus(@PathVariable UUID id, @RequestParam String status) {
+        return ResponseEntity.ok(adminService.updateCompanyStatus(id, status));
     }
 
     @PreAuthorize("hasAuthority('company.delete')")
     @DeleteMapping("/companies/{id}")
-    public ResponseEntity<Void> deleteCompany(@PathVariable UUID id, @RequestParam(required = false) UUID organizationId) {
-        adminService.deleteCompany(id, organizationId);
+    public ResponseEntity<Void> deleteCompany(@PathVariable UUID id) {
+        adminService.deleteCompany(id);
         return ResponseEntity.noContent().build();
     }
 

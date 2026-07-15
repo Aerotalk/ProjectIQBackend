@@ -30,8 +30,9 @@ public class FileService {
     private String bucketName;
 
     @Transactional
-    public File uploadFile(MultipartFile multipartFile, UUID organizationId, UUID uploadedBy) {
+    public File uploadFile(MultipartFile multipartFile, UUID uploadedBy) {
         try {
+            UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
             if (multipartFile.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }

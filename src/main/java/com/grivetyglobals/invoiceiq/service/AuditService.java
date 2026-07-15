@@ -70,11 +70,13 @@ public class AuditService {
         auditLogRepository.save(log);
     }
 
-    public Page<AuditLog> getPaginatedActivity(UUID organizationId, Pageable pageable) {
+    public Page<AuditLog> getPaginatedActivity(Pageable pageable) {
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         return auditLogRepository.findByOrganizationIdOrderByCreatedAtDesc(organizationId, pageable);
     }
     
-    public List<AuditLog> getRecentActivity(UUID organizationId) {
+    public List<AuditLog> getRecentActivity() {
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         // Fallback to top 10 logic. Since we don't have a top 10 method in the repository yet, let's use pageable
         return auditLogRepository.findByOrganizationIdOrderByCreatedAtDesc(organizationId, org.springframework.data.domain.PageRequest.of(0, 10)).getContent();
     }

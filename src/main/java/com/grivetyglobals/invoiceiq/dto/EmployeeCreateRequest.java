@@ -10,13 +10,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EmployeeCreateRequest {
 
-    @NotNull(message = "Organization ID is required")
     private UUID organizationId;
 
     @NotNull(message = "User ID is required")

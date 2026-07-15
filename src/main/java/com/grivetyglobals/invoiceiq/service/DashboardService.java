@@ -23,7 +23,8 @@ public class DashboardService {
     private final AuditService auditService;
     private final ApplicationRepository applicationRepository;
 
-    public DashboardMetricsResponse getDashboardMetrics(UUID organizationId) {
+    public DashboardMetricsResponse getDashboardMetrics() {
+        UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         
         long totalCompanies = companyRepository.countByOrganizationId(organizationId);
         long totalEmployees = employeeRepository.countByOrganizationId(organizationId);
@@ -37,7 +38,7 @@ public class DashboardService {
                 .totalDepartments(totalDepartments)
                 .totalRoles(totalRoles)
                 .totalApplications(totalApplications)
-                .recentActivityLogs(auditService.getRecentActivity(organizationId).stream().map(log -> (Object) log).collect(Collectors.toList()))
+                .recentActivityLogs(auditService.getRecentActivity().stream().map(log -> (Object) log).collect(Collectors.toList()))
                 .systemNotice("All services are operational!")
                 .build();
     }

@@ -29,6 +29,7 @@ public class Company {
     @Column(name = "company_id")
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
@@ -107,6 +108,7 @@ public class Company {
     private java.util.List<CompanyBankAccount> bankAccounts;
 
     @org.hibernate.annotations.BatchSize(size = 20)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private java.util.Set<CompanyApplication> companyApplications = new java.util.HashSet<>();

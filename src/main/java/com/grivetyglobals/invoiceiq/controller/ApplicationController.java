@@ -21,10 +21,8 @@ public class ApplicationController {
     @PreAuthorize("hasAuthority('setting.edit')")
     @PostMapping
     public ResponseEntity<Application> createApplication(
-            @Valid @RequestBody com.grivetyglobals.invoiceiq.dto.ApplicationRequest request, 
-            @RequestParam UUID userId, 
-            @RequestParam UUID organizationId) {
-        return ResponseEntity.ok(applicationRegistryService.createApplication(request, userId, organizationId));
+            @Valid @RequestBody com.grivetyglobals.invoiceiq.dto.ApplicationRequest request) {
+        return ResponseEntity.ok(applicationRegistryService.createApplication(request));
     }
 
     @PreAuthorize("hasAuthority('setting.view')")
@@ -37,11 +35,9 @@ public class ApplicationController {
     @PutMapping("/employees/{employeeId}")
     public ResponseEntity<Void> assignApplicationsToEmployee(
             @PathVariable UUID employeeId,
-            @RequestBody List<UUID> applicationIds,
-            @RequestParam UUID userId,
-            @RequestParam UUID organizationId) {
+            @RequestBody List<UUID> applicationIds) {
         
-        applicationRegistryService.assignApplicationsToEmployee(employeeId, applicationIds, userId, organizationId);
+        applicationRegistryService.assignApplicationsToEmployee(employeeId, applicationIds);
         return ResponseEntity.ok().build();
     }
 
@@ -49,11 +45,9 @@ public class ApplicationController {
     @PutMapping("/companies/{companyId}")
     public ResponseEntity<Void> assignApplicationsToCompany(
             @PathVariable UUID companyId,
-            @RequestBody List<UUID> applicationIds,
-            @RequestParam UUID userId,
-            @RequestParam UUID organizationId) {
+            @RequestBody List<UUID> applicationIds) {
         
-        applicationRegistryService.assignApplicationsToCompany(companyId, applicationIds, userId, organizationId);
+        applicationRegistryService.assignApplicationsToCompany(companyId, applicationIds);
         return ResponseEntity.ok().build();
     }
 }
