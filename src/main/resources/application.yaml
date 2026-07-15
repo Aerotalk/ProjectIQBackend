@@ -18,10 +18,13 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: ${SUPABASE_DB_URL}
+    url: ${SUPABASE_DB_URL}?connectTimeout=10&socketTimeout=30&tcpKeepAlive=true
     username: ${SUPABASE_DB_USER}
     password: ${SUPABASE_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      max-lifetime: 1800000
+      connection-timeout: 10000
   flyway:
     enabled: true
     baseline-on-migrate: true
