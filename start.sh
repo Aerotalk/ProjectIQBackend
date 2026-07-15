@@ -16,6 +16,21 @@ if [ -z "$FOUND_JAR" ]; then
     exit 1
 fi
 
+# Railway sometimes injects variables with literal double quotes if they were copied from a .env file.
+# This causes JDBC and JWT to crash. We strip any leading/trailing quotes here before starting Java.
+strip_quotes() {
+    local val="$1"
+    val="${val%\"}" # Strip trailing quote
+    val="${val#\"}" # Strip leading quote
+    echo "$val"
+}
+
+export RENDER_DB_URL=$(strip_quotes "$RENDER_DB_URL")
+export RENDER_DB_USER=$(strip_quotes "$RENDER_DB_USER")
+export RENDER_DB_PASSWORD=$(strip_quotes "$RENDER_DB_PASSWORD")
+export JWT_SECRET=$(strip_quotes "$JWT_SECRET")
+export CORS_ALLOWED_ORIGINS=$(strip_quotes "$CORS_ALLOWED_ORIGINS")
+
 echo "🚀 Starting InvoiceIQ Backend from $FOUND_JAR..."
 java -jar "$FOUND_JAR" &
 APP_PID=$!
