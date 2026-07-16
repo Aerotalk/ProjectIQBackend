@@ -7,10 +7,12 @@ import com.grivetyglobals.invoiceiq.entity.Designation;
 import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.entity.User;
+import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.repository.DepartmentRepository;
 import com.grivetyglobals.invoiceiq.repository.DesignationRepository;
 import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
+import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.UserRepository;
 import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final OrganizationRepository organizationRepository;
+    private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final DesignationRepository designationRepository;
@@ -39,7 +42,7 @@ public class EmployeeService {
     @Transactional
     public Employee createEmployee(EmployeeCreateRequest request) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
-        
+
         Organization organization = organizationRepository.findById(currentOrgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
@@ -64,8 +67,15 @@ public class EmployeeService {
                     .orElseThrow(() -> new RuntimeException("Reporting Manager not found"));
         }
 
+        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        Company company = null;
+        if (currentCompanyId != null) {
+            company = companyRepository.findById(currentCompanyId).orElse(null);
+        }
+
         Employee employee = Employee.builder()
                 .organization(organization)
+                .company(company)
                 .user(user)
                 .employeeCode(generateEmployeeCode(organization.getId()))
                 .firstName(request.getFirstName())
@@ -87,16 +97,18 @@ public class EmployeeService {
     public Employee getEmployeeById(UUID employeeId) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
-        
+
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
         if (!employee.getOrganization().getId().equals(currentOrgId)) {
             throw new RuntimeException("Access Denied: Employee belongs to another organization");
         }
-        
-        // Data scope check: if the user belongs to a specific company, they can only view employees of that company
-        if (currentCompanyId != null && employee.getCompany() != null && !employee.getCompany().getId().equals(currentCompanyId)) {
+
+        // Data scope check: if the user belongs to a specific company, they can only
+        // view employees of that company
+        if (currentCompanyId != null && employee.getCompany() != null
+                && !employee.getCompany().getId().equals(currentCompanyId)) {
             throw new RuntimeException("Access Denied: Employee belongs to another company");
         }
 

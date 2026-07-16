@@ -24,12 +24,14 @@ public class ExpenseService {
     private final CompanyRepository companyRepository;
     private final ProjectRepository projectRepository;
 
+    @Transactional(readOnly = true)
     public List<ExpenseDto> getExpensesByCompany(UUID companyId) {
         return expenseRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ExpenseDto getExpense(UUID id) {
         return mapToDto(expenseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Expense not found")));

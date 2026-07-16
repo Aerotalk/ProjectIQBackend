@@ -29,12 +29,14 @@ public class QuotationService {
     private final ClientRepository clientRepository;
     private final ProductRepository productRepository;
 
+    @Transactional(readOnly = true)
     public List<QuotationDto> getQuotationsByCompany(UUID companyId) {
         return quotationRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public QuotationDto getQuotation(UUID id) {
         return mapToDto(quotationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Quotation not found")));
