@@ -22,12 +22,14 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final CompanyRepository companyRepository;
 
+    @Transactional(readOnly = true)
     public List<ClientDto> getClientsByCompany(UUID companyId) {
         return clientRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ClientDto getClient(UUID id) {
         return mapToDto(clientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found")));

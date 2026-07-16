@@ -39,7 +39,8 @@ public class DepartmentController {
 
     @PreAuthorize("hasPermission(#id, 'Department', 'department.edit')")
     @PutMapping("/{id}")
-    public ResponseEntity<Department> updateDepartment(@PathVariable UUID id, @Valid @RequestBody DepartmentRequest request) {
+    public ResponseEntity<Department> updateDepartment(@PathVariable UUID id,
+            @Valid @RequestBody DepartmentRequest request) {
         return ResponseEntity.ok(departmentService.updateDepartment(id, request));
     }
 

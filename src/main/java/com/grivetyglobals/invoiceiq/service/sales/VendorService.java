@@ -25,12 +25,14 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final CompanyRepository companyRepository;
 
+    @Transactional(readOnly = true)
     public List<VendorDto> getVendorsByCompany(UUID companyId) {
         return vendorRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public VendorDto getVendor(UUID id) {
         return mapToDto(vendorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found")));
