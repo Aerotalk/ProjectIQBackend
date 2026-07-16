@@ -68,6 +68,9 @@ public class User implements UserDetails {
     @Column(length = 20)
     private String status;
 
+    @Column(name = "profile_photo_id")
+    private UUID profilePhotoId;
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")

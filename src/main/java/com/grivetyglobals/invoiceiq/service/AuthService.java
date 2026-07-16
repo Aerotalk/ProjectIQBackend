@@ -217,7 +217,25 @@ public class AuthService {
                 .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
                 .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
                 .effectivePermissions(effectivePermissions)
+                .profilePhotoId(user.getProfilePhotoId())
                 .build();
+    }
+
+    @Transactional
+    public MeResponse updateProfile(com.grivetyglobals.invoiceiq.dto.UpdateProfileRequest request) {
+        User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            user.setUsername(request.getUsername());
+        }
+
+        // Allow setting to null (removing photo) or updating to a new file ID
+        user.setProfilePhotoId(request.getProfilePhotoId());
+
+        userRepository.save(user);
+        return getMe();
     }
 
     @Transactional(readOnly = true)

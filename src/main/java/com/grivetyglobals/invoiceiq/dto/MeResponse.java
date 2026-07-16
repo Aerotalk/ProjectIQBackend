@@ -19,4 +19,5 @@ public class MeResponse {
     private UUID companyId;
     private String companyName;
     private Set<String> effectivePermissions;
+    private UUID profilePhotoId;
 }

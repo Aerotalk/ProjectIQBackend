@@ -104,6 +104,13 @@ public class AuthController {
         return ResponseEntity.ok("Password successfully reset. You can now log in with your new password.");
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    @org.springframework.web.bind.annotation.PutMapping("/profile")
+    public ResponseEntity<com.grivetyglobals.invoiceiq.dto.MeResponse> updateProfile(
+            @RequestBody com.grivetyglobals.invoiceiq.dto.UpdateProfileRequest request) {
+        return ResponseEntity.ok(authService.updateProfile(request));
+    }
+
     @org.springframework.web.bind.annotation.GetMapping("/me")
     public ResponseEntity<com.grivetyglobals.invoiceiq.dto.MeResponse> getMe() {
         return ResponseEntity.ok(authService.getMe());
