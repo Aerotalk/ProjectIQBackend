@@ -38,6 +38,7 @@ public class FileController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(metadata.getMimeType()))
+                .contentLength(metadata.getFileSize())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + metadata.getOriginalName() + "\"")
                 .body(resource);
     }
