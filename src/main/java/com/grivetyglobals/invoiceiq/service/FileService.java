@@ -56,7 +56,7 @@ public class FileService {
                     .contentType(multipartFile.getContentType())
                     .build();
 
-            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(multipartFile.getBytes()));
 
             File file = File.builder()
                     .originalName(originalFilename)

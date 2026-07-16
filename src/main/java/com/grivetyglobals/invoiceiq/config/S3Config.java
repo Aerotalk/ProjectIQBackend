@@ -31,7 +31,7 @@ public class S3Config {
     public S3Client s3Client() {
         return S3Client.builder()
                 .endpointOverride(URI.create(endpointUrl))
-                .region("auto".equals(region) ? Region.US_EAST_1 : Region.of(region))
+                .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)
                 ))
