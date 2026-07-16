@@ -24,9 +24,10 @@ public class FileController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload")
     public ResponseEntity<File> uploadFile(@RequestParam("file") MultipartFile file, 
+                                           @RequestParam(value = "module", required = false) String module,
                                            @AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user) {
         UUID uploadedBy = (user != null) ? user.getId() : null;
-        return ResponseEntity.ok(fileService.uploadFile(file, uploadedBy));
+        return ResponseEntity.ok(fileService.uploadFile(file, uploadedBy, module));
     }
 
     @PreAuthorize("isAuthenticated()")

@@ -30,7 +30,7 @@ public class FileService {
     private String bucketName;
 
     @Transactional
-    public File uploadFile(MultipartFile multipartFile, UUID uploadedBy) {
+    public File uploadFile(MultipartFile multipartFile, UUID uploadedBy, String module) {
         try {
             UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
             if (multipartFile.isEmpty()) {
@@ -45,7 +45,10 @@ public class FileService {
             }
             String storedFilename = UUID.randomUUID().toString() + extension;
             
-            String storagePath = organizationId.toString() + "/" + storedFilename;
+            String orgPath = organizationId != null ? organizationId.toString() : "system";
+            String safeModule = (module != null && !module.trim().isEmpty()) ? module.trim().toLowerCase() : "general";
+            String yearMonth = java.time.YearMonth.now().toString(); // e.g. 2026-07
+            String storagePath = orgPath + "/" + safeModule + "/" + yearMonth + "/" + storedFilename;
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)

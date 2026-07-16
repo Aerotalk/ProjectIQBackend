@@ -23,7 +23,7 @@ public class File {
     @Column(name = "file_id")
     private UUID id;
 
-    @Column(name = "organization_id", nullable = false)
+    @Column(name = "organization_id")
     private UUID organizationId;
 
     @Column(name = "original_name", length = 255, nullable = false)
