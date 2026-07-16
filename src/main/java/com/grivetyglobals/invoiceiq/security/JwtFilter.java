@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String method = request.getMethod();
             boolean safeMethod = "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method) || "OPTIONS".equalsIgnoreCase(method);
             String contentType = request.getContentType();
-            if (safeMethod || (contentType != null && contentType.contains("application/json"))) {
+            if (safeMethod || (contentType != null && (contentType.contains("application/json") || contentType.contains("multipart/form-data")))) {
                 for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                     if ("access_token".equals(cookie.getName())) {
                         jwt = cookie.getValue();
