@@ -75,7 +75,7 @@ public class FileService {
         }
     }
 
-    public Resource loadFileAsResource(UUID fileId) {
+    public java.io.InputStream getFileInputStream(UUID fileId) {
         File fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
@@ -85,13 +85,7 @@ public class FileService {
                     .key(fileEntity.getStoragePath())
                     .build();
 
-            ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(getObjectRequest);
-            return new InputStreamResource(s3Object) {
-                @Override
-                public long contentLength() {
-                    return fileEntity.getFileSize();
-                }
-            };
+            return s3Client.getObject(getObjectRequest);
         } catch (Exception e) {
             throw new RuntimeException("Could not read file from S3: " + fileEntity.getOriginalName(), e);
         }

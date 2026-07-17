@@ -32,14 +32,20 @@ public class FileController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{fileId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable UUID fileId) {
-        Resource resource = fileService.loadFileAsResource(fileId);
+    public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> downloadFile(@PathVariable UUID fileId) {
         File metadata = fileService.getFileMetadata(fileId);
+        java.io.InputStream inputStream = fileService.getFileInputStream(fileId);
+
+        org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody responseBody = outputStream -> {
+            try (inputStream) {
+                inputStream.transferTo(outputStream);
+            }
+        };
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(metadata.getMimeType()))
                 .contentLength(metadata.getFileSize())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + metadata.getOriginalName() + "\"")
-                .body(resource);
+                .body(responseBody);
     }
 }
