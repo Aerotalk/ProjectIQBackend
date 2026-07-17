@@ -188,8 +188,8 @@ public class AuthService {
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
                 .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
-                .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
                 .effectivePermissions(effectivePermissions)
+                .profilePhotoId(user.getProfilePhotoId())
                 .build();
     }
 

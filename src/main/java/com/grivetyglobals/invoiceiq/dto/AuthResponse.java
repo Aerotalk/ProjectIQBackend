@@ -19,4 +19,5 @@ public class AuthResponse {
     private java.util.UUID companyId;
     private String companyName;
     private java.util.Set<String> effectivePermissions;
+    private java.util.UUID profilePhotoId;
 }

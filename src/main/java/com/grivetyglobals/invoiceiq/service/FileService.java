@@ -86,7 +86,12 @@ public class FileService {
                     .build();
 
             ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(getObjectRequest);
-            return new InputStreamResource(s3Object);
+            return new InputStreamResource(s3Object) {
+                @Override
+                public long contentLength() {
+                    return fileEntity.getFileSize();
+                }
+            };
         } catch (Exception e) {
             throw new RuntimeException("Could not read file from S3: " + fileEntity.getOriginalName(), e);
         }
