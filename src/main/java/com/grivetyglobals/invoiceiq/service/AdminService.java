@@ -129,6 +129,9 @@ public class AdminService {
                 .primaryColor(request.getPrimaryColor())
                 .secondaryColor(request.getSecondaryColor())
                 .status(request.getStatus())
+                .logoFileId(request.getLogoFileId())
+                .invoiceLogoId(request.getInvoiceLogoId())
+                .stampFileId(request.getStampFileId())
                 .build();
 
         company = companyRepository.save(company);
@@ -396,13 +399,13 @@ public class AdminService {
         return company;
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Company getMyCompanyProfile(String email) {
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
         if (companyId == null) {
             return null; // System Super Admins or Org Admins might not have a specific company
         }
-        return companyRepository.findById(companyId)
-                .orElseThrow(() -> new RuntimeException("Company not found"));
+        return getCompanyById(companyId);
     }
 
     @Transactional
