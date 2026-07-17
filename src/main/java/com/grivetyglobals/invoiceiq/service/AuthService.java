@@ -190,6 +190,7 @@ public class AuthService {
                 .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
                 .effectivePermissions(effectivePermissions)
                 .profilePhotoId(user.getProfilePhotoId())
+                .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
                 .build();
     }
 
@@ -218,6 +219,7 @@ public class AuthService {
                 .companyName(user.getCompany() != null ? user.getCompany().getCompanyName() : null)
                 .effectivePermissions(effectivePermissions)
                 .profilePhotoId(user.getProfilePhotoId())
+                .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
                 .build();
     }
 
