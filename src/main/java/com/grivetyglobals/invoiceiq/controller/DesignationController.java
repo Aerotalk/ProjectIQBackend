@@ -27,8 +27,9 @@ public class DesignationController {
 
     @PreAuthorize("hasAuthority('designation.view')")
     @GetMapping
-    public ResponseEntity<List<Designation>> getAllDesignations() {
-        return ResponseEntity.ok(designationService.getAllDesignations());
+    public ResponseEntity<List<Designation>> getAllDesignations(
+            @RequestParam(required = false) UUID companyId) {
+        return ResponseEntity.ok(designationService.getAllDesignations(companyId));
     }
 
     @PreAuthorize("hasPermission(#id, 'Designation', 'designation.view')")

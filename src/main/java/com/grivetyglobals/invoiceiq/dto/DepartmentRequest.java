@@ -22,5 +22,7 @@ public class DepartmentRequest {
 
     private UUID parentDepartmentId;
 
+    private UUID companyId;
+
     private String description;
 }

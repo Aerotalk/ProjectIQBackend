@@ -13,4 +13,7 @@ import java.util.UUID;
 @Repository
 public interface DesignationRepository extends JpaRepository<Designation, UUID> {
     List<Designation> findByOrganizationId(UUID organizationId);
+
+    @Query("SELECT d FROM Designation d WHERE d.organization.id = :organizationId AND (:companyId IS NULL OR d.company.id = :companyId)")
+    List<Designation> findByOrganizationIdAndCompanyId(@Param("organizationId") UUID organizationId, @Param("companyId") UUID companyId);
 }

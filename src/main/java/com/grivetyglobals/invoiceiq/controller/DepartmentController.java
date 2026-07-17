@@ -27,8 +27,9 @@ public class DepartmentController {
 
     @PreAuthorize("hasAuthority('department.view')")
     @GetMapping
-    public ResponseEntity<List<Department>> getAllDepartments() {
-        return ResponseEntity.ok(departmentService.getAllDepartments());
+    public ResponseEntity<List<Department>> getAllDepartments(
+            @RequestParam(required = false) UUID companyId) {
+        return ResponseEntity.ok(departmentService.getAllDepartments(companyId));
     }
 
     @PreAuthorize("hasPermission(#id, 'Department', 'department.view')")

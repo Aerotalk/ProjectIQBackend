@@ -37,10 +37,20 @@ public class DepartmentService {
                     .orElseThrow(() -> new RuntimeException("Parent Department not found"));
         }
 
-        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        // Company resolution: request.companyId (org admin dropdown) takes priority,
+        // then fall back to the JWT-scoped companyId (company-level user)
+        UUID resolvedCompanyId = request.getCompanyId() != null
+                ? request.getCompanyId()
+                : SecurityUtils.getCurrentCompanyId();
+
         Company company = null;
-        if (currentCompanyId != null) {
-            company = companyRepository.findById(currentCompanyId).orElse(null);
+        if (resolvedCompanyId != null) {
+            company = companyRepository.findById(resolvedCompanyId)
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
+            // Ensure the company belongs to this org (tenancy guard)
+            if (!company.getOrganization().getId().equals(currentOrgId)) {
+                throw new RuntimeException("Access Denied: Company belongs to another organization");
+            }
         }
 
         Department department = Department.builder()
@@ -55,11 +65,12 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "departmentsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId()")
-    public List<Department> getAllDepartments() {
+    @org.springframework.cache.annotation.Cacheable(value = "departmentsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + (#companyId != null ? #companyId : T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId())")
+    public List<Department> getAllDepartments(UUID companyId) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
-        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
-        return departmentRepository.findByOrganizationIdAndCompanyId(currentOrgId, currentCompanyId);
+        // companyId param (from query string) takes priority over JWT-scoped companyId
+        UUID resolvedCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId();
+        return departmentRepository.findByOrganizationIdAndCompanyId(currentOrgId, resolvedCompanyId);
     }
 
     public Department getDepartmentById(UUID id) {
