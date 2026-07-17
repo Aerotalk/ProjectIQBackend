@@ -17,4 +17,7 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
     @Query("SELECT COUNT(c) FROM Company c WHERE c.organization.id = :organizationId")
     long countByOrganizationId(@Param("organizationId") UUID organizationId);
+
+    @Query("SELECT c FROM Company c WHERE c.organization.id = :organizationId AND c.deletedAt IS NULL ORDER BY c.createdAt ASC")
+    List<Company> findAllByOrganizationId(@Param("organizationId") UUID organizationId);
 }

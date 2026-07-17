@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -19,6 +21,8 @@ public class DesignationRequest {
     private String designationName;
 
     private Integer hierarchyLevel;
+
+    private UUID companyId;
 
     private String description;
 }

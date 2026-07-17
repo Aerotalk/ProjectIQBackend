@@ -115,7 +115,7 @@ public class EmployeeService {
         return employee;
     }
 
-    @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), #departmentId, #status, #searchTerm)")
+    @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId(), #departmentId, #status, #searchTerm)")
     @Transactional(readOnly = true)
     public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String searchTerm) {
         UUID organizationId = SecurityUtils.getCurrentOrganizationId();

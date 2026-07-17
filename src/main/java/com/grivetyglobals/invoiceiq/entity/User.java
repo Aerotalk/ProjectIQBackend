@@ -90,6 +90,17 @@ public class User implements UserDetails {
     @Builder.Default
     private Set<String> effectivePermissions = new HashSet<>();
 
+    @Transient
+    public Set<Role> getRoles() {
+        if (!org.hibernate.Hibernate.isInitialized(this)) {
+            return java.util.Collections.emptySet();
+        }
+        if (userRoles != null && org.hibernate.Hibernate.isInitialized(userRoles)) {
+            return userRoles.stream().map(UserRole::getRole).collect(Collectors.toSet());
+        }
+        return java.util.Collections.emptySet();
+    }
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
@@ -99,7 +110,13 @@ public class User implements UserDetails {
     @com.fasterxml.jackson.annotation.JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = userRoles.stream()
-                .map(userRole -> new SimpleGrantedAuthority("ROLE_" + userRole.getRole().getRoleName()))
+                .map(userRole -> {
+                    String roleName = userRole.getRole().getRoleName();
+                    if (!roleName.startsWith("ROLE_")) {
+                        roleName = "ROLE_" + roleName;
+                    }
+                    return new SimpleGrantedAuthority(roleName);
+                })
                 .collect(Collectors.toSet());
                 
         if (effectivePermissions != null) {

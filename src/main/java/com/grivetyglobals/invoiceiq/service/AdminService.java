@@ -41,7 +41,7 @@ public class AdminService {
                 .industry(request.getIndustry())
                 .status(request.getStatus())
                 .build();
-                
+
         org = organizationRepository.save(org);
 
         // Auto-create Organization Admin User so they can login
@@ -75,7 +75,8 @@ public class AdminService {
         return org;
     }
 
-    public org.springframework.data.domain.Page<Organization> getAllOrganizations(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<Organization> getAllOrganizations(
+            org.springframework.data.domain.Pageable pageable) {
         return organizationRepository.findAll(pageable);
     }
 
@@ -85,7 +86,8 @@ public class AdminService {
     }
 
     @Transactional
-    public Organization updateOrganization(java.util.UUID id, com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
+    public Organization updateOrganization(java.util.UUID id,
+            com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
         Organization org = getOrganizationById(id);
         org.setOrganizationName(request.getOrganizationName());
         org.setOrganizationEmail(request.getOrganizationEmail());
@@ -106,7 +108,7 @@ public class AdminService {
         if (orgId == null) {
             orgId = request.getOrganizationId();
         }
-        
+
         Organization organization = organizationRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
@@ -210,24 +212,29 @@ public class AdminService {
     @Transactional
     public User createUser(UserCreateRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new com.grivetyglobals.invoiceiq.exception.BusinessValidationException("An account with this email address already exists in the system.");
+            throw new com.grivetyglobals.invoiceiq.exception.BusinessValidationException(
+                    "An account with this email address already exists in the system.");
         }
 
         java.util.UUID currentOrgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID currentCompanyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
-        
+
         Organization organization = null;
         if (currentOrgId != null) {
-            organization = organizationRepository.findById(currentOrgId).orElseThrow(() -> new RuntimeException("Org not found"));
+            organization = organizationRepository.findById(currentOrgId)
+                    .orElseThrow(() -> new RuntimeException("Org not found"));
         } else if (request.getOrganizationId() != null) {
-            organization = organizationRepository.findById(request.getOrganizationId()).orElseThrow(() -> new RuntimeException("Org not found"));
+            organization = organizationRepository.findById(request.getOrganizationId())
+                    .orElseThrow(() -> new RuntimeException("Org not found"));
         }
 
         Company company = null;
         if (currentCompanyId != null) {
-            company = companyRepository.findById(currentCompanyId).orElseThrow(() -> new RuntimeException("Company not found"));
+            company = companyRepository.findById(currentCompanyId)
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
         } else if (request.getCompanyId() != null) {
-            company = companyRepository.findById(request.getCompanyId()).orElseThrow(() -> new RuntimeException("Company not found"));
+            company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
             if (organization != null && !company.getOrganization().getId().equals(organization.getId())) {
                 throw new RuntimeException("Access Denied: Company belongs to another organization");
             }
@@ -244,20 +251,34 @@ public class AdminService {
                 .mobile(request.getMobile())
                 .build();
 
+        java.util.List<UUID> allowedRoleIds = getAvailableRoles().stream().map(Role::getId)
+                .collect(java.util.stream.Collectors.toList());
         if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
             for (UUID roleId : request.getRoleIds()) {
+                if (!allowedRoleIds.contains(roleId)) {
+                    throw new RuntimeException(
+                            "Access Denied: You cannot assign a role you do not have permission to grant.");
+                }
                 Role role = roleRepository.findById(roleId).orElseThrow(() -> new RuntimeException("Role not found"));
-                com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+                com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole
+                        .builder()
                         .user(user)
                         .role(role)
                         .build();
                 user.getUserRoles().add(userRole);
             }
         } else if (request.getRole() != null) {
-            Role role = roleRepository.findByRoleName(request.getRole()).orElseThrow(() -> new RuntimeException("Role not found: " + request.getRole()));
-            com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+            Role role = roleRepository.findByRoleName(request.getRole())
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRole()));
+            if (!allowedRoleIds.contains(role.getId())) {
+                throw new RuntimeException(
+                        "Access Denied: You cannot assign a role you do not have permission to grant.");
+            }
+            com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole
+                    .builder()
                     .user(user)
                     .role(role)
+                    .company(company)
                     .build();
             user.getUserRoles().add(userRole);
         }
@@ -267,7 +288,7 @@ public class AdminService {
     public org.springframework.data.domain.Page<User> getAllUsers(org.springframework.data.domain.Pageable pageable) {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
-        
+
         if (companyId != null) {
             return userRepository.findByCompanyId(companyId, pageable);
         } else if (orgId != null) {
@@ -279,42 +300,66 @@ public class AdminService {
     @Transactional
     public User updateUser(java.util.UUID userId, com.grivetyglobals.invoiceiq.dto.UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         java.util.UUID currentOrgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID currentCompanyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
-        
-        if (currentCompanyId != null && (user.getCompany() == null || !user.getCompany().getId().equals(currentCompanyId))) {
+
+        if (currentCompanyId != null
+                && (user.getCompany() == null || !user.getCompany().getId().equals(currentCompanyId))) {
             throw new RuntimeException("Access Denied");
         }
-        if (currentOrgId != null && (user.getOrganization() == null || !user.getOrganization().getId().equals(currentOrgId))) {
+        if (currentOrgId != null
+                && (user.getOrganization() == null || !user.getOrganization().getId().equals(currentOrgId))) {
             throw new RuntimeException("Access Denied");
         }
-        
-        if (request.getUsername() != null) user.setUsername(request.getUsername());
-        if (request.getEmail() != null) user.setEmail(request.getEmail());
-        if (request.getMobile() != null) user.setMobile(request.getMobile());
-        if (request.getStatus() != null) user.setStatus(request.getStatus());
+
+        if (request.getUsername() != null)
+            user.setUsername(request.getUsername());
+        if (request.getEmail() != null)
+            user.setEmail(request.getEmail());
+        if (request.getMobile() != null)
+            user.setMobile(request.getMobile());
+        if (request.getStatus() != null)
+            user.setStatus(request.getStatus());
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        
+
         if (request.getRoleIds() != null) {
+            java.util.List<UUID> allowedRoleIds = getAvailableRoles().stream().map(Role::getId)
+                    .collect(java.util.stream.Collectors.toList());
             user.getUserRoles().clear();
             for (UUID roleId : request.getRoleIds()) {
+                if (!allowedRoleIds.contains(roleId)) {
+                    throw new RuntimeException(
+                            "Access Denied: You cannot assign a role you do not have permission to grant.");
+                }
                 Role role = roleRepository.findById(roleId).orElseThrow(() -> new RuntimeException("Role not found"));
-                com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole.builder()
+
+                Company roleCompany = null;
+                if (currentCompanyId != null) {
+                    roleCompany = companyRepository.findById(currentCompanyId).orElse(null);
+                } else if (user.getCompany() != null) {
+                    roleCompany = user.getCompany();
+                }
+
+                com.grivetyglobals.invoiceiq.entity.UserRole userRole = com.grivetyglobals.invoiceiq.entity.UserRole
+                        .builder()
                         .user(user)
                         .role(role)
+                        .company(roleCompany)
                         .build();
                 user.getUserRoles().add(userRole);
             }
         }
-        
+
         return userRepository.save(user);
     }
+
     @org.springframework.cache.annotation.Cacheable(value = "companiesList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Company> getAllCompanies(org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<Company> getAllCompanies(
+            org.springframework.data.domain.Pageable pageable) {
         java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         org.springframework.data.domain.Page<Company> companies;
         if (organizationId != null) {
@@ -322,12 +367,14 @@ public class AdminService {
         } else {
             companies = companyRepository.findAll(pageable);
         }
-        
+
         companies.forEach(company -> {
-            if (company.getAddresses() != null) company.getAddresses().size();
-            if (company.getBankAccounts() != null) company.getBankAccounts().size();
+            if (company.getAddresses() != null)
+                company.getAddresses().size();
+            if (company.getBankAccounts() != null)
+                company.getBankAccounts().size();
         });
-        
+
         return companies;
     }
 
@@ -336,14 +383,16 @@ public class AdminService {
         java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
-        
+
         if (organizationId != null && !company.getOrganization().getId().equals(organizationId)) {
             throw new RuntimeException("Access Denied: Company belongs to another organization");
         }
-        
-        if (company.getAddresses() != null) company.getAddresses().size();
-        if (company.getBankAccounts() != null) company.getBankAccounts().size();
-        
+
+        if (company.getAddresses() != null)
+            company.getAddresses().size();
+        if (company.getBankAccounts() != null)
+            company.getBankAccounts().size();
+
         return company;
     }
 
@@ -391,7 +440,7 @@ public class AdminService {
         // Update Addresses (Simplistic approach: delete old and recreate new)
         companyAddressRepository.deleteAll(company.getAddresses());
         company.getAddresses().clear();
-        
+
         if (request.getAddresses() != null) {
             for (CompanyAddressDto addressDto : request.getAddresses()) {
                 CompanyAddress address = CompanyAddress.builder()
@@ -443,11 +492,12 @@ public class AdminService {
         company.setStatus(status);
         return companyRepository.save(company);
     }
+
     @Transactional(readOnly = true)
     public java.util.List<PermissionGroup> getMyPermissionGroups() {
         User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
         user = userRepository.findById(user.getId()).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         java.util.Set<PermissionGroup> allowedGroups = new java.util.HashSet<>();
         for (com.grivetyglobals.invoiceiq.entity.UserRole ur : user.getUserRoles()) {
             for (com.grivetyglobals.invoiceiq.entity.RolePermissionGroup rpg : ur.getRole().getRolePermissionGroups()) {
@@ -461,22 +511,24 @@ public class AdminService {
     public Role createRole(com.grivetyglobals.invoiceiq.dto.RoleCreateRequest request) {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
-        
+
         Organization org = null;
         if (orgId != null) {
             org = organizationRepository.findById(orgId).orElseThrow(() -> new RuntimeException("Org not found"));
         }
-        
+
         Company company = null;
         if (companyId != null) {
-            company = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not found"));
+            company = companyRepository.findById(companyId)
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
         } else if (request.getCompanyId() != null) {
-            company = companyRepository.findById(request.getCompanyId()).orElseThrow(() -> new RuntimeException("Company not found"));
+            company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
             if (orgId != null && !company.getOrganization().getId().equals(orgId)) {
                 throw new RuntimeException("Access Denied: Company belongs to another organization");
             }
         }
-        
+
         Role role = Role.builder()
                 .roleName(request.getRoleName())
                 .description(request.getDescription())
@@ -485,48 +537,77 @@ public class AdminService {
                 .systemRole(false)
                 .status("ACTIVE")
                 .build();
-                
+
         return roleRepository.save(role);
     }
 
     public java.util.List<Role> getAvailableRoles() {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
-        
+
+        java.util.List<Role> roles;
         if (orgId == null && companyId == null) {
-            return roleRepository.findAll();
+            roles = roleRepository.findAll();
+        } else {
+            roles = roleRepository.findAvailableRoles(orgId, companyId);
         }
-        return roleRepository.findAvailableRoles(orgId, companyId);
+
+        User currentUser = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+        // The user entity we have from SecurityContext might not have the fully loaded
+        // roles if not careful, but getAuthorities works too, or just query it.
+        boolean isSuperAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+        boolean isOrgAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ORG_ADMIN"));
+        boolean isCompanyAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_COMPANY_ADMIN"));
+
+        return roles.stream().filter(role -> {
+            if (role.getSystemRole()) {
+                if (role.getRoleName().equals("ROLE_SUPER_ADMIN"))
+                    return isSuperAdmin;
+                if (role.getRoleName().equals("ROLE_ORG_ADMIN"))
+                    return isSuperAdmin || isOrgAdmin;
+                if (role.getRoleName().equals("ROLE_COMPANY_ADMIN"))
+                    return isSuperAdmin || isOrgAdmin || isCompanyAdmin;
+                return true; // e.g., EMPLOYEE
+            }
+            return true;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional
-    public Role assignPermissionsToRole(java.util.UUID roleId, com.grivetyglobals.invoiceiq.dto.RolePermissionAssignRequest request) {
+    public Role assignPermissionsToRole(java.util.UUID roleId,
+            com.grivetyglobals.invoiceiq.dto.RolePermissionAssignRequest request) {
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new RuntimeException("Role not found"));
-        
+
         java.util.List<PermissionGroup> myGroups = getMyPermissionGroups();
         java.util.Set<UUID> myGroupIds = new java.util.HashSet<>();
         for (PermissionGroup pg : myGroups) {
             myGroupIds.add(pg.getId());
         }
-        
+
         role.getRolePermissionGroups().clear();
-        
+
         for (UUID pgId : request.getPermissionGroupIds()) {
             if (!myGroupIds.contains(pgId)) {
-                throw new RuntimeException("Access Denied: You cannot assign a permission group that you do not possess (ID: " + pgId + ")");
+                throw new RuntimeException(
+                        "Access Denied: You cannot assign a permission group that you do not possess (ID: " + pgId
+                                + ")");
             }
             PermissionGroup pg = new PermissionGroup();
             pg.setId(pgId);
-            
-            com.grivetyglobals.invoiceiq.entity.RolePermissionGroup rpg = com.grivetyglobals.invoiceiq.entity.RolePermissionGroup.builder()
+
+            com.grivetyglobals.invoiceiq.entity.RolePermissionGroup rpg = com.grivetyglobals.invoiceiq.entity.RolePermissionGroup
+                    .builder()
                     .role(role)
                     .permissionGroup(pg)
                     // Defaults to global, ideally should be configurable but for now set to default
-                    .dataScope(com.grivetyglobals.invoiceiq.enums.DataScope.GLOBAL) 
+                    .dataScope(com.grivetyglobals.invoiceiq.enums.DataScope.GLOBAL)
                     .build();
             role.getRolePermissionGroups().add(rpg);
         }
-        
+
         return roleRepository.save(role);
     }
 }
