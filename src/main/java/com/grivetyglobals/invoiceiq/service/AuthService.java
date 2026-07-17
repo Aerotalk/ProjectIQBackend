@@ -183,7 +183,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken.getToken())
-                .username(user.getUsername())
+                .username(user.getActualUsername())
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
@@ -209,7 +209,7 @@ public class AuthService {
 
         return MeResponse.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .username(user.getActualUsername())
                 .email(user.getEmail())
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
