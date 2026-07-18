@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Invoice - Bold Creative</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-color: #8B5CF6; /* Vibrant Purple */
+    --brand-dark: #5B21B6;
+    --bg-color: #F3F4F6;
+    --text-main: #1F2937;
+    --surface: #ffffff;
+  }
+  
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-color);
+    margin: 0; padding: 0; font-size: 13px; line-height: 1.5;
+  }
+
+  .document-container {
+    max-width: 800px; margin: 40px auto;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  @media print {
+    body { background-color: #fff; }
+    .document-container { margin: 0; border-radius: 0; box-shadow: none; max-width: 100%; }
+  }
+
+  .header-block {
+    background: linear-gradient(135deg, var(--brand-color), var(--brand-dark));
+    color: #fff; padding: 40px; display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .header-block h1 { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 1px; }
+  .header-block p { margin: 5px 0 0 0; opacity: 0.9; }
+
+  .doc-type {
+    background-color: #000; color: #fff; padding: 8px 20px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; border-radius: 30px; font-size: 12px; display: inline-block;
+  }
+
+  .content-wrapper { padding: 40px; }
+
+  .flex-row { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
+  
+  .card {
+    background: #F9FAFB; padding: 20px; border-radius: 12px; flex: 1; border: 1px solid #E5E7EB;
+  }
+  .card h3 { margin: 0 0 10px 0; color: var(--brand-color); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px; }
+  th, td { padding: 15px; text-align: left; }
+  th { background-color: #F3F4F6; color: var(--text-main); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  th:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+  th:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+  
+  td { border-bottom: 1px solid #E5E7EB; }
+  tr:last-child td { border-bottom: none; }
+
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+
+  .totals-box {
+    background: var(--brand-color); color: #fff; padding: 25px; border-radius: 16px; width: 300px; margin-left: auto;
+  }
+  .totals-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+  .totals-row.grand { font-size: 20px; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 15px; margin-top: 10px; }
+
+  .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; border-top: 1px solid #E5E7EB; padding-top: 30px; }
+  .footer-col h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--text-main); }
+  .footer-col p { margin: 0 0 5px 0; color: #6B7280; font-size: 12px; }
+
+</style>
+</head>
+<body>
+  <div class="document-container">
+    
+    <div class="header-block">
+      <div>
+        <div class="doc-type">Invoice</div>
+        <h1>{{company_name}}</h1>
+        <p>GSTIN: {{company_gstin}} | Phone: {{company_phone}}</p>
+      </div>
+      <div>
+        <img src="{{company_logo_url}}" alt="Logo" style="max-height: 80px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));" onerror="this.style.display='none'">
+      </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="flex-row">
+        <div class="card">
+          <h3>Billed To</h3>
+          <strong>{{client_name}}</strong><br>
+          {{client_address_line1}}<br>
+          {{client_address_line2}}<br>
+          GSTIN: {{client_gstin}}
+        </div>
+        <div class="card">
+          <h3>Invoice Info</h3>
+          <strong>No:</strong> {{invoice_number}}<br>
+          <strong>Date:</strong> {{invoice_date}}<br>
+          <strong>Due Date:</strong> {{due_date}}<br>
+          <strong>Place of Supply:</strong> {{place_of_supply}}
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th width="45%">Item Description</th>
+            <th width="15%" class="text-center">Qty</th>
+            <th width="20%" class="text-right">Price</th>
+            <th width="20%" class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#items}}
+          <tr>
+            <td>
+              <strong style="font-size: 14px;">{{item_name}}</strong>
+              {{#item_description}}<br><span style="color: #6B7280; font-size: 12px;">{{item_description}}</span>{{/item_description}}
+            </td>
+            <td class="text-center">
+              <span style="background: #F3F4F6; padding: 4px 8px; border-radius: 6px; font-weight: 600;">{{item_quantity}}</span>
+            </td>
+            <td class="text-right">{{item_price}}</td>
+            <td class="text-right" style="font-weight: 600;">{{item_amount}}</td>
+          </tr>
+          {{/items}}
+        </tbody>
+      </table>
+
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>Sub Total</span>
+          <span>{{sub_total}}</span>
+        </div>
+        <div class="totals-row">
+          <span>Taxes</span>
+          <span>{{total_tax}}</span>
+        </div>
+        <div class="totals-row grand">
+          <span>Amount Due</span>
+          <span>{{grand_total}}</span>
+        </div>
+      </div>
+
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Payment Instructions</h4>
+          <p><strong>Bank:</strong> {{bank_name}}</p>
+          <p><strong>Account:</strong> {{bank_account_no}}</p>
+          <p><strong>IFSC:</strong> {{bank_ifsc}}</p>
+        </div>
+        <div class="footer-col">
+          <h4>Terms & Conditions</h4>
+          <p>{{terms_and_conditions}}</p>
+          <div style="margin-top: 30px; border-top: 2px solid #E5E7EB; width: 150px; padding-top: 10px; font-weight: 600;">
+            Authorized Signatory
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

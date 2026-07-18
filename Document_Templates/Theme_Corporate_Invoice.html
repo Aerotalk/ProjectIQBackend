@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax Invoice - Corporate</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-dark: #1e3a8a;
+    --border-color: #000000;
+  }
+  
+  body {
+    font-family: 'Open Sans', sans-serif;
+    color: #000;
+    margin: 0; padding: 0; font-size: 12px; line-height: 1.4;
+  }
+
+  .document-container {
+    max-width: 800px; margin: 40px auto; padding: 40px;
+    background: #fff; border: 1px solid #ccc;
+  }
+
+  @media print {
+    body { background-color: #fff; }
+    .document-container { margin: 0; padding: 0; border: none; max-width: 100%; }
+  }
+
+  .header-table { width: 100%; margin-bottom: 20px; }
+  .header-table td { border: none; padding: 0; }
+  .company-name { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin: 0 0 5px 0; text-transform: uppercase; }
+
+  .doc-title { text-align: center; font-size: 18px; font-weight: 700; border-top: 2px solid var(--primary-dark); border-bottom: 2px solid var(--primary-dark); padding: 5px 0; margin-bottom: 20px; text-transform: uppercase; background-color: #f1f5f9; }
+
+  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid var(--border-color); }
+  .info-table td { width: 50%; padding: 8px; vertical-align: top; border: 1px solid var(--border-color); }
+  .info-title { font-weight: 700; background-color: #f1f5f9; padding: 4px 8px; border-bottom: 1px solid var(--border-color); margin: -8px -8px 8px -8px; }
+
+  .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid var(--border-color); }
+  .items-table th, .items-table td { padding: 8px; text-align: left; border: 1px solid var(--border-color); }
+  .items-table th { background-color: var(--primary-dark); color: #fff; font-weight: 600; text-transform: uppercase; font-size: 11px; text-align: center; }
+  
+  .text-right { text-align: right !important; }
+  .text-center { text-align: center !important; }
+
+  .summary-table { width: 100%; border-collapse: collapse; }
+  .summary-table td { padding: 6px 8px; border: 1px solid var(--border-color); }
+  .summary-table .total-row { font-weight: 700; background-color: #f1f5f9; }
+
+  .footer-table { width: 100%; border-collapse: collapse; border: 1px solid var(--border-color); margin-top: 20px; }
+  .footer-table td { padding: 8px; vertical-align: top; border: 1px solid var(--border-color); width: 50%; }
+</style>
+</head>
+<body>
+  <div class="document-container">
+    
+    <table class="header-table">
+      <tr>
+        <td width="60%">
+          <h1 class="company-name">{{company_name}}</h1>
+          <div>
+            {{company_address_line1}}, {{company_address_line2}}<br>
+            Phone: {{company_phone}} | Email: {{company_email}}<br>
+            GSTIN: <strong>{{company_gstin}}</strong> | PAN: <strong>{{company_pan}}</strong>
+          </div>
+        </td>
+        <td width="40%" class="text-right">
+          <img src="{{company_logo_url}}" alt="Logo" style="max-height: 70px;" onerror="this.style.display='none'">
+        </td>
+      </tr>
+    </table>
+
+    <div class="doc-title">TAX INVOICE</div>
+
+    <table class="info-table">
+      <tr>
+        <td>
+          <div class="info-title">Details of Receiver (Billed To)</div>
+          <strong>{{client_name}}</strong><br>
+          {{client_address_line1}}<br>
+          {{client_address_line2}}<br>
+          GSTIN: {{client_gstin}}<br>
+          State: {{client_state}}
+        </td>
+        <td>
+          <div class="info-title">Invoice Details</div>
+          <table style="width:100%; font-size: 12px;">
+            <tr><td style="border:none; padding:2px 0;">Invoice No.:</td><td style="border:none; padding:2px 0;"><strong>{{invoice_number}}</strong></td></tr>
+            <tr><td style="border:none; padding:2px 0;">Invoice Date:</td><td style="border:none; padding:2px 0;"><strong>{{invoice_date}}</strong></td></tr>
+            <tr><td style="border:none; padding:2px 0;">Due Date:</td><td style="border:none; padding:2px 0;"><strong>{{due_date}}</strong></td></tr>
+            <tr><td style="border:none; padding:2px 0;">Place of Supply:</td><td style="border:none; padding:2px 0;"><strong>{{place_of_supply}}</strong></td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th width="5%">S.No</th>
+          <th width="35%">Description of Goods/Services</th>
+          <th width="10%">HSN/SAC</th>
+          <th width="10%">Qty</th>
+          <th width="15%">Rate</th>
+          <th width="10%">Tax %</th>
+          <th width="15%">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#items}}
+        <tr>
+          <td class="text-center">{{item_index}}</td>
+          <td><strong>{{item_name}}</strong></td>
+          <td class="text-center">{{item_hsn}}</td>
+          <td class="text-center">{{item_quantity}} {{item_unit}}</td>
+          <td class="text-right">{{item_price}}</td>
+          <td class="text-center">{{item_tax_rate}}%</td>
+          <td class="text-right">{{item_amount}}</td>
+        </tr>
+        {{/items}}
+      </tbody>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td width="60%" style="vertical-align: top; padding-right: 10px;">
+          <div style="border: 1px solid var(--border-color); padding: 8px; margin-bottom: 10px;">
+            <strong>Amount in words:</strong><br>
+            {{amount_in_words}}
+          </div>
+          <div style="border: 1px solid var(--border-color); padding: 8px;">
+            <strong>Bank Details:</strong><br>
+            Bank: {{bank_name}}<br>
+            A/C No: {{bank_account_no}}<br>
+            IFSC: {{bank_ifsc}}<br>
+            A/C Holder: {{bank_account_holder}}
+          </div>
+        </td>
+        <td width="40%" style="vertical-align: top;">
+          <table class="summary-table">
+            <tr>
+              <td>Total Taxable Value</td>
+              <td class="text-right">{{sub_total}}</td>
+            </tr>
+            <tr>
+              <td>Add: CGST</td>
+              <td class="text-right">{{cgst_amount}}</td>
+            </tr>
+            <tr>
+              <td>Add: SGST</td>
+              <td class="text-right">{{sgst_amount}}</td>
+            </tr>
+            <tr>
+              <td>Add: IGST</td>
+              <td class="text-right">{{igst_amount}}</td>
+            </tr>
+            <tr class="total-row">
+              <td>Total Invoice Value</td>
+              <td class="text-right">{{grand_total}}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <table class="footer-table">
+      <tr>
+        <td>
+          <strong>Terms and Conditions:</strong><br>
+          <div style="white-space: pre-wrap; font-size: 11px;">{{terms_and_conditions}}</div>
+        </td>
+        <td class="text-right" style="position: relative; height: 100px;">
+          <div style="font-weight: 700;">For {{company_name}}</div>
+          <div style="position: absolute; bottom: 8px; right: 8px;">Authorized Signatory</div>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+</body>
+</html>
