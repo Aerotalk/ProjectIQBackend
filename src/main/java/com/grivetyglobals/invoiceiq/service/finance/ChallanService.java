@@ -31,12 +31,14 @@ public class ChallanService {
     private final ProjectRepository projectRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
 
+    @Transactional(readOnly = true)
     public List<ChallanDto> getChallansByCompany(UUID companyId) {
         return challanRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ChallanDto getChallan(UUID id) {
         return mapToDto(challanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Challan not found")));
