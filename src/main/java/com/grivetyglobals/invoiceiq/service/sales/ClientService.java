@@ -92,7 +92,9 @@ public class ClientService {
     }
 
     private void mapToEntity(ClientDto dto, Client client) {
-        client.setClientNo(dto.getClientNo());
+        if (dto.getClientNo() != null) {
+            client.setClientNo(dto.getClientNo());
+        }
         client.setCustomerType(dto.getCustomerType());
         client.setCompanyName(dto.getCompanyName());
         client.setFirstName(dto.getFirstName());

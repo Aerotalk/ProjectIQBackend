@@ -111,7 +111,9 @@ public class VendorService {
     }
 
     private void mapToEntity(VendorDto dto, Vendor vendor) {
-        vendor.setVendorNo(dto.getVendorNo());
+        if (dto.getVendorNo() != null) {
+            vendor.setVendorNo(dto.getVendorNo());
+        }
         vendor.setVendorType(dto.getVendorType());
         vendor.setCompanyName(dto.getCompanyName());
         vendor.setFirstName(dto.getFirstName());
