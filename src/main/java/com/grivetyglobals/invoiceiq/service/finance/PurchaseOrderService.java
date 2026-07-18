@@ -29,12 +29,14 @@ public class PurchaseOrderService {
     private final VendorRepository vendorRepository;
     private final ProjectRepository projectRepository;
 
+    @Transactional(readOnly = true)
     public List<PurchaseOrderDto> getPurchaseOrdersByCompany(UUID companyId) {
         return purchaseOrderRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public PurchaseOrderDto getPurchaseOrder(UUID id) {
         return mapToDto(purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase Order not found")));
