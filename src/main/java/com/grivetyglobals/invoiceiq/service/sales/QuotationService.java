@@ -52,6 +52,10 @@ public class QuotationService {
         Client client = clientRepository.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
+        if (dto.getQuotationNo() == null || dto.getQuotationNo().trim().isEmpty() || "Unassigned".equals(dto.getQuotationNo())) {
+            dto.setQuotationNo(generateNextQuotationNumber(companyId));
+        }
+
         Quotation quotation = new Quotation();
         quotation.setCompany(company);
         quotation.setClient(client);
@@ -60,6 +64,23 @@ public class QuotationService {
         handleLineItems(dto, quotation);
 
         return mapToDto(quotationRepository.save(quotation));
+    }
+
+    private String generateNextQuotationNumber(UUID companyId) {
+        int year = java.time.LocalDate.now().getYear();
+        String prefix = "QT/" + year + "/";
+        List<Quotation> existing = quotationRepository.findByCompanyId(companyId);
+        int max = 0;
+        for (Quotation q : existing) {
+            String no = q.getQuotationNo();
+            if (no != null && no.startsWith(prefix)) {
+                try {
+                    int num = Integer.parseInt(no.substring(prefix.length()));
+                    if (num > max) max = num;
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return String.format("%s%04d", prefix, max + 1);
     }
 
     @Transactional

@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface ClientRepository extends JpaRepository<Client, UUID> {
     List<Client> findByCompanyId(UUID companyId);
+    long countByCompanyIdAndClientNoStartingWith(UUID companyId, String prefix);
 }

@@ -31,8 +31,14 @@ public class FileController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/{fileId}")
-    public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> downloadFile(@PathVariable UUID fileId) {
+    @GetMapping("/{fileIdStr}")
+    public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> downloadFile(@PathVariable String fileIdStr) {
+        UUID fileId;
+        try {
+            fileId = UUID.fromString(fileIdStr.trim());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid file ID format");
+        }
         File metadata = fileService.getFileMetadata(fileId);
         java.io.InputStream inputStream = fileService.getFileInputStream(fileId);
 
