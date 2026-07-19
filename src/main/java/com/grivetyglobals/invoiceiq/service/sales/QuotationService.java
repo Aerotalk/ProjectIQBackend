@@ -46,6 +46,9 @@ public class QuotationService {
     public QuotationDto createQuotation(UUID companyId, QuotationDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+        if (dto.getClientId() == null) {
+            throw new IllegalArgumentException("Client ID is required");
+        }
         Client client = clientRepository.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
@@ -64,7 +67,7 @@ public class QuotationService {
         Quotation quotation = quotationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Quotation not found"));
 
-        if (!quotation.getClient().getId().equals(dto.getClientId())) {
+        if (dto.getClientId() != null && !quotation.getClient().getId().equals(dto.getClientId())) {
             Client client = clientRepository.findById(dto.getClientId())
                     .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
             quotation.setClient(client);
@@ -101,6 +104,9 @@ public class QuotationService {
     private void handleLineItems(QuotationDto dto, Quotation quotation) {
         if (dto.getLineItems() != null) {
             List<QuotationLineItem> items = dto.getLineItems().stream().map(i -> {
+                if (i.getProductId() == null) {
+                    throw new IllegalArgumentException("Product ID is required for line items");
+                }
                 Product product = productRepository.findById(i.getProductId())
                         .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
                 
