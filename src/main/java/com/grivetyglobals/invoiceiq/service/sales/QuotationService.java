@@ -82,6 +82,18 @@ public class QuotationService {
     }
 
     @Transactional
+    public QuotationDto updateQuotationStatus(UUID id, String status, String approvedBy) {
+        Quotation quotation = quotationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation not found"));
+        quotation.setStatus(status);
+        if ("Approved".equalsIgnoreCase(status) || "Rejected".equalsIgnoreCase(status)) {
+            quotation.setApprovedBy(approvedBy);
+            quotation.setApprovalDate(java.time.LocalDateTime.now());
+        }
+        return mapToDto(quotationRepository.save(quotation));
+    }
+
+    @Transactional
     public void deleteQuotation(UUID id) {
         quotationRepository.deleteById(id);
     }
@@ -123,6 +135,7 @@ public class QuotationService {
         quotation.setValidUntil(dto.getValidUntil());
         quotation.setSubject(dto.getSubject());
         quotation.setReference(dto.getReference());
+        quotation.setTemplateName(dto.getTemplateName());
         quotation.setSubTotal(dto.getSubTotal());
         quotation.setTotalDiscount(dto.getTotalDiscount());
         quotation.setDeliveryCost(dto.getDeliveryCost());
@@ -147,6 +160,7 @@ public class QuotationService {
         dto.setValidUntil(quotation.getValidUntil());
         dto.setSubject(quotation.getSubject());
         dto.setReference(quotation.getReference());
+        dto.setTemplateName(quotation.getTemplateName());
         dto.setSubTotal(quotation.getSubTotal());
         dto.setTotalDiscount(quotation.getTotalDiscount());
         dto.setDeliveryCost(quotation.getDeliveryCost());

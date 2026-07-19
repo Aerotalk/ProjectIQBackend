@@ -41,6 +41,12 @@ public class QuotationController {
         return ResponseEntity.ok(quotationService.updateQuotation(id, dto));
     }
 
+    @PreAuthorize("hasAnyAuthority('quotation.approve', 'ROLE_ADMIN', 'ROLE_MANAGER')") // Restrict to managers/admins
+    @PutMapping("/{id}/status")
+    public ResponseEntity<QuotationDto> updateQuotationStatus(@PathVariable UUID id, @RequestParam String status, @RequestParam(required = false) String approvedBy) {
+        return ResponseEntity.ok(quotationService.updateQuotationStatus(id, status, approvedBy));
+    }
+
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteQuotation(@PathVariable UUID id) {

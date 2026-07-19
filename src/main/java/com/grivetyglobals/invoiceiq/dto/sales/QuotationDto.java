@@ -23,6 +23,7 @@ public class QuotationDto {
     private LocalDateTime validUntil;
     private String subject;
     private String reference;
+    private String templateName;
 
     private List<QuotationLineItemDto> lineItems;
 

@@ -56,6 +56,9 @@ public class Quotation {
     @Column(length = 100)
     private String reference;
 
+    @Column(name = "template_name", length = 100)
+    private String templateName;
+
     @Column(name = "sub_total", precision = 19, scale = 4)
     private BigDecimal subTotal;
 
