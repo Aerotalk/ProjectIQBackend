@@ -62,7 +62,8 @@ public class DocumentTemplateSeeder implements CommandLineRunner {
         }
 
         try {
-            String content = Files.readString(filePath);
+            byte[] bytes = Files.readAllBytes(filePath);
+            String content = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
             String name = generateBeautifulName(filename);
             String type = determineType(filename);
 
