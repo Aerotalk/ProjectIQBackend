@@ -35,6 +35,12 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found")));
     }
 
+    private String generateNextClientNumber(Company company) {
+        String year = String.valueOf(java.time.LocalDateTime.now().getYear());
+        long count = clientRepository.countByCompanyIdAndClientNoStartingWith(company.getId(), "CL/" + year);
+        return String.format("CL/%s/%04d", year, count + 1);
+    }
+
     @Transactional
     public ClientDto createClient(UUID companyId, ClientDto dto) {
         Company company = companyRepository.findById(companyId)
@@ -43,6 +49,10 @@ public class ClientService {
         Client client = new Client();
         client.setCompany(company);
         mapToEntity(dto, client);
+        
+        if (dto.getClientNo() == null || dto.getClientNo().trim().isEmpty()) {
+            client.setClientNo(generateNextClientNumber(company));
+        }
 
         if (dto.getAdditionalContacts() != null) {
             List<ClientAdditionalContact> contacts = dto.getAdditionalContacts().stream().map(c -> {

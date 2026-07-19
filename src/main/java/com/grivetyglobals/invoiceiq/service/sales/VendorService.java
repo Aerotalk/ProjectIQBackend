@@ -38,6 +38,12 @@ public class VendorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found")));
     }
 
+    private String generateNextVendorNumber(Company company) {
+        String year = String.valueOf(java.time.LocalDateTime.now().getYear());
+        long count = vendorRepository.countByCompanyIdAndVendorNoStartingWith(company.getId(), "VD/" + year);
+        return String.format("VD/%s/%04d", year, count + 1);
+    }
+
     @Transactional
     public VendorDto createVendor(UUID companyId, VendorDto dto) {
         Company company = companyRepository.findById(companyId)
@@ -46,6 +52,10 @@ public class VendorService {
         Vendor vendor = new Vendor();
         vendor.setCompany(company);
         mapToEntity(dto, vendor);
+        
+        if (dto.getVendorNo() == null || dto.getVendorNo().trim().isEmpty()) {
+            vendor.setVendorNo(generateNextVendorNumber(company));
+        }
 
         handleContactsAndBankDetails(dto, vendor);
 
