@@ -34,6 +34,9 @@ public class QuotationLineItem {
     @Column(name = "item_name", length = 255, nullable = false)
     private String itemName;
 
+    @Column(name = "hsn_sac")
+    private String hsnSac;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

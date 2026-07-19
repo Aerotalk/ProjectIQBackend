@@ -135,6 +135,7 @@ public class QuotationService {
                 item.setQuotation(quotation);
                 item.setProduct(product);
                 item.setItemName(i.getItemName());
+                item.setHsnSac(i.getHsnSac());
                 item.setDescription(i.getDescription());
                 item.setQuantity(i.getQuantity());
                 item.setUnit(i.getUnit());
@@ -207,6 +208,7 @@ public class QuotationService {
                     .id(i.getId())
                     .productId(i.getProduct().getId())
                     .itemName(i.getItemName())
+                    .hsnSac(i.getHsnSac())
                     .description(i.getDescription())
                     .quantity(i.getQuantity())
                     .unit(i.getUnit())
