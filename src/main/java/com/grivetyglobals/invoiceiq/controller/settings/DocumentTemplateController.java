@@ -20,10 +20,22 @@ public class DocumentTemplateController {
 
     private static final String TEMPLATES_DIR = "Document_Templates";
 
+    private Path getTemplatesDirPath() {
+        Path path1 = Paths.get(TEMPLATES_DIR);
+        if (Files.exists(path1) && Files.isDirectory(path1)) {
+            return path1;
+        }
+        Path path2 = Paths.get("ProjectIQBackend", TEMPLATES_DIR);
+        if (Files.exists(path2) && Files.isDirectory(path2)) {
+            return path2;
+        }
+        return path1;
+    }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<String>> getTemplates(@RequestParam(required = false) String type) {
-        Path dirPath = Paths.get(TEMPLATES_DIR);
+        Path dirPath = getTemplatesDirPath();
         if (!Files.exists(dirPath)) {
             return ResponseEntity.ok(List.of());
         }
@@ -49,7 +61,7 @@ public class DocumentTemplateController {
             throw new RuntimeException("Invalid filename");
         }
 
-        Path filePath = Paths.get(TEMPLATES_DIR, filename);
+        Path filePath = getTemplatesDirPath().resolve(filename);
         if (!Files.exists(filePath)) {
             throw new RuntimeException("Template not found");
         }
