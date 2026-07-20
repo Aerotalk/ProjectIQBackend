@@ -205,6 +205,18 @@
           <td>Total Tax</td>
           <td class="text-right">{{total_tax}}</td>
         </tr>
+        {{#has_delivery_cost}}
+        <tr>
+          <td>Delivery Cost</td>
+          <td class="text-right">{{delivery_cost}}</td>
+        </tr>
+        {{/has_delivery_cost}}
+        {{#has_discount}}
+        <tr>
+          <td>Discount</td>
+          <td class="text-right">-{{discount}}</td>
+        </tr>
+        {{/has_discount}}
         {{#round_off}}
         <tr>
           <td>Round off</td>
@@ -241,9 +253,9 @@
       <div class="signature-block">
         <div style="font-size: 12px; color: var(--secondary-color);">For : <strong>{{company_name}}</strong></div>
         <!-- Digital signature -->
-        {{#signature_url}}
-        <img src="{{signature_url}}" alt="Signature" style="max-height: 50px; margin-top: 10px;">
-        {{/signature_url}}
+        {{#company_signature_url}}
+        <img src="{{company_signature_url}}" alt="Signature" style="max-height: 50px; margin-top: 10px;">
+        {{/company_signature_url}}
         <div class="signature-line">Authorized Signatory</div>
       </div>
     </div>

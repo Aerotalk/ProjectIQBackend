@@ -55,11 +55,9 @@ public class DocumentTemplateSeeder implements CommandLineRunner {
     private void processTemplateFile(Path filePath) {
         String filename = filePath.getFileName().toString();
         
-        // Skip if already in DB
+        // Update if already in DB
         Optional<DocumentTemplate> existing = documentTemplateRepository.findByFilename(filename);
-        if (existing.isPresent()) {
-            return;
-        }
+        DocumentTemplate template = existing.orElse(new DocumentTemplate());
 
         try {
             byte[] bytes = Files.readAllBytes(filePath);
@@ -67,15 +65,13 @@ public class DocumentTemplateSeeder implements CommandLineRunner {
             String name = generateBeautifulName(filename);
             String type = determineType(filename);
 
-            DocumentTemplate template = DocumentTemplate.builder()
-                    .filename(filename)
-                    .name(name)
-                    .type(type)
-                    .content(content)
-                    .build();
+            template.setFilename(filename);
+            template.setName(name);
+            template.setType(type);
+            template.setContent(content);
 
             documentTemplateRepository.save(template);
-            System.out.println("Added template: " + name + " (" + filename + ")");
+            System.out.println((existing.isPresent() ? "Updated" : "Added") + " template: " + name + " (" + filename + ")");
         } catch (IOException e) {
             System.err.println("❌ Failed to read template content for " + filename + ": " + e.getMessage());
         }
