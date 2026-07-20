@@ -38,6 +38,16 @@ public class PermissionController {
     }
 
     /**
+     * GET /api/admin/permissions/roles/{roleId}
+     * Returns the permission IDs directly assigned to a role.
+     */
+    @PreAuthorize("hasAuthority('permission.view')")
+    @GetMapping("/roles/{roleId}")
+    public ResponseEntity<Set<UUID>> getRolePermissionIds(@PathVariable UUID roleId) {
+        return ResponseEntity.ok(permissionService.getRolePermissionIds(roleId));
+    }
+
+    /**
      * PUT /api/admin/permissions/roles/{roleId}/groups/{groupId}
      * Assigns a PermissionGroup to a Role with a DataScope.
      */
