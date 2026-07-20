@@ -21,4 +21,6 @@ public class AuthResponse {
     private java.util.Set<String> effectivePermissions;
     private java.util.UUID profilePhotoId;
     private java.util.UUID companyLogoId;
+    private String primaryColor;
+    private String secondaryColor;
 }

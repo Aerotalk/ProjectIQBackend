@@ -191,6 +191,8 @@ public class AuthService {
                 .effectivePermissions(effectivePermissions)
                 .profilePhotoId(user.getProfilePhotoId())
                 .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
+                .primaryColor(user.getCompany() != null ? user.getCompany().getPrimaryColor() : null)
+                .secondaryColor(user.getCompany() != null ? user.getCompany().getSecondaryColor() : null)
                 .build();
     }
 
@@ -220,6 +222,8 @@ public class AuthService {
                 .effectivePermissions(effectivePermissions)
                 .profilePhotoId(user.getProfilePhotoId())
                 .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
+                .primaryColor(user.getCompany() != null ? user.getCompany().getPrimaryColor() : null)
+                .secondaryColor(user.getCompany() != null ? user.getCompany().getSecondaryColor() : null)
                 .build();
     }
 

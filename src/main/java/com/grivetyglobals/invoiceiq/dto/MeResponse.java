@@ -21,4 +21,6 @@ public class MeResponse {
     private Set<String> effectivePermissions;
     private UUID profilePhotoId;
     private UUID companyLogoId;
+    private String primaryColor;
+    private String secondaryColor;
 }
