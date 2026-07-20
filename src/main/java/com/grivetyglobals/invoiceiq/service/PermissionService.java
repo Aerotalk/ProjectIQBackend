@@ -75,6 +75,15 @@ public class PermissionService {
         return roleRepository.save(role);
     }
 
+    @Transactional(readOnly = true)
+    public Set<UUID> getRolePermissionIds(UUID roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        return role.getRolePermissions().stream()
+                .map(rp -> rp.getPermission().getId())
+                .collect(Collectors.toSet());
+    }
+
     // ========================================================================
     // ROLE → PERMISSION GROUP MANAGEMENT
     // ========================================================================
