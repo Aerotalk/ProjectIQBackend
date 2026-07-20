@@ -132,6 +132,7 @@ public class AdminService {
                 .logoFileId(request.getLogoFileId())
                 .invoiceLogoId(request.getInvoiceLogoId())
                 .stampFileId(request.getStampFileId())
+                .termsAndConditions(request.getTermsAndConditions())
                 .build();
 
         company = companyRepository.save(company);
@@ -428,6 +429,7 @@ public class AdminService {
         company.setStampFileId(request.getStampFileId());
         company.setPrimaryColor(request.getPrimaryColor());
         company.setSecondaryColor(request.getSecondaryColor());
+        company.setTermsAndConditions(request.getTermsAndConditions());
 
         company = companyRepository.save(company);
 

@@ -51,6 +51,7 @@ public class CompanyCreateRequest {
     private UUID stampFileId;
     private String primaryColor;
     private String secondaryColor;
+    private String termsAndConditions;
     
     @NotBlank(message = "Status is required")
     private String status;

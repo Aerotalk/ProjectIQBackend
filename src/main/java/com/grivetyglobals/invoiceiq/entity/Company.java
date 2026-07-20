@@ -85,6 +85,9 @@ public class Company {
     @Column(name = "secondary_color", length = 20)
     private String secondaryColor;
 
+    @Column(name = "terms_and_conditions", columnDefinition = "TEXT")
+    private String termsAndConditions;
+
     @Column(length = 20)
     private String status;
 

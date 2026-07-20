@@ -42,6 +42,7 @@ public class CompanyUpdateRequest {
     private UUID stampFileId;
     private String primaryColor;
     private String secondaryColor;
+    private String termsAndConditions;
     
     // Admin Account
     private String adminPassword;
