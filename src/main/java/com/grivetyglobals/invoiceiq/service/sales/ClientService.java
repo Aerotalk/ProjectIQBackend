@@ -4,6 +4,7 @@ import com.grivetyglobals.invoiceiq.dto.sales.ClientDto;
 import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.sales.Client;
 import com.grivetyglobals.invoiceiq.entity.sales.ClientAdditionalContact;
+import com.grivetyglobals.invoiceiq.exception.BusinessValidationException;
 import com.grivetyglobals.invoiceiq.exception.ResourceNotFoundException;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.sales.ClientRepository;
@@ -41,10 +42,33 @@ public class ClientService {
         return String.format("CL/%s/%04d", year, count + 1);
     }
 
+    private void validateClientUniqueness(UUID companyId, String gstin, String panNumber, UUID excludeId) {
+        if (gstin != null && !gstin.trim().isEmpty()) {
+            String cleanGstin = gstin.trim();
+            boolean exists = (excludeId == null)
+                    ? clientRepository.existsByCompanyIdAndGstinIgnoreCase(companyId, cleanGstin)
+                    : clientRepository.existsByCompanyIdAndGstinIgnoreCaseAndIdNot(companyId, cleanGstin, excludeId);
+            if (exists) {
+                throw new BusinessValidationException("A client with GSTIN '" + cleanGstin.toUpperCase() + "' already exists for this company.");
+            }
+        }
+        if (panNumber != null && !panNumber.trim().isEmpty()) {
+            String cleanPan = panNumber.trim();
+            boolean exists = (excludeId == null)
+                    ? clientRepository.existsByCompanyIdAndPanNumberIgnoreCase(companyId, cleanPan)
+                    : clientRepository.existsByCompanyIdAndPanNumberIgnoreCaseAndIdNot(companyId, cleanPan, excludeId);
+            if (exists) {
+                throw new BusinessValidationException("A client with PAN number '" + cleanPan.toUpperCase() + "' already exists for this company.");
+            }
+        }
+    }
+
     @Transactional
     public ClientDto createClient(UUID companyId, ClientDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        validateClientUniqueness(companyId, dto.getGstin(), dto.getPanNumber(), null);
 
         Client client = new Client();
         client.setCompany(company);
@@ -75,6 +99,8 @@ public class ClientService {
     public ClientDto updateClient(UUID id, ClientDto dto) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
+
+        validateClientUniqueness(client.getCompany().getId(), dto.getGstin(), dto.getPanNumber(), id);
 
         mapToEntity(dto, client);
 

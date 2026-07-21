@@ -7,6 +7,7 @@ import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
 import com.grivetyglobals.invoiceiq.entity.sales.VendorAdditionalContact;
 import com.grivetyglobals.invoiceiq.entity.sales.VendorBankDetails;
+import com.grivetyglobals.invoiceiq.exception.BusinessValidationException;
 import com.grivetyglobals.invoiceiq.exception.ResourceNotFoundException;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.sales.VendorRepository;
@@ -44,10 +45,33 @@ public class VendorService {
         return String.format("VD/%s/%04d", year, count + 1);
     }
 
+    private void validateVendorUniqueness(UUID companyId, String gstin, String panNumber, UUID excludeId) {
+        if (gstin != null && !gstin.trim().isEmpty()) {
+            String cleanGstin = gstin.trim();
+            boolean exists = (excludeId == null)
+                    ? vendorRepository.existsByCompanyIdAndGstinIgnoreCase(companyId, cleanGstin)
+                    : vendorRepository.existsByCompanyIdAndGstinIgnoreCaseAndIdNot(companyId, cleanGstin, excludeId);
+            if (exists) {
+                throw new BusinessValidationException("A vendor with GSTIN '" + cleanGstin.toUpperCase() + "' already exists for this company.");
+            }
+        }
+        if (panNumber != null && !panNumber.trim().isEmpty()) {
+            String cleanPan = panNumber.trim();
+            boolean exists = (excludeId == null)
+                    ? vendorRepository.existsByCompanyIdAndPanNumberIgnoreCase(companyId, cleanPan)
+                    : vendorRepository.existsByCompanyIdAndPanNumberIgnoreCaseAndIdNot(companyId, cleanPan, excludeId);
+            if (exists) {
+                throw new BusinessValidationException("A vendor with PAN number '" + cleanPan.toUpperCase() + "' already exists for this company.");
+            }
+        }
+    }
+
     @Transactional
     public VendorDto createVendor(UUID companyId, VendorDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        validateVendorUniqueness(companyId, dto.getGstin(), dto.getPanNumber(), null);
 
         Vendor vendor = new Vendor();
         vendor.setCompany(company);
@@ -66,6 +90,8 @@ public class VendorService {
     public VendorDto updateVendor(UUID id, VendorDto dto) {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+
+        validateVendorUniqueness(vendor.getCompany().getId(), dto.getGstin(), dto.getPanNumber(), id);
 
         mapToEntity(dto, vendor);
 

@@ -46,10 +46,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Map<String, String>> handleAppException(AppException ex) {
-        log.warn("dY> [BUSINESS_VALIDATION] {}", ex.getMessage());
+        log.warn("⚠️ [BUSINESS_VALIDATION] {}", ex.getMessage());
 
         Map<String, String> response = new HashMap<>();
         response.put("error", ex.getMessage());
+        response.put("message", ex.getMessage());
         return ResponseEntity.status(ex.getStatus()).body(response);
     }
 

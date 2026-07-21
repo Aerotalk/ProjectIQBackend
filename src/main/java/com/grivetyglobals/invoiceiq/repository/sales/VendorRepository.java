@@ -11,4 +11,10 @@ import java.util.UUID;
 public interface VendorRepository extends JpaRepository<Vendor, UUID> {
     List<Vendor> findByCompanyId(UUID companyId);
     long countByCompanyIdAndVendorNoStartingWith(UUID companyId, String prefix);
+
+    boolean existsByCompanyIdAndGstinIgnoreCase(UUID companyId, String gstin);
+    boolean existsByCompanyIdAndGstinIgnoreCaseAndIdNot(UUID companyId, String gstin, UUID id);
+    boolean existsByCompanyIdAndPanNumberIgnoreCase(UUID companyId, String panNumber);
+    boolean existsByCompanyIdAndPanNumberIgnoreCaseAndIdNot(UUID companyId, String panNumber, UUID id);
 }
+
