@@ -41,6 +41,54 @@ public class Project {
     @Column(length = 50)
     private String status;
 
+    @Column(name = "client", length = 200)
+    private String client;
+
+    @Column(name = "project_manager", length = 200)
+    private String projectManager;
+
+    @Column(name = "linked_quotation", length = 100)
+    private String linkedQuotation;
+
+    @Column(name = "start_date")
+    private String startDate;
+
+    @Column(name = "expected_end_date")
+    private String expectedEndDate;
+
+    @Column(name = "expected_revenue")
+    private Double expectedRevenue;
+
+    @ElementCollection
+    @CollectionTable(name = "project_vendors", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "vendor_id")
+    private java.util.List<String> assignedVendors;
+
+    @ElementCollection
+    @CollectionTable(name = "project_entities", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "entity_id")
+    private java.util.List<String> assignedEntities;
+
+    @ElementCollection
+    @CollectionTable(name = "project_incidents", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "incident_id")
+    private java.util.List<String> linkedIncidents;
+
+    @ElementCollection
+    @CollectionTable(name = "project_quotations", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "quotation_id")
+    private java.util.List<String> linkedQuotations;
+
+    @ElementCollection
+    @CollectionTable(name = "project_pos", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "po_id")
+    private java.util.List<String> linkedPOs;
+
+    @ElementCollection
+    @CollectionTable(name = "project_expenses", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "expense_id")
+    private java.util.List<String> linkedExpenses;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

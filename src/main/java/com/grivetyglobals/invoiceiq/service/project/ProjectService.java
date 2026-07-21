@@ -21,12 +21,14 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
 
+    @Transactional
     public List<ProjectDto> getProjectsByCompany(UUID companyId) {
         return projectRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public ProjectDto getProject(UUID id) {
         return mapToDto(projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found")));
@@ -36,6 +38,11 @@ public class ProjectService {
     public ProjectDto createProject(UUID companyId, ProjectDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        if (dto.getProjectCode() == null || dto.getProjectCode().trim().isEmpty()) {
+            long count = projectRepository.countByCompanyId(companyId);
+            dto.setProjectCode(String.format("PROJ-%04d", count + 1));
+        }
 
         Project project = new Project();
         project.setCompany(company);
@@ -64,6 +71,18 @@ public class ProjectService {
         project.setProjectName(dto.getProjectName());
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());
+        project.setClient(dto.getClient());
+        project.setProjectManager(dto.getProjectManager());
+        project.setLinkedQuotation(dto.getLinkedQuotation());
+        project.setStartDate(dto.getStartDate());
+        project.setExpectedEndDate(dto.getExpectedEndDate());
+        project.setExpectedRevenue(dto.getExpectedRevenue());
+        project.setAssignedVendors(dto.getAssignedVendors());
+        project.setAssignedEntities(dto.getAssignedEntities());
+        project.setLinkedIncidents(dto.getLinkedIncidents());
+        project.setLinkedQuotations(dto.getLinkedQuotations());
+        project.setLinkedPOs(dto.getLinkedPOs());
+        project.setLinkedExpenses(dto.getLinkedExpenses());
     }
 
     private ProjectDto mapToDto(Project project) {
@@ -73,6 +92,18 @@ public class ProjectService {
         dto.setProjectName(project.getProjectName());
         dto.setDescription(project.getDescription());
         dto.setStatus(project.getStatus());
+        dto.setClient(project.getClient());
+        dto.setProjectManager(project.getProjectManager());
+        dto.setLinkedQuotation(project.getLinkedQuotation());
+        dto.setStartDate(project.getStartDate());
+        dto.setExpectedEndDate(project.getExpectedEndDate());
+        dto.setExpectedRevenue(project.getExpectedRevenue());
+        dto.setAssignedVendors(project.getAssignedVendors() != null ? new java.util.ArrayList<>(project.getAssignedVendors()) : new java.util.ArrayList<>());
+        dto.setAssignedEntities(project.getAssignedEntities() != null ? new java.util.ArrayList<>(project.getAssignedEntities()) : new java.util.ArrayList<>());
+        dto.setLinkedIncidents(project.getLinkedIncidents() != null ? new java.util.ArrayList<>(project.getLinkedIncidents()) : new java.util.ArrayList<>());
+        dto.setLinkedQuotations(project.getLinkedQuotations() != null ? new java.util.ArrayList<>(project.getLinkedQuotations()) : new java.util.ArrayList<>());
+        dto.setLinkedPOs(project.getLinkedPOs() != null ? new java.util.ArrayList<>(project.getLinkedPOs()) : new java.util.ArrayList<>());
+        dto.setLinkedExpenses(project.getLinkedExpenses() != null ? new java.util.ArrayList<>(project.getLinkedExpenses()) : new java.util.ArrayList<>());
         return dto;
     }
 }

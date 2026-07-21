@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.ticket.Ticket;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.ticket.TicketRepository;
+import com.grivetyglobals.invoiceiq.repository.project.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final CompanyRepository companyRepository;
     private final TicketMapper ticketMapper;
+    private final ProjectRepository projectRepository;
 
     @Transactional(readOnly = true)
     public List<TicketDto> getTicketsByCompany(UUID companyId) {
@@ -50,6 +52,18 @@ public class TicketService {
         }
 
         Ticket saved = ticketRepository.save(ticket);
+        
+        if (saved.getProject() != null) {
+            com.grivetyglobals.invoiceiq.entity.project.Project project = saved.getProject();
+            if (project.getLinkedIncidents() == null) {
+                project.setLinkedIncidents(new java.util.ArrayList<>());
+            }
+            if (!project.getLinkedIncidents().contains(saved.getId().toString())) {
+                project.getLinkedIncidents().add(saved.getId().toString());
+                projectRepository.save(project);
+            }
+        }
+        
         return ticketMapper.toDto(saved);
     }
 
