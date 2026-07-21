@@ -22,6 +22,8 @@ public class QuotationLineItemDto {
     private String unit;
     private BigDecimal rate;
     private BigDecimal discount;
+    @Builder.Default
+    private String discountType = "FLAT";
     private BigDecimal gstRate;
     
     // Calculated fields

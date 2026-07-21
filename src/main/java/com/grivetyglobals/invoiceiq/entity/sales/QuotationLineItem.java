@@ -52,6 +52,11 @@ public class QuotationLineItem {
     @Column(precision = 19, scale = 4)
     private BigDecimal discount;
 
+    @Builder.Default
+    @Column(name = "discount_type", length = 20)
+    private String discountType = "FLAT";
+
+
     @Column(name = "gst_rate", precision = 5, scale = 2)
     private BigDecimal gstRate;
 
