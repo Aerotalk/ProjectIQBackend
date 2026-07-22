@@ -95,6 +95,7 @@
           State: {{client_state}}
         </div>
       </div>
+      {{#has_shipping}}
       <div class="details-block" style="flex: 1.2;">
         <div class="details-title">Ship To</div>
         <div class="details-content">
@@ -104,6 +105,7 @@
           State: {{ship_to_state}}
         </div>
       </div>
+      {{/has_shipping}}
       <div class="details-block" style="flex: 1.2;">
         <div class="details-title">Transportation Details</div>
         <div class="details-content">
