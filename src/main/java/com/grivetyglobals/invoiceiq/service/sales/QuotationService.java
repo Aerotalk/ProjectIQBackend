@@ -163,6 +163,7 @@ public class QuotationService {
         quotation.setValidUntil(dto.getValidUntil());
         quotation.setSubject(dto.getSubject());
         quotation.setReference(dto.getReference());
+        quotation.setSalesperson(dto.getSalesperson());
         quotation.setTemplateName(dto.getTemplateName());
         quotation.setSubTotal(dto.getSubTotal());
         quotation.setTotalDiscount(dto.getTotalDiscount());
@@ -188,6 +189,7 @@ public class QuotationService {
         dto.setValidUntil(quotation.getValidUntil());
         dto.setSubject(quotation.getSubject());
         dto.setReference(quotation.getReference());
+        dto.setSalesperson(quotation.getSalesperson());
         dto.setTemplateName(quotation.getTemplateName());
         dto.setSubTotal(quotation.getSubTotal());
         dto.setTotalDiscount(quotation.getTotalDiscount());
@@ -201,6 +203,7 @@ public class QuotationService {
         dto.setApprovedBy(quotation.getApprovedBy());
         dto.setApprovalDate(quotation.getApprovalDate());
         dto.setWoPoDocumentUrl(quotation.getWoPoDocumentUrl());
+        dto.setCreatedAt(quotation.getCreatedAt());
 
         if (quotation.getLineItems() != null) {
             dto.setLineItems(quotation.getLineItems().stream().map(i -> 

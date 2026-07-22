@@ -23,6 +23,7 @@ public class QuotationDto {
     private LocalDateTime validUntil;
     private String subject;
     private String reference;
+    private String salesperson;
     private String templateName;
 
     private List<QuotationLineItemDto> lineItems;
@@ -44,4 +45,6 @@ public class QuotationDto {
     private String approvedBy;
     private LocalDateTime approvalDate;
     private String woPoDocumentUrl;
+    
+    private LocalDateTime createdAt;
 }
