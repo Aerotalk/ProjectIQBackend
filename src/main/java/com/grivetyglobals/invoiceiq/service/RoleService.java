@@ -58,9 +58,11 @@ public class RoleService {
                 .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
 
         return roleRepository.findAll().stream()
-                .filter(role -> !"ROLE_SUPER_ADMIN".equals(role.getRoleName()))
                 .filter(role -> {
-                    // Super admins and org admins can see all non-super-admin roles
+                    if ("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin) return false;
+                    if ("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin && !isOrgAdmin) return false;
+                    
+                    // Super admins and org admins can see all other non-filtered roles
                     if (isSuperAdmin || isOrgAdmin) return true;
 
                     // For other users, only show roles whose permissions are a subset of theirs
@@ -169,6 +171,13 @@ public class RoleService {
         boolean isOrgAdmin = currentUser.getUserRoles().stream()
                 .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
         
+        if ("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin) {
+            throw new RuntimeException("Security Violation: Only Super Admins can assign the Super Admin role.");
+        }
+        if ("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin && !isOrgAdmin) {
+            throw new RuntimeException("Security Violation: Only Super Admins or Org Admins can assign the Org Admin role.");
+        }
+        
         if (!isSuperAdmin && !isOrgAdmin) {
             java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
             java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
@@ -207,10 +216,25 @@ public class RoleService {
             java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
             for (UUID roleId : roleIds) {
                 Role role = getRoleById(roleId);
+                
+                if ("ROLE_SUPER_ADMIN".equals(role.getRoleName())) {
+                    throw new RuntimeException("Security Violation: Only Super Admins can assign the Super Admin role.");
+                }
+                if ("ROLE_ORG_ADMIN".equals(role.getRoleName())) {
+                    throw new RuntimeException("Security Violation: Only Super Admins or Org Admins can assign the Org Admin role.");
+                }
+                
                 java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
                 if (!myPermissions.containsAll(rolePermKeys)) {
                     throw new RuntimeException("Security Violation: Cannot assign role '" + role.getRoleName() 
                         + "' because it contains permissions you do not have.");
+                }
+            }
+        } else {
+            for (UUID roleId : roleIds) {
+                Role role = getRoleById(roleId);
+                if ("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin) {
+                    throw new RuntimeException("Security Violation: Only Super Admins can assign the Super Admin role.");
                 }
             }
         }
