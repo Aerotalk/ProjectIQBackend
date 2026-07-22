@@ -37,5 +37,6 @@ public class ChallanDto {
     private String contactMobile;
     private String poNumber;
     private LocalDate poDate;
+    private java.time.LocalDateTime createdAt;
     private List<ChallanLineItemDto> lineItems;
 }
