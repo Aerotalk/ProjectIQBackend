@@ -28,20 +28,17 @@ public class ChallanLineItem {
     @JoinColumn(name = "challan_id", nullable = false)
     private Challan challan;
 
-    @Column(name = "item_name")
+    @Column(name = "item_name", length = 255)
     private String itemName;
 
     @Column(name = "hsn_sac", length = 50)
     private String hsnSac;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "item_name", length = 255)
-    private String itemName;
-
     @Column(name = "item_hsn", length = 50)
     private String itemHsn;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(name = "dispatched_quantity", precision = 10, scale = 2)
     private BigDecimal dispatchedQuantity;
