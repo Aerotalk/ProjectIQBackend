@@ -73,6 +73,12 @@ public class Challan {
     @Column(name = "transport_mode", length = 100)
     private String transportMode;
 
+    @Column(name = "billing_address", columnDefinition = "TEXT")
+    private String billingAddress;
+
+    @Column(name = "shipping_address", columnDefinition = "TEXT")
+    private String shippingAddress;
+
     @Column(name = "delivery_location", length = 255)
     private String deliveryLocation;
 

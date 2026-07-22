@@ -30,6 +30,8 @@ public class ChallanDto {
     private UUID attachmentFileId;
     private String attachmentName;
     private String transportMode;
+    private String billingAddress;
+    private String shippingAddress;
     private String deliveryLocation;
     private String placeOfSupply;
     private String contactName;

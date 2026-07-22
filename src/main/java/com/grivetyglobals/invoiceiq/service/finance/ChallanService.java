@@ -108,6 +108,8 @@ public class ChallanService {
         challan.setAttachmentFileId(dto.getAttachmentFileId());
         challan.setAttachmentName(dto.getAttachmentName());
         challan.setTransportMode(dto.getTransportMode());
+        challan.setBillingAddress(dto.getBillingAddress());
+        challan.setShippingAddress(dto.getShippingAddress());
         challan.setDeliveryLocation(dto.getDeliveryLocation());
         challan.setPlaceOfSupply(dto.getPlaceOfSupply());
         challan.setContactName(dto.getContactName());
@@ -185,6 +187,8 @@ public class ChallanService {
         dto.setAttachmentFileId(challan.getAttachmentFileId());
         dto.setAttachmentName(challan.getAttachmentName());
         dto.setTransportMode(challan.getTransportMode());
+        dto.setBillingAddress(challan.getBillingAddress());
+        dto.setShippingAddress(challan.getShippingAddress());
         dto.setDeliveryLocation(challan.getDeliveryLocation());
         dto.setPlaceOfSupply(challan.getPlaceOfSupply());
         dto.setContactName(challan.getContactName());
