@@ -29,5 +29,13 @@ public class ChallanDto {
     private String status;
     private UUID attachmentFileId;
     private String attachmentName;
+    private String transportMode;
+    private String deliveryLocation;
+    private String placeOfSupply;
+    private String contactName;
+    private String contactEmail;
+    private String contactMobile;
+    private String poNumber;
+    private LocalDate poDate;
     private List<ChallanLineItemDto> lineItems;
 }

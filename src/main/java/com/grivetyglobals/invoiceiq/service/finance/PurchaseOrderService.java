@@ -128,6 +128,7 @@ public class PurchaseOrderService {
                 }
                 item.setProductId(itemDto.getProductId());
                 item.setItemName(itemDto.getItemName());
+                item.setHsnSac(itemDto.getHsnSac());
                 item.setDescription(itemDto.getDescription());
                 item.setQuantity(itemDto.getQuantity());
                 item.setUnit(itemDto.getUnit());
@@ -171,6 +172,7 @@ public class PurchaseOrderService {
                 itemDto.setId(item.getId());
                 itemDto.setProductId(item.getProductId());
                 itemDto.setItemName(item.getItemName());
+                itemDto.setHsnSac(item.getHsnSac());
                 itemDto.setDescription(item.getDescription());
                 itemDto.setQuantity(item.getQuantity());
                 itemDto.setUnit(item.getUnit());
