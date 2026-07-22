@@ -34,6 +34,9 @@ public class PurchaseOrderLineItem {
     @Column(name = "item_name", length = 255)
     private String itemName;
 
+    @Column(name = "hsn_sac", length = 50)
+    private String hsnSac;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

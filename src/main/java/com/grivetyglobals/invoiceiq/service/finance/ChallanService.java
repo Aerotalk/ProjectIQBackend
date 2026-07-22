@@ -107,6 +107,14 @@ public class ChallanService {
         challan.setStatus(dto.getStatus());
         challan.setAttachmentFileId(dto.getAttachmentFileId());
         challan.setAttachmentName(dto.getAttachmentName());
+        challan.setTransportMode(dto.getTransportMode());
+        challan.setDeliveryLocation(dto.getDeliveryLocation());
+        challan.setPlaceOfSupply(dto.getPlaceOfSupply());
+        challan.setContactName(dto.getContactName());
+        challan.setContactEmail(dto.getContactEmail());
+        challan.setContactMobile(dto.getContactMobile());
+        challan.setPoNumber(dto.getPoNumber());
+        challan.setPoDate(dto.getPoDate());
 
         if (challan.getLineItems() == null) {
             challan.setLineItems(new java.util.ArrayList<>());
@@ -138,8 +146,10 @@ public class ChallanService {
                     item.setChallan(challan);
                     challan.getLineItems().add(item);
                 }
+                String hsn = itemDto.getHsnSac() != null ? itemDto.getHsnSac() : itemDto.getItemHsn();
                 item.setItemName(itemDto.getItemName());
-                item.setHsnSac(itemDto.getHsnSac());
+                item.setHsnSac(hsn);
+                item.setItemHsn(hsn);
                 item.setDescription(itemDto.getDescription());
                 item.setDispatchedQuantity(itemDto.getDispatchedQuantity());
                 item.setUnit(itemDto.getUnit());
@@ -174,13 +184,23 @@ public class ChallanService {
         dto.setStatus(challan.getStatus());
         dto.setAttachmentFileId(challan.getAttachmentFileId());
         dto.setAttachmentName(challan.getAttachmentName());
+        dto.setTransportMode(challan.getTransportMode());
+        dto.setDeliveryLocation(challan.getDeliveryLocation());
+        dto.setPlaceOfSupply(challan.getPlaceOfSupply());
+        dto.setContactName(challan.getContactName());
+        dto.setContactEmail(challan.getContactEmail());
+        dto.setContactMobile(challan.getContactMobile());
+        dto.setPoNumber(challan.getPoNumber());
+        dto.setPoDate(challan.getPoDate());
 
         if (challan.getLineItems() != null) {
             dto.setLineItems(challan.getLineItems().stream().map(item -> {
                 ChallanLineItemDto itemDto = new ChallanLineItemDto();
                 itemDto.setId(item.getId());
                 itemDto.setItemName(item.getItemName());
-                itemDto.setHsnSac(item.getHsnSac());
+                String hsn = item.getHsnSac() != null ? item.getHsnSac() : item.getItemHsn();
+                itemDto.setHsnSac(hsn);
+                itemDto.setItemHsn(hsn);
                 itemDto.setDescription(item.getDescription());
                 itemDto.setDispatchedQuantity(item.getDispatchedQuantity());
                 itemDto.setUnit(item.getUnit());

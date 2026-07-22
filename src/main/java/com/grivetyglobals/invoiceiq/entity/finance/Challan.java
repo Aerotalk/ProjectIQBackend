@@ -70,6 +70,30 @@ public class Challan {
     @Column(name = "attachment_name", length = 255)
     private String attachmentName;
 
+    @Column(name = "transport_mode", length = 100)
+    private String transportMode;
+
+    @Column(name = "delivery_location", length = 255)
+    private String deliveryLocation;
+
+    @Column(name = "place_of_supply", length = 100)
+    private String placeOfSupply;
+
+    @Column(name = "contact_name", length = 150)
+    private String contactName;
+
+    @Column(name = "contact_email", length = 150)
+    private String contactEmail;
+
+    @Column(name = "contact_mobile", length = 50)
+    private String contactMobile;
+
+    @Column(name = "po_number", length = 100)
+    private String poNumber;
+
+    @Column(name = "po_date")
+    private LocalDate poDate;
+
     @OneToMany(mappedBy = "challan", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChallanLineItem> lineItems;
 
