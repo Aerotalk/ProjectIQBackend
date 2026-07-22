@@ -2,6 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
+startCommand = "bash start.sh"
 # Point to the new custom health check endpoint
 healthcheckPath = "/health"
 # The deployment will wait up to 100 seconds for a 200 OK response from the health check

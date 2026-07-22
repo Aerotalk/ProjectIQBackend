@@ -12,6 +12,13 @@ import org.springframework.cache.annotation.EnableCaching;
 public class InvoiceiqApplication {
 
 	public static void main(String[] args) {
+		// Strip literal double quotes from environment variables injected by Railway/Render
+		System.getenv().forEach((key, val) -> {
+			if (val != null && val.startsWith("\"") && val.endsWith("\"") && val.length() > 1) {
+				String cleaned = val.substring(1, val.length() - 1);
+				System.setProperty(key, cleaned);
+			}
+		});
 		SpringApplication.run(InvoiceiqApplication.class, args);
 	}
 
