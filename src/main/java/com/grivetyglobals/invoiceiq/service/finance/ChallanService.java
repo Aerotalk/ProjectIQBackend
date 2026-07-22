@@ -138,6 +138,8 @@ public class ChallanService {
                     item.setChallan(challan);
                     challan.getLineItems().add(item);
                 }
+                item.setItemName(itemDto.getItemName());
+                item.setHsnSac(itemDto.getHsnSac());
                 item.setDescription(itemDto.getDescription());
                 item.setDispatchedQuantity(itemDto.getDispatchedQuantity());
                 item.setUnit(itemDto.getUnit());
@@ -177,6 +179,8 @@ public class ChallanService {
             dto.setLineItems(challan.getLineItems().stream().map(item -> {
                 ChallanLineItemDto itemDto = new ChallanLineItemDto();
                 itemDto.setId(item.getId());
+                itemDto.setItemName(item.getItemName());
+                itemDto.setHsnSac(item.getHsnSac());
                 itemDto.setDescription(item.getDescription());
                 itemDto.setDispatchedQuantity(item.getDispatchedQuantity());
                 itemDto.setUnit(item.getUnit());

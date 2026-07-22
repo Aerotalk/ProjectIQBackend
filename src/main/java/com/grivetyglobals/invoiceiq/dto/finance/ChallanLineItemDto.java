@@ -14,6 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ChallanLineItemDto {
     private UUID id;
+    private String itemName;
+    private String hsnSac;
     private String description;
     private BigDecimal dispatchedQuantity;
     private String unit;

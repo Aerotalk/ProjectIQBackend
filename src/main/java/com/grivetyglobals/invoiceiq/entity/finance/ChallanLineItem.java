@@ -28,6 +28,12 @@ public class ChallanLineItem {
     @JoinColumn(name = "challan_id", nullable = false)
     private Challan challan;
 
+    @Column(name = "item_name")
+    private String itemName;
+
+    @Column(name = "hsn_sac", length = 50)
+    private String hsnSac;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
