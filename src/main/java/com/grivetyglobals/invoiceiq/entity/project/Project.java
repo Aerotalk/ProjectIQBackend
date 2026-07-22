@@ -89,6 +89,16 @@ public class Project {
     @Column(name = "expense_id")
     private java.util.List<String> linkedExpenses;
 
+    @ElementCollection
+    @CollectionTable(name = "project_notes", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "note", columnDefinition = "TEXT")
+    private java.util.List<String> projectNotes;
+
+    @ElementCollection
+    @CollectionTable(name = "project_documents", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "document_json", columnDefinition = "TEXT")
+    private java.util.List<String> projectDocuments;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
