@@ -165,6 +165,7 @@ public class PurchaseOrderService {
         dto.setStatus(po.getStatus());
         dto.setAttachmentFileId(po.getAttachmentFileId());
         dto.setAttachmentName(po.getAttachmentName());
+        dto.setCreatedAt(po.getCreatedAt());
 
         if (po.getLineItems() != null) {
             dto.setLineItems(po.getLineItems().stream().map(item -> {

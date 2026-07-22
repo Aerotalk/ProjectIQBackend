@@ -192,6 +192,7 @@ public class ChallanService {
         dto.setContactMobile(challan.getContactMobile());
         dto.setPoNumber(challan.getPoNumber());
         dto.setPoDate(challan.getPoDate());
+        dto.setCreatedAt(challan.getCreatedAt());
 
         if (challan.getLineItems() != null) {
             dto.setLineItems(challan.getLineItems().stream().map(item -> {
