@@ -30,4 +30,6 @@ public class ProjectDto {
     private java.util.List<String> linkedQuotations;
     private java.util.List<String> linkedPOs;
     private java.util.List<String> linkedExpenses;
+    private java.util.List<String> projectNotes;
+    private java.util.List<String> projectDocuments;
 }

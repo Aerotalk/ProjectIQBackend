@@ -83,6 +83,8 @@ public class ProjectService {
         project.setLinkedQuotations(dto.getLinkedQuotations());
         project.setLinkedPOs(dto.getLinkedPOs());
         project.setLinkedExpenses(dto.getLinkedExpenses());
+        project.setProjectNotes(dto.getProjectNotes());
+        project.setProjectDocuments(dto.getProjectDocuments());
     }
 
     private ProjectDto mapToDto(Project project) {
@@ -104,6 +106,8 @@ public class ProjectService {
         dto.setLinkedQuotations(project.getLinkedQuotations() != null ? new java.util.ArrayList<>(project.getLinkedQuotations()) : new java.util.ArrayList<>());
         dto.setLinkedPOs(project.getLinkedPOs() != null ? new java.util.ArrayList<>(project.getLinkedPOs()) : new java.util.ArrayList<>());
         dto.setLinkedExpenses(project.getLinkedExpenses() != null ? new java.util.ArrayList<>(project.getLinkedExpenses()) : new java.util.ArrayList<>());
+        dto.setProjectNotes(project.getProjectNotes() != null ? new java.util.ArrayList<>(project.getProjectNotes()) : new java.util.ArrayList<>());
+        dto.setProjectDocuments(project.getProjectDocuments() != null ? new java.util.ArrayList<>(project.getProjectDocuments()) : new java.util.ArrayList<>());
         return dto;
     }
 }
