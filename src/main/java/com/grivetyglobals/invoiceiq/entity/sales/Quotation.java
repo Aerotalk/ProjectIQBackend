@@ -56,6 +56,9 @@ public class Quotation {
     @Column(length = 100)
     private String reference;
 
+    @Column(name = "salesperson", length = 100)
+    private String salesperson;
+
     @Column(name = "template_name", length = 100)
     private String templateName;
 

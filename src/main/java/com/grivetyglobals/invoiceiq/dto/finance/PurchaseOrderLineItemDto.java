@@ -16,6 +16,7 @@ public class PurchaseOrderLineItemDto {
     private UUID id;
     private UUID productId;
     private String itemName;
+    private String hsnSac;
     private String description;
     private BigDecimal quantity;
     private String unit;

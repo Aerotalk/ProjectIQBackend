@@ -31,6 +31,12 @@ public class ChallanLineItem {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "item_name", length = 255)
+    private String itemName;
+
+    @Column(name = "item_hsn", length = 50)
+    private String itemHsn;
+
     @Column(name = "dispatched_quantity", precision = 10, scale = 2)
     private BigDecimal dispatchedQuantity;
 
