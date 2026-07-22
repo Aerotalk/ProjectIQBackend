@@ -46,6 +46,7 @@ public class RoleService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
         User currentUser = SecurityUtils.getCurrentUser();
         currentUser = userRepository.findById(currentUser.getId()).orElse(currentUser);
