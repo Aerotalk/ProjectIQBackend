@@ -95,6 +95,7 @@ public class PurchaseOrderService {
         po.setStatus(dto.getStatus());
         po.setAttachmentFileId(dto.getAttachmentFileId());
         po.setAttachmentName(dto.getAttachmentName());
+        po.setTemplateName(dto.getTemplateName());
 
         if (po.getLineItems() == null) {
             po.setLineItems(new java.util.ArrayList<>());
@@ -165,6 +166,7 @@ public class PurchaseOrderService {
         dto.setStatus(po.getStatus());
         dto.setAttachmentFileId(po.getAttachmentFileId());
         dto.setAttachmentName(po.getAttachmentName());
+        dto.setTemplateName(po.getTemplateName());
         dto.setCreatedAt(po.getCreatedAt());
 
         if (po.getLineItems() != null) {

@@ -29,6 +29,7 @@ public class ChallanDto {
     private String status;
     private UUID attachmentFileId;
     private String attachmentName;
+    private String templateName;
     private String transportMode;
     private String billingAddress;
     private String shippingAddress;

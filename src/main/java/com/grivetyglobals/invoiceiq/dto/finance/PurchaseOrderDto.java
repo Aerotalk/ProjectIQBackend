@@ -29,6 +29,7 @@ public class PurchaseOrderDto {
     private String status;
     private UUID attachmentFileId;
     private String attachmentName;
+    private String templateName;
     private java.time.LocalDateTime createdAt;
     private List<PurchaseOrderLineItemDto> lineItems;
 }

@@ -70,6 +70,9 @@ public class PurchaseOrder {
     @Column(name = "attachment_name", length = 255)
     private String attachmentName;
 
+    @Column(name = "template_name", length = 255)
+    private String templateName;
+
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseOrderLineItem> lineItems;
 

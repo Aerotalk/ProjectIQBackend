@@ -70,6 +70,9 @@ public class Challan {
     @Column(name = "attachment_name", length = 255)
     private String attachmentName;
 
+    @Column(name = "template_name", length = 255)
+    private String templateName;
+
     @Column(name = "transport_mode", length = 100)
     private String transportMode;
 

@@ -67,8 +67,12 @@ public class ProjectService {
     }
 
     private void mapToEntity(ProjectDto dto, Project project) {
-        project.setProjectCode(dto.getProjectCode());
-        project.setProjectName(dto.getProjectName());
+        if (dto.getProjectCode() != null && !dto.getProjectCode().trim().isEmpty()) {
+            project.setProjectCode(dto.getProjectCode());
+        }
+        if (dto.getProjectName() != null && !dto.getProjectName().trim().isEmpty()) {
+            project.setProjectName(dto.getProjectName());
+        }
         project.setDescription(dto.getDescription());
         project.setStatus(dto.getStatus());
         project.setClient(dto.getClient());
