@@ -23,6 +23,7 @@ public class ProjectDto {
     private String startDate;
     private String expectedEndDate;
     private Double expectedRevenue;
+    private Double budget;
 
     private java.util.List<String> assignedVendors;
     private java.util.List<String> assignedEntities;

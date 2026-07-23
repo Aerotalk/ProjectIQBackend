@@ -77,6 +77,7 @@ public class ProjectService {
         project.setStartDate(dto.getStartDate());
         project.setExpectedEndDate(dto.getExpectedEndDate());
         project.setExpectedRevenue(dto.getExpectedRevenue());
+        project.setBudget(dto.getBudget());
         project.setAssignedVendors(dto.getAssignedVendors());
         project.setAssignedEntities(dto.getAssignedEntities());
         project.setLinkedIncidents(dto.getLinkedIncidents());
@@ -100,6 +101,7 @@ public class ProjectService {
         dto.setStartDate(project.getStartDate());
         dto.setExpectedEndDate(project.getExpectedEndDate());
         dto.setExpectedRevenue(project.getExpectedRevenue());
+        dto.setBudget(project.getBudget());
         dto.setAssignedVendors(project.getAssignedVendors() != null ? new java.util.ArrayList<>(project.getAssignedVendors()) : new java.util.ArrayList<>());
         dto.setAssignedEntities(project.getAssignedEntities() != null ? new java.util.ArrayList<>(project.getAssignedEntities()) : new java.util.ArrayList<>());
         dto.setLinkedIncidents(project.getLinkedIncidents() != null ? new java.util.ArrayList<>(project.getLinkedIncidents()) : new java.util.ArrayList<>());

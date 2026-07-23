@@ -59,6 +59,9 @@ public class Project {
     @Column(name = "expected_revenue")
     private Double expectedRevenue;
 
+    @Column(name = "budget")
+    private Double budget;
+
     @ElementCollection
     @CollectionTable(name = "project_vendors", joinColumns = @JoinColumn(name = "project_id"))
     @Column(name = "vendor_id")
