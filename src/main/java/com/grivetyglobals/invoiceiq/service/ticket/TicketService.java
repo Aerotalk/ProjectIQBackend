@@ -53,14 +53,16 @@ public class TicketService {
 
         Ticket saved = ticketRepository.save(ticket);
         
-        if (saved.getProject() != null) {
-            com.grivetyglobals.invoiceiq.entity.project.Project project = saved.getProject();
-            if (project.getLinkedIncidents() == null) {
-                project.setLinkedIncidents(new java.util.ArrayList<>());
-            }
-            if (!project.getLinkedIncidents().contains(saved.getId().toString())) {
-                project.getLinkedIncidents().add(saved.getId().toString());
-                projectRepository.save(project);
+        if (saved.getProject() != null && saved.getProject().getId() != null) {
+            com.grivetyglobals.invoiceiq.entity.project.Project project = projectRepository.findById(saved.getProject().getId()).orElse(null);
+            if (project != null) {
+                if (project.getLinkedIncidents() == null) {
+                    project.setLinkedIncidents(new java.util.ArrayList<>());
+                }
+                if (!project.getLinkedIncidents().contains(saved.getId().toString())) {
+                    project.getLinkedIncidents().add(saved.getId().toString());
+                    projectRepository.save(project);
+                }
             }
         }
         
