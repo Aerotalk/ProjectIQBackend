@@ -28,7 +28,10 @@ spring:
       connection-timeout: 10000
   data:
     redis:
-      url: ${REDIS_URL:redis://localhost:6379}
+      host: ${REDIS_HOST:tokaido.proxy.rlwy.net}
+      port: ${REDIS_PORT:13853}
+      username: ${REDIS_USER:default}
+      password: ${REDIS_PASSWORD:YRBYanONrYbVkSqpfvptrYyZkviUAShI}
   jpa:
     open-in-view: false
     hibernate:
