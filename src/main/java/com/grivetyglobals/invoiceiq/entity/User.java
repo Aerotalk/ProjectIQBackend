@@ -84,6 +84,32 @@ public class User implements UserDetails {
     @JoinColumn(name = "company_id")
     private Company company;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("organizationId")
+    public UUID getOrganizationIdForSerialization() {
+        return this.organization != null ? this.organization.getId() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("organizationId")
+    public void setOrganizationIdForSerialization(UUID orgId) {
+        if (orgId != null) {
+            this.organization = new Organization();
+            this.organization.setId(orgId);
+        }
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("companyId")
+    public UUID getCompanyIdForSerialization() {
+        return this.company != null ? this.company.getId() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("companyId")
+    public void setCompanyIdForSerialization(UUID companyId) {
+        if (companyId != null) {
+            this.company = new Company();
+            this.company.setId(companyId);
+        }
+    }
+
     @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

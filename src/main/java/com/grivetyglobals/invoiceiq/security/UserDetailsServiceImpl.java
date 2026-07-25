@@ -19,7 +19,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final PermissionService permissionService;
 
     @Override
-    @org.springframework.cache.annotation.Cacheable("users")
+    @org.springframework.cache.annotation.Cacheable("users_cache")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username)
