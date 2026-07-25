@@ -33,5 +33,6 @@ public class UserRole {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Company company;
 }
