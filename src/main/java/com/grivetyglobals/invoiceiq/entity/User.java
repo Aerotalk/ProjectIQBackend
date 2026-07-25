@@ -94,6 +94,7 @@ public class User implements UserDetails {
     private Set<String> effectivePermissions = new HashSet<>();
 
     @Transient
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Set<Role> getRoles() {
         if (!org.hibernate.Hibernate.isInitialized(this)) {
             return java.util.Collections.emptySet();
@@ -135,26 +136,31 @@ public class User implements UserDetails {
         return email;
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public String getActualUsername() {
         return this.username;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isEnabled() {
         return true;
     }
