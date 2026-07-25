@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for ClientAdditionalContactDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

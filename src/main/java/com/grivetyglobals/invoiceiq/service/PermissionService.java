@@ -11,6 +11,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 
+/**
+ * Service class for managing permissions, permission groups, and data scopes.
+ * Handles the logic for computing effective permissions and overrides for users.
+ */
 @Service
 @RequiredArgsConstructor
 public class PermissionService {
@@ -28,6 +32,12 @@ public class PermissionService {
     // PERMISSION MATRIX
     // ========================================================================
 
+    /**
+     * Computes the available permission matrix grouped by module.
+     * Filters out super-admin-only permissions for non-super-admins.
+     * 
+     * @return a map of module names to lists of Permission entities
+     */
     public Map<String, List<Permission>> getPermissionMatrix() {
         List<Permission> allPermissions = permissionRepository.findAll();
         DataScope scope = getCurrentUserMaxScope();
@@ -56,6 +66,13 @@ public class PermissionService {
     // ROLE → DIRECT PERMISSION MANAGEMENT
     // ========================================================================
 
+    /**
+     * Updates direct permission assignments for a role.
+     * 
+     * @param roleId        the UUID of the role
+     * @param permissionIds a set of permission UUIDs to assign
+     * @return the updated Role entity
+     */
     @Transactional
     public Role updateRolePermissions(UUID roleId, Set<UUID> permissionIds) {
         Role role = roleRepository.findById(roleId)
@@ -75,6 +92,12 @@ public class PermissionService {
         return roleRepository.save(role);
     }
 
+    /**
+     * Retrieves the set of permission IDs directly assigned to a role.
+     * 
+     * @param roleId the UUID of the role
+     * @return a set of permission UUIDs
+     */
     @Transactional(readOnly = true)
     public Set<UUID> getRolePermissionIds(UUID roleId) {
         Role role = roleRepository.findById(roleId)

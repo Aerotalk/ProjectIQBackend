@@ -20,6 +20,10 @@ import java.io.IOException;
 import java.util.UUID;
 import org.springframework.cache.annotation.Cacheable;
 
+/**
+ * Service class for handling file uploads, downloads, and metadata retrieval.
+ * Integrates with AWS S3 for object storage.
+ */
 @Service
 @RequiredArgsConstructor
 public class FileService {
@@ -30,6 +34,14 @@ public class FileService {
     @Value("${cloud.s3.bucket-name}")
     private String bucketName;
 
+    /**
+     * Uploads a file to the S3 bucket and saves its metadata in the database.
+     * 
+     * @param multipartFile the file to upload
+     * @param uploadedBy    the UUID of the user uploading the file
+     * @param module        the module context (e.g., 'avatar', 'invoice')
+     * @return the saved File metadata entity
+     */
     @Transactional
     public File uploadFile(MultipartFile multipartFile, UUID uploadedBy, String module) {
         try {
@@ -76,6 +88,12 @@ public class FileService {
         }
     }
 
+    /**
+     * Retrieves the file stream from the S3 bucket for downloading/viewing.
+     * 
+     * @param fileId the UUID of the file metadata record
+     * @return an InputStream of the file content
+     */
     public java.io.InputStream getFileInputStream(UUID fileId) {
         File fileEntity = fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -92,6 +110,12 @@ public class FileService {
         }
     }
 
+    /**
+     * Retrieves the metadata for a specific file.
+     * 
+     * @param fileId the UUID of the file metadata record
+     * @return the File metadata entity
+     */
     @Cacheable(value = "fileMetadata", key = "#fileId")
     public File getFileMetadata(UUID fileId) {
         return fileRepository.findById(fileId)

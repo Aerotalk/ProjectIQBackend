@@ -18,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 
+/**
+ * Configuration class for RedisCacheConfig.
+ */
 @Configuration
 @EnableCaching
 public class RedisCacheConfig implements CachingConfigurer {

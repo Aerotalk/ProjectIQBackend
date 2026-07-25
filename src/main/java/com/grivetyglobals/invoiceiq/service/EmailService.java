@@ -3,6 +3,10 @@ package com.grivetyglobals.invoiceiq.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class for sending emails.
+ * Currently uses standard output for testing purposes.
+ */
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -10,6 +14,12 @@ public class EmailService {
     // In a real app, this would be your frontend URL (e.g., http://localhost:3000)
     private final String appUrl = "http://localhost:8080";
 
+    /**
+     * Sends an email verification link.
+     * 
+     * @param to    the recipient's email address
+     * @param token the verification token
+     */
     public void sendVerificationEmail(String to, String token) {
         String verificationLink = appUrl + "/api/auth/verify-email?token=" + token;
         
@@ -19,6 +29,12 @@ public class EmailService {
         System.out.println("=======================================================\n");
     }
 
+    /**
+     * Sends a password reset link.
+     * 
+     * @param to    the recipient's email address
+     * @param token the password reset token
+     */
     public void sendPasswordResetEmail(String to, String token) {
         String resetLink = appUrl + "/reset-password?token=" + token;
         

@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for DocumentTemplateDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

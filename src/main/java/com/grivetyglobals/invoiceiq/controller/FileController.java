@@ -14,6 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
+/**
+ * REST controller for file uploading and downloading operations.
+ * Handles multipart file uploads and streaming file downloads.
+ */
 @RestController
 @RequestMapping("/api/admin/files")
 @RequiredArgsConstructor
@@ -21,6 +25,15 @@ public class FileController {
 
     private final FileService fileService;
 
+    /**
+     * Uploads a file to the system storage.
+     * Requires the user to be authenticated.
+     *
+     * @param file   the multipart file to upload
+     * @param module an optional module identifier (e.g., 'profile_pictures')
+     * @param user   the authenticated user performing the upload
+     * @return the saved File entity metadata
+     */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload")
     public ResponseEntity<File> uploadFile(@RequestParam("file") MultipartFile file, 
@@ -30,6 +43,13 @@ public class FileController {
         return ResponseEntity.ok(fileService.uploadFile(file, uploadedBy, module));
     }
 
+    /**
+     * Downloads a file from the system storage via a streaming response.
+     * Requires the user to be authenticated.
+     *
+     * @param fileIdStr the UUID of the file as a string
+     * @return a streaming response containing the file data
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{fileIdStr}")
     public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> downloadFile(@PathVariable String fileIdStr) {

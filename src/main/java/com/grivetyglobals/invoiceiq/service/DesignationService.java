@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service class for managing designations (job titles).
+ * Handles creation, retrieval, updating, and deletion of designations within an organization.
+ */
 @Service
 @RequiredArgsConstructor
 public class DesignationService {
@@ -23,6 +27,12 @@ public class DesignationService {
     private final OrganizationRepository organizationRepository;
     private final CompanyRepository companyRepository;
 
+    /**
+     * Creates a new designation.
+     * 
+     * @param request the designation data payload
+     * @return the created Designation entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public Designation createDesignation(DesignationRequest request) {
@@ -59,6 +69,12 @@ public class DesignationService {
         return designationRepository.save(designation);
     }
 
+    /**
+     * Retrieves all designations for a specific company or the current JWT-scoped company.
+     * 
+     * @param companyId the optional company ID to filter by
+     * @return a list of Designation entities
+     */
     @org.springframework.cache.annotation.Cacheable(value = "designationsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + (#companyId != null ? #companyId : T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId())")
     public List<Designation> getAllDesignations(UUID companyId) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
@@ -66,6 +82,14 @@ public class DesignationService {
         return designationRepository.findByOrganizationIdAndCompanyId(currentOrgId, resolvedCompanyId);
     }
 
+    /**
+     * Retrieves a specific designation by its UUID.
+     * Ensures the designation belongs to the current organization.
+     * 
+     * @param id the UUID of the designation
+     * @return the Designation entity
+     * @throws RuntimeException if the designation is not found or access is denied
+     */
     public Designation getDesignationById(UUID id) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         
@@ -79,6 +103,13 @@ public class DesignationService {
         return designation;
     }
 
+    /**
+     * Updates an existing designation.
+     * 
+     * @param id      the UUID of the designation to update
+     * @param request the updated designation data payload
+     * @return the updated Designation entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public Designation updateDesignation(UUID id, DesignationRequest request) {
@@ -92,6 +123,11 @@ public class DesignationService {
         return designationRepository.save(designation);
     }
 
+    /**
+     * Deletes a designation by its UUID.
+     * 
+     * @param id the UUID of the designation to delete
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "designationsList", allEntries = true)
     @Transactional
     public void deleteDesignation(UUID id) {

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for ProjectRepository.
+ */
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
     List<Project> findByCompanyId(UUID companyId);

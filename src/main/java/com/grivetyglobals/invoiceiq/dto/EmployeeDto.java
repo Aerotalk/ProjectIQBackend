@@ -9,6 +9,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for EmployeeDto.
+ */
 @Data
 @Builder
 @AllArgsConstructor

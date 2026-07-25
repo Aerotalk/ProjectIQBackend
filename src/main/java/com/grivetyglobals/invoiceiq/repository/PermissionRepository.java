@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository interface for PermissionRepository.
+ */
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, UUID> {
     java.util.Optional<Permission> findByPermissionKey(String permissionKey);

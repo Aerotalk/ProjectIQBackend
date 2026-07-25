@@ -8,6 +8,9 @@ import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Entity representing QuotationLineItem.
+ */
 @Entity
 @Table(name = "sales_quotation_line_items")
 @Getter

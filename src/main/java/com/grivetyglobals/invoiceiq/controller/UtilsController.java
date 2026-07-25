@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.HashMap;
 
+/**
+ * REST controller for various utility operations.
+ * Provides helper endpoints like GST number parsing and validation.
+ */
 @RestController
 @RequestMapping("/api/admin/utils")
 public class UtilsController {
@@ -52,6 +56,13 @@ public class UtilsController {
         STATE_CODES.put("38", "Ladakh");
     }
 
+    /**
+     * Parses a given GST number to extract PAN and state information.
+     * Requires an authenticated session.
+     *
+     * @param gstNumber the 15-character GST identification number
+     * @return the extracted GST info including PAN, state code, and state name
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/gst-info")
     public ResponseEntity<GstInfoResponse> getGstInfo(@RequestParam String gstNumber) {

@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+/**
+ * Entity representing PermissionGroupMapping.
+ */
 @Entity
 @Table(name = "permission_group_mappings")
 @Getter

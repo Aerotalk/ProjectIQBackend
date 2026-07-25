@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for PurchaseOrderRepository.
+ */
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UUID> {
     List<PurchaseOrder> findByCompanyId(UUID companyId);

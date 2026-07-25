@@ -14,6 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service class for managing roles.
+ * Provides functionality for creating, updating, deleting, cloning, and assigning roles.
+ */
 @Service
 @RequiredArgsConstructor
 public class RoleService {
@@ -26,6 +30,12 @@ public class RoleService {
     private final org.springframework.cache.CacheManager cacheManager;
     private final PermissionService permissionService;
 
+    /**
+     * Creates a new role.
+     * 
+     * @param request the role data payload
+     * @return the created Role entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role createRole(RoleRequest request) {
@@ -46,6 +56,12 @@ public class RoleService {
         return saved;
     }
 
+    /**
+     * Retrieves all roles, filtered by the current user's permissions and scope.
+     * Non-super-admins cannot see the super admin role.
+     * 
+     * @return a list of accessible Role entities
+     */
     @Transactional(readOnly = true)
     public List<Role> getAllRoles() {
         User currentUser = SecurityUtils.getCurrentUser();
@@ -106,11 +122,24 @@ public class RoleService {
         return keys;
     }
 
+    /**
+     * Retrieves a role by its UUID.
+     * 
+     * @param id the UUID of the role
+     * @return the Role entity
+     */
     public Role getRoleById(UUID id) {
         return roleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
     }
 
+    /**
+     * Updates an existing role's details.
+     * 
+     * @param id      the UUID of the role
+     * @param request the updated role data
+     * @return the updated Role entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role updateRole(UUID id, RoleRequest request) {
@@ -127,6 +156,12 @@ public class RoleService {
         return saved;
     }
 
+    /**
+     * Deletes a role by its UUID.
+     * Prevents deletion if the role is currently assigned to users.
+     * 
+     * @param id the UUID of the role
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public void deleteRole(UUID id) {
@@ -143,6 +178,12 @@ public class RoleService {
         auditService.logActivity("ROLE_DELETED", "Deleted role " + role.getRoleName(), id, "Role", currentUserId, currentOrgId);
     }
 
+    /**
+     * Clones an existing role.
+     * 
+     * @param id the UUID of the role to clone
+     * @return the newly cloned Role entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "rolesList", allEntries = true)
     @Transactional
     public Role cloneRole(UUID id) {
@@ -158,6 +199,12 @@ public class RoleService {
         return saved;
     }
 
+    /**
+     * Assigns a role to a user. Includes privilege escalation checks.
+     * 
+     * @param roleId       the UUID of the role to assign
+     * @param targetUserId the UUID of the target user
+     */
     @Transactional
     public void assignRoleToUser(UUID roleId, UUID targetUserId) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
@@ -201,6 +248,14 @@ public class RoleService {
         evictUserCache(user.getEmail());
     }
 
+    /**
+     * Assigns multiple roles to an employee under a specific company (if provided).
+     * Includes privilege escalation checks.
+     * 
+     * @param employeeId the UUID of the employee
+     * @param companyId  the UUID of the company (null for org-level roles)
+     * @param roleIds    the list of role UUIDs to assign
+     */
     @Transactional
     public void assignRolesToEmployee(UUID employeeId, UUID companyId, List<UUID> roleIds) {
         UUID currentUserId = SecurityUtils.getCurrentUser().getId();
@@ -282,6 +337,13 @@ public class RoleService {
         }
     }
 
+    /**
+     * Retrieves roles assigned to an employee, optionally scoped to a company.
+     * 
+     * @param employeeId the UUID of the employee
+     * @param companyId  the optional UUID of the company
+     * @return a list of assigned Role entities
+     */
     @Transactional(readOnly = true)
     public List<Role> getAssignedRolesForEmployee(UUID employeeId, UUID companyId) {
         com.grivetyglobals.invoiceiq.entity.Employee employee = employeeRepository.findById(employeeId)

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for KBRepository.
+ */
 @Repository
 public interface KBRepository extends JpaRepository<KnowledgeBaseArticle, UUID> {
     List<KnowledgeBaseArticle> findByCompanyIdOrderByCreatedAtDesc(UUID companyId);

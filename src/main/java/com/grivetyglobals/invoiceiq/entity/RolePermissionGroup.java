@@ -10,6 +10,9 @@ import java.util.UUID;
     @Index(name = "idx_rpg_role", columnList = "role_id"),
     @Index(name = "idx_rpg_permission_group", columnList = "permission_group_id")
 })
+/**
+ * Entity representing RolePermissionGroup.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

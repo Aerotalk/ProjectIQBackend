@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository interface for ApplicationRepository.
+ */
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, UUID> {
     boolean existsByApplicationName(String applicationName);

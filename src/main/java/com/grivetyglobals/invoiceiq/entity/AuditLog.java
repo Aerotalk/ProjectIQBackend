@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Entity representing AuditLog.
+ */
 @Entity
 @Table(name = "audit_logs")
 @Getter

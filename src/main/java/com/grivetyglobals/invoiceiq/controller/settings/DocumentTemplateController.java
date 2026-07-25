@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * REST controller for managing document templates in the settings module.
+ * Provides endpoints for retrieving available document templates and their contents.
+ */
 @RestController
 @RequestMapping("/api/admin/templates")
 @RequiredArgsConstructor
@@ -19,6 +23,14 @@ public class DocumentTemplateController {
 
     private final DocumentTemplateRepository documentTemplateRepository;
 
+    /**
+     * Retrieves a list of available document templates.
+     * Optionally filters templates by type (e.g., INVOICE, QUOTATION).
+     * Requires an authenticated session.
+     *
+     * @param type the optional template type to filter by
+     * @return a list of DocumentTemplateDto objects
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<DocumentTemplateDto>> getTemplates(@RequestParam(required = false) String type) {
@@ -42,6 +54,14 @@ public class DocumentTemplateController {
         return ResponseEntity.ok(dtos);
     }
 
+    /**
+     * Retrieves the raw content (HTML/Handlebars/etc.) of a specific document template.
+     * Attempts to find the template by filename first, then falls back to UUID lookup.
+     * Requires an authenticated session.
+     *
+     * @param filename the filename or UUID of the template
+     * @return the template content string
+     */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{filename}")
     public ResponseEntity<String> getTemplateContent(@PathVariable String filename) {

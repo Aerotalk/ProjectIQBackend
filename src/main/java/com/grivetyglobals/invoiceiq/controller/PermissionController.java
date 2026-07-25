@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * REST controller for managing system permissions and their assignments.
+ * Supports updating role permissions, groups, and user-level overrides.
+ */
 @RestController
 @RequestMapping("/api/admin/permissions")
 @RequiredArgsConstructor
@@ -18,8 +22,10 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     /**
-     * GET /api/admin/permissions/matrix
-     * Returns all permissions grouped by module.
+     * Retrieves all system permissions grouped by their respective modules.
+     * Requires 'permission.view' authority.
+     *
+     * @return a map of module name to a list of permissions
      */
     @PreAuthorize("hasAuthority('permission.view')")
     @GetMapping("/matrix")
@@ -28,8 +34,12 @@ public class PermissionController {
     }
 
     /**
-     * PUT /api/admin/permissions/roles/{roleId}
-     * Updates direct permissions on a role (replaces all).
+     * Updates direct permissions assigned to a role, replacing existing ones.
+     * Requires 'role.edit' authority.
+     *
+     * @param roleId        the UUID of the role
+     * @param permissionIds the set of new permission UUIDs
+     * @return the updated Role entity
      */
     @PreAuthorize("hasAuthority('role.edit')")
     @PutMapping("/roles/{roleId}")
@@ -38,8 +48,11 @@ public class PermissionController {
     }
 
     /**
-     * GET /api/admin/permissions/roles/{roleId}
-     * Returns the permission IDs directly assigned to a role.
+     * Retrieves the set of permission IDs directly assigned to a specific role.
+     * Requires 'permission.view' authority.
+     *
+     * @param roleId the UUID of the role
+     * @return a set of assigned permission UUIDs
      */
     @PreAuthorize("hasAuthority('permission.view')")
     @GetMapping("/roles/{roleId}")
@@ -48,8 +61,13 @@ public class PermissionController {
     }
 
     /**
-     * PUT /api/admin/permissions/roles/{roleId}/groups/{groupId}
-     * Assigns a PermissionGroup to a Role with a DataScope.
+     * Assigns a predefined permission group to a role with a specific data scope.
+     * Requires 'role.assign' authority.
+     *
+     * @param roleId    the UUID of the role
+     * @param groupId   the UUID of the permission group
+     * @param dataScope the data scope restriction (e.g., GLOBAL, COMPANY)
+     * @return the assigned RolePermissionGroup entity
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @PutMapping("/roles/{roleId}/groups/{groupId}")
@@ -61,8 +79,12 @@ public class PermissionController {
     }
 
     /**
-     * DELETE /api/admin/permissions/roles/{roleId}/groups/{groupId}
-     * Removes a PermissionGroup from a Role.
+     * Removes a permission group assignment from a role.
+     * Requires 'role.assign' authority.
+     *
+     * @param roleId  the UUID of the role
+     * @param groupId the UUID of the permission group to remove
+     * @return a 204 No Content response
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @DeleteMapping("/roles/{roleId}/groups/{groupId}")
@@ -72,8 +94,14 @@ public class PermissionController {
     }
 
     /**
-     * PUT /api/admin/permissions/users/{userId}/overrides/{permissionId}
-     * Creates or updates a user-level permission override.
+     * Creates or updates a granular user-level permission override.
+     * Requires 'role.assign' authority.
+     *
+     * @param userId       the UUID of the user
+     * @param permissionId the UUID of the permission
+     * @param isGranted    true to grant, false to explicitly deny
+     * @param dataScope    the data scope for this override
+     * @return the created or updated UserPermission entity
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @PutMapping("/users/{userId}/overrides/{permissionId}")
@@ -86,8 +114,12 @@ public class PermissionController {
     }
 
     /**
-     * DELETE /api/admin/permissions/users/{userId}/overrides/{permissionId}
      * Removes a user-level permission override.
+     * Requires 'role.assign' authority.
+     *
+     * @param userId       the UUID of the user
+     * @param permissionId the UUID of the permission override to remove
+     * @return a 204 No Content response
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @DeleteMapping("/users/{userId}/overrides/{permissionId}")
@@ -97,8 +129,12 @@ public class PermissionController {
     }
 
     /**
-     * GET /api/admin/permissions/users/{userId}/effective
-     * Returns the computed effective permissions for a user.
+     * Computes and retrieves the effective permissions for a specific user,
+     * taking into account roles, groups, and explicit overrides.
+     * Requires 'permission.view' authority.
+     *
+     * @param userId the UUID of the user
+     * @return a set of effective permission strings
      */
     @PreAuthorize("hasAuthority('permission.view')")
     @GetMapping("/users/{userId}/effective")
@@ -109,8 +145,11 @@ public class PermissionController {
     }
 
     /**
-     * GET /api/admin/permissions/users/{userId}/overrides
-     * Returns all user-level overrides for a user.
+     * Retrieves all explicit user-level permission overrides for a specific user.
+     * Requires 'permission.view' authority.
+     *
+     * @param userId the UUID of the user
+     * @return a list of UserPermission entities
      */
     @PreAuthorize("hasAuthority('permission.view')")
     @GetMapping("/users/{userId}/overrides")

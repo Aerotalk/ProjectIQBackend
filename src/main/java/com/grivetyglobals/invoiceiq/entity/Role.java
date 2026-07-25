@@ -9,6 +9,9 @@ import java.util.UUID;
 @Table(name = "roles", indexes = {
     @Index(name = "idx_role_name", columnList = "role_name")
 })
+/**
+ * Entity representing Role.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

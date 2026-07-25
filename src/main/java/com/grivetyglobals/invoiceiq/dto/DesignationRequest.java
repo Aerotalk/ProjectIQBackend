@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for DesignationRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

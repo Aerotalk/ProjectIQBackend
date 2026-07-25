@@ -10,6 +10,9 @@ import java.util.UUID;
     @Index(name = "idx_user_role_user", columnList = "user_id"),
     @Index(name = "idx_user_role_role", columnList = "role_id")
 })
+/**
+ * Entity representing UserRole.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Entity representing PurchaseOrder.
+ */
 @Entity
 @Table(name = "purchase_orders")
 @Getter

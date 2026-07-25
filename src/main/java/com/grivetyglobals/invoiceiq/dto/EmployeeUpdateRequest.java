@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for EmployeeUpdateRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

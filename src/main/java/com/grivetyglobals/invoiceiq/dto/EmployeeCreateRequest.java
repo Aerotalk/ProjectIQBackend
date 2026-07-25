@@ -12,6 +12,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Data Transfer Object for EmployeeCreateRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

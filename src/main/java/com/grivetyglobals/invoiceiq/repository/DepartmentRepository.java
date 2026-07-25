@@ -11,6 +11,9 @@ import java.util.UUID;
 
 import java.util.List;
 
+/**
+ * Repository interface for DepartmentRepository.
+ */
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, UUID> {
     @Query("SELECT COUNT(d) FROM Department d WHERE d.organization.id = :organizationId")

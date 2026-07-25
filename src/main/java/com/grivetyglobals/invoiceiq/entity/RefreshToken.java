@@ -17,6 +17,9 @@ import java.util.UUID;
 @Table(name = "refresh_tokens", indexes = {
     @Index(name = "idx_refresh_token_user", columnList = "user_id")
 })
+/**
+ * Entity representing RefreshToken.
+ */
 public class RefreshToken {
 
     @Id

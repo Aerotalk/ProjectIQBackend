@@ -17,6 +17,9 @@ import java.util.UUID;
 @Table(name = "sales_products", indexes = {
     @Index(name = "idx_product_company", columnList = "company_id")
 })
+/**
+ * Entity representing Product.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

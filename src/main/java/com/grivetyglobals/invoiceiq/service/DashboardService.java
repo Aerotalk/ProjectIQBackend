@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Service class for handling dashboard-related operations.
+ * Aggregates metrics from various domains like companies, employees, and departments.
+ */
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
@@ -23,6 +27,13 @@ public class DashboardService {
     private final AuditService auditService;
     private final ApplicationRepository applicationRepository;
 
+    /**
+     * Retrieves aggregated metrics for the organization's dashboard.
+     * Counts the total companies, employees, departments, roles, and applications.
+     * Includes recent activity logs from the audit service.
+     *
+     * @return the dashboard metrics response payload
+     */
     public DashboardMetricsResponse getDashboardMetrics() {
         UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         

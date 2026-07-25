@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
     @Index(name = "idx_user_organization", columnList = "organization_id"),
     @Index(name = "idx_user_company", columnList = "company_id")
 })
+/**
+ * Entity representing User.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -17,6 +17,9 @@ import java.util.UUID;
 @Table(name = "verification_tokens", indexes = {
     @Index(name = "idx_verification_token_user", columnList = "user_id")
 })
+/**
+ * Entity representing VerificationToken.
+ */
 public class VerificationToken {
 
     public enum TokenType {

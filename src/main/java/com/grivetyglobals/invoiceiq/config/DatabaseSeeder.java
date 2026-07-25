@@ -12,6 +12,9 @@ import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Comparator;
 
+/**
+ * Configuration class for DatabaseSeeder.
+ */
 @Configuration
 public class DatabaseSeeder {
 

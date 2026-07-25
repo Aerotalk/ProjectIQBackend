@@ -7,6 +7,9 @@ import org.springframework.data.domain.AuditorAware;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Configuration class for AuditorAwareImpl.
+ */
 public class AuditorAwareImpl implements AuditorAware<UUID> {
 
     @Override

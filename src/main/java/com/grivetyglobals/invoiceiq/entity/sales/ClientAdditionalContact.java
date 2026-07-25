@@ -7,6 +7,9 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
+/**
+ * Entity representing ClientAdditionalContact.
+ */
 @Entity
 @Table(name = "sales_client_additional_contacts")
 @Getter

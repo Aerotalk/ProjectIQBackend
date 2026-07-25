@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Service class for managing applications in the registry.
+ * Provides methods for creating applications and assigning them to companies and employees.
+ */
 @Service
 @RequiredArgsConstructor
 public class ApplicationRegistryService {
@@ -22,6 +26,13 @@ public class ApplicationRegistryService {
     private final com.grivetyglobals.invoiceiq.repository.CompanyRepository companyRepository;
     private final AuditService auditService;
 
+    /**
+     * Creates a new application in the registry.
+     * 
+     * @param request the application data payload
+     * @return the created Application entity
+     * @throws RuntimeException if an application with the same name already exists
+     */
     @Transactional
     public Application createApplication(ApplicationRequest request) {
         if (applicationRepository.existsByApplicationName(request.getApplicationName())) {
@@ -43,10 +54,23 @@ public class ApplicationRegistryService {
         return saved;
     }
 
+    /**
+     * Retrieves all applications in the registry.
+     * 
+     * @return a list of Application entities
+     */
     public List<Application> getAllApplications() {
         return applicationRepository.findAll();
     }
 
+    /**
+     * Assigns a set of applications to a specific employee.
+     * Replaces any existing application assignments for the employee.
+     * 
+     * @param employeeId     the UUID of the employee
+     * @param applicationIds a list of application UUIDs to assign
+     * @throws RuntimeException if the employee or any application is not found
+     */
     @Transactional
     public void assignApplicationsToEmployee(UUID employeeId, List<UUID> applicationIds) {
         Employee employee = employeeRepository.findById(employeeId)
@@ -76,6 +100,14 @@ public class ApplicationRegistryService {
         auditService.logActivity("EMPLOYEE_APPLICATIONS_UPDATED", "Updated application access for employee " + employee.getFirstName(), employeeId, "Employee", userId, organizationId);
     }
 
+    /**
+     * Assigns a set of applications to a specific company.
+     * Replaces any existing application assignments for the company.
+     * 
+     * @param companyId      the UUID of the company
+     * @param applicationIds a list of application UUIDs to assign
+     * @throws RuntimeException if the company is not found or does not belong to the current organization
+     */
     @Transactional
     public void assignApplicationsToCompany(UUID companyId, List<UUID> applicationIds) {
         UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();

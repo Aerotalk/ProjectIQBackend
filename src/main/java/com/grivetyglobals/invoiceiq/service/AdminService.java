@@ -16,6 +16,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import java.util.UUID;
 
+/**
+ * Service class for managing system administrative tasks.
+ * Handles organization, company, user, and role management.
+ */
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -28,6 +32,12 @@ public class AdminService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Creates a new organization and auto-creates an organization admin user.
+     * 
+     * @param request the organization creation payload
+     * @return the created Organization entity
+     */
     @Transactional
     public Organization createOrganization(OrganizationCreateRequest request) {
         if (organizationRepository.existsByOrganizationCode(request.getOrganizationCode())) {
@@ -77,16 +87,35 @@ public class AdminService {
         return org;
     }
 
+    /**
+     * Retrieves all organizations with pagination.
+     * 
+     * @param pageable pagination configuration
+     * @return a paginated list of Organization entities
+     */
     public org.springframework.data.domain.Page<Organization> getAllOrganizations(
             org.springframework.data.domain.Pageable pageable) {
         return organizationRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a specific organization by its UUID.
+     * 
+     * @param id the UUID of the organization
+     * @return the Organization entity
+     */
     public Organization getOrganizationById(java.util.UUID id) {
         return organizationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
     }
 
+    /**
+     * Updates an existing organization's details.
+     * 
+     * @param id      the UUID of the organization to update
+     * @param request the update payload
+     * @return the updated Organization entity
+     */
     @Transactional
     public Organization updateOrganization(java.util.UUID id,
             com.grivetyglobals.invoiceiq.dto.OrganizationUpdateRequest request) {
@@ -103,6 +132,13 @@ public class AdminService {
         return organizationRepository.save(org);
     }
 
+    /**
+     * Creates a new company within an organization.
+     * Auto-creates a company admin user.
+     * 
+     * @param request the company creation payload
+     * @return the created Company entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "companiesList", allEntries = true)
     @Transactional
     public Company createCompany(CompanyCreateRequest request) {
@@ -215,6 +251,13 @@ public class AdminService {
         return company;
     }
 
+    /**
+     * Creates a new user in the system.
+     * Applies data scope checks and validates role assignments.
+     * 
+     * @param request the user creation payload
+     * @return the created User entity
+     */
     @Transactional
     public User createUser(UserCreateRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -291,6 +334,12 @@ public class AdminService {
         return userRepository.save(user);
     }
 
+    /**
+     * Retrieves all users with pagination, optionally scoped to the current organization or company.
+     * 
+     * @param pageable pagination configuration
+     * @return a paginated list of User entities
+     */
     public org.springframework.data.domain.Page<User> getAllUsers(org.springframework.data.domain.Pageable pageable) {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
@@ -303,6 +352,13 @@ public class AdminService {
         return userRepository.findAll(pageable);
     }
 
+    /**
+     * Updates an existing user's details, including role reassignments.
+     * 
+     * @param userId  the UUID of the user to update
+     * @param request the update payload
+     * @return the updated User entity
+     */
     @Transactional
     public User updateUser(java.util.UUID userId, com.grivetyglobals.invoiceiq.dto.UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -362,6 +418,12 @@ public class AdminService {
         return userRepository.save(user);
     }
 
+    /**
+     * Retrieves all companies with pagination, scoped to the current organization if applicable.
+     * 
+     * @param pageable pagination configuration
+     * @return a paginated list of Company entities
+     */
     @org.springframework.cache.annotation.Cacheable(value = "companiesList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public org.springframework.data.domain.Page<Company> getAllCompanies(
@@ -384,6 +446,12 @@ public class AdminService {
         return companies;
     }
 
+    /**
+     * Retrieves a company by its UUID, enforcing organization tenancy rules.
+     * 
+     * @param companyId the UUID of the company
+     * @return the Company entity
+     */
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @Cacheable(value = "companyProfile", key = "#companyId")
     public Company getCompanyById(java.util.UUID companyId) {
@@ -403,6 +471,12 @@ public class AdminService {
         return company;
     }
 
+    /**
+     * Retrieves the company profile associated with the currently authenticated user.
+     * 
+     * @param email the email of the user
+     * @return the Company entity, or null if the user is a system/org admin without a specific company
+     */
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     @Cacheable(value = "companyProfileByEmail", key = "#email", unless = "#result == null")
     public Company getMyCompanyProfile(String email) {
@@ -413,6 +487,13 @@ public class AdminService {
         return getCompanyById(companyId);
     }
 
+    /**
+     * Updates an existing company's details, including addresses and bank accounts.
+     * 
+     * @param companyId the UUID of the company to update
+     * @param request   the update payload
+     * @return the updated Company entity
+     */
     @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     @Transactional
     public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request) {
@@ -490,12 +571,24 @@ public class AdminService {
         return company;
     }
 
+    /**
+     * Deletes a company by its UUID.
+     * 
+     * @param companyId the UUID of the company
+     */
     @Transactional
     public void deleteCompany(java.util.UUID companyId) {
         Company company = getCompanyById(companyId);
         companyRepository.delete(company);
     }
 
+    /**
+     * Updates the active status of a company.
+     * 
+     * @param companyId the UUID of the company
+     * @param status    the new status (e.g., 'ACTIVE', 'INACTIVE')
+     * @return the updated Company entity
+     */
     @Transactional
     @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     public Company updateCompanyStatus(java.util.UUID companyId, String status) {
@@ -504,6 +597,11 @@ public class AdminService {
         return companyRepository.save(company);
     }
 
+    /**
+     * Retrieves all permission groups assigned to the currently authenticated user's roles.
+     * 
+     * @return a list of PermissionGroup entities
+     */
     @Transactional(readOnly = true)
     public java.util.List<PermissionGroup> getMyPermissionGroups() {
         User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
@@ -518,6 +616,12 @@ public class AdminService {
         return new java.util.ArrayList<>(allowedGroups);
     }
 
+    /**
+     * Creates a new custom role scoped to an organization or company.
+     * 
+     * @param request the role creation payload
+     * @return the created Role entity
+     */
     @Transactional
     public Role createRole(com.grivetyglobals.invoiceiq.dto.RoleCreateRequest request) {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
@@ -552,6 +656,12 @@ public class AdminService {
         return roleRepository.save(role);
     }
 
+    /**
+     * Retrieves roles available for assignment, filtered by the current user's organization,
+     * company, and administrative privileges.
+     * 
+     * @return a list of Role entities
+     */
     public java.util.List<Role> getAvailableRoles() {
         java.util.UUID orgId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
@@ -587,6 +697,14 @@ public class AdminService {
         }).collect(java.util.stream.Collectors.toList());
     }
 
+    /**
+     * Assigns multiple permission groups to a specific role.
+     * Validates that the assigner actually possesses the groups they are granting.
+     * 
+     * @param roleId  the UUID of the role
+     * @param request the permission group assignment payload
+     * @return the updated Role entity
+     */
     @Transactional
     public Role assignPermissionsToRole(java.util.UUID roleId,
             com.grivetyglobals.invoiceiq.dto.RolePermissionAssignRequest request) {

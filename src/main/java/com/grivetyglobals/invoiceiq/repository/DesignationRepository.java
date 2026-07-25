@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for DesignationRepository.
+ */
 @Repository
 public interface DesignationRepository extends JpaRepository<Designation, UUID> {
     List<Designation> findByOrganizationId(UUID organizationId);

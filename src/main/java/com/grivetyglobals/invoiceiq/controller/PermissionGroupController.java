@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * REST controller for managing permission groups.
+ * Allows logical grouping of permissions to simplify role assignments.
+ */
 @RestController
 @RequestMapping("/api/admin/permission-groups")
 @RequiredArgsConstructor
@@ -21,8 +25,10 @@ public class PermissionGroupController {
     private final PermissionService permissionService;
 
     /**
-     * GET /api/admin/permission-groups
-     * Lists all permission groups.
+     * Retrieves all permission groups in the system.
+     * Requires 'role.view' authority.
+     *
+     * @return a list of PermissionGroup entities
      */
     @PreAuthorize("hasAuthority('role.view')")
     @GetMapping
@@ -31,8 +37,11 @@ public class PermissionGroupController {
     }
 
     /**
-     * GET /api/admin/permission-groups/{id}
-     * Gets a single permission group with its permissions.
+     * Retrieves a specific permission group along with its nested permissions.
+     * Requires 'role.view' authority.
+     *
+     * @param id the UUID of the permission group
+     * @return the PermissionGroup entity
      */
     @PreAuthorize("hasAuthority('role.view')")
     @GetMapping("/{id}")
@@ -43,8 +52,11 @@ public class PermissionGroupController {
     }
 
     /**
-     * POST /api/admin/permission-groups
      * Creates a new permission group.
+     * Requires 'role.create' authority.
+     *
+     * @param group the permission group payload
+     * @return the created PermissionGroup entity
      */
     @PreAuthorize("hasAuthority('role.create')")
     @PostMapping
@@ -53,8 +65,12 @@ public class PermissionGroupController {
     }
 
     /**
-     * PUT /api/admin/permission-groups/{id}
-     * Updates a permission group's name and description.
+     * Updates an existing permission group's name and description.
+     * Requires 'role.edit' authority.
+     *
+     * @param id      the UUID of the permission group
+     * @param request the updated permission group details
+     * @return the updated PermissionGroup entity
      */
     @PreAuthorize("hasAuthority('role.edit')")
     @PutMapping("/{id}")
@@ -67,8 +83,11 @@ public class PermissionGroupController {
     }
 
     /**
-     * DELETE /api/admin/permission-groups/{id}
      * Deletes a permission group and all its mappings.
+     * Requires 'role.delete' authority.
+     *
+     * @param id the UUID of the permission group to delete
+     * @return a 204 No Content response
      */
     @PreAuthorize("hasAuthority('role.delete')")
     @DeleteMapping("/{id}")
@@ -81,8 +100,12 @@ public class PermissionGroupController {
     }
 
     /**
-     * POST /api/admin/permission-groups/{groupId}/permissions/{permissionId}
-     * Adds a permission to a group.
+     * Adds a specific permission to a permission group.
+     * Requires 'role.assign' authority.
+     *
+     * @param groupId      the UUID of the permission group
+     * @param permissionId the UUID of the permission to add
+     * @return the created PermissionGroupMapping entity
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @PostMapping("/{groupId}/permissions/{permissionId}")
@@ -93,8 +116,12 @@ public class PermissionGroupController {
     }
 
     /**
-     * DELETE /api/admin/permission-groups/{groupId}/permissions/{permissionId}
-     * Removes a permission from a group.
+     * Removes a specific permission from a permission group.
+     * Requires 'role.assign' authority.
+     *
+     * @param groupId      the UUID of the permission group
+     * @param permissionId the UUID of the permission to remove
+     * @return a 204 No Content response
      */
     @PreAuthorize("hasAuthority('role.assign')")
     @DeleteMapping("/{groupId}/permissions/{permissionId}")

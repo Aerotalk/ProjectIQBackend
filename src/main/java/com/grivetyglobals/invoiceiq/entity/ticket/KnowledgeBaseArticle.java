@@ -10,6 +10,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing KnowledgeBaseArticle.
+ */
 @Entity
 @Table(name = "kb_articles")
 @Getter

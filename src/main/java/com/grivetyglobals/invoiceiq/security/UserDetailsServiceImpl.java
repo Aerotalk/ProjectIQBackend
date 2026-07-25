@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
+/**
+ * Security component UserDetailsServiceImpl.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {

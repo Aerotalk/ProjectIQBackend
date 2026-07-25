@@ -20,6 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Service class for handling authentication, authorization, and user account management.
+ * Manages login, tokens, password resets, and profile retrieval.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -34,6 +38,12 @@ public class AuthService {
     private final EmailService emailService;
     private final PermissionService permissionService;
 
+    /**
+     * Bootstraps the initial super admin user in the system.
+     * 
+     * @param request the registration details
+     * @throws RuntimeException if a super admin already exists
+     */
     @Transactional
     public void setupSuperAdmin(RegisterRequest request) {
         if (userRepository.existsByUserRoles_Role_RoleName("ROLE_SUPER_ADMIN")) {
@@ -59,6 +69,12 @@ public class AuthService {
         userRepository.save(superAdmin);
     }
 
+    /**
+     * Authenticates a user and generates JWT and refresh tokens.
+     * 
+     * @param request the login credentials
+     * @return an AuthResponse containing tokens and user context
+     */
     @Transactional
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
@@ -82,6 +98,12 @@ public class AuthService {
         return createAuthResponse(user);
     }
 
+    /**
+     * Refreshes an expired JWT using a valid refresh token.
+     * 
+     * @param request the refresh token payload
+     * @return a new AuthResponse with fresh tokens
+     */
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
@@ -98,12 +120,22 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * Logs out a user by invalidating their refresh token.
+     * 
+     * @param request the logout payload containing the refresh token
+     */
     @Transactional
     public void logout(LogoutRequest request) {
         refreshTokenRepository.findByToken(request.getRefreshToken())
                 .ifPresent(refreshTokenRepository::delete);
     }
 
+    /**
+     * Verifies a user's email address using a verification token.
+     * 
+     * @param token the email verification token
+     */
     @Transactional
     public void verifyEmail(String token) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
@@ -124,6 +156,11 @@ public class AuthService {
         verificationTokenRepository.delete(verificationToken);
     }
 
+    /**
+     * Initiates the password reset process by generating a token and sending an email.
+     * 
+     * @param request the forgot password request containing the user's email
+     */
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -143,6 +180,11 @@ public class AuthService {
         emailService.sendPasswordResetEmail(user.getEmail(), resetToken.getToken());
     }
 
+    /**
+     * Resets a user's password using a valid password reset token.
+     * 
+     * @param request the reset password request payload
+     */
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         VerificationToken resetToken = verificationTokenRepository.findByToken(request.getToken())
@@ -196,6 +238,11 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * Retrieves the profile and context of the currently authenticated user.
+     * 
+     * @return a MeResponse containing user details and permissions
+     */
     @Transactional(readOnly = true)
     public MeResponse getMe() {
         User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
@@ -227,6 +274,12 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * Updates the profile information of the currently authenticated user.
+     * 
+     * @param request the profile update payload
+     * @return an updated MeResponse
+     */
     @Transactional
     public MeResponse updateProfile(com.grivetyglobals.invoiceiq.dto.UpdateProfileRequest request) {
         User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
@@ -244,6 +297,11 @@ public class AuthService {
         return getMe();
     }
 
+    /**
+     * Retrieves a list of companies the currently authenticated user has access to.
+     * 
+     * @return a list of maps containing company IDs and names
+     */
     @Transactional(readOnly = true)
     public java.util.List<java.util.Map<String, Object>> getMyCompanies() {
         User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();

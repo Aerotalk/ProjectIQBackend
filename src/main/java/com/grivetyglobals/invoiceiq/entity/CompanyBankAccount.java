@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Entity representing CompanyBankAccount.
+ */
 @Entity
 @Table(name = "company_bank_accounts")
 @Getter

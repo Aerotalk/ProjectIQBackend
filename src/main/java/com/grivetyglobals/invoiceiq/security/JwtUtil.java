@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Security component JwtUtil.
+ */
 @Component
 public class JwtUtil {
     

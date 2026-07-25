@@ -18,6 +18,9 @@ import java.util.List;
 @Table(name = "sales_clients", indexes = {
     @Index(name = "idx_client_company", columnList = "company_id")
 })
+/**
+ * Entity representing Client.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

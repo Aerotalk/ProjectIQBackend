@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for CompanyCreateRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

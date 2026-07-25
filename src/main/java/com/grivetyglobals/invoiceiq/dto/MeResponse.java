@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for MeResponse.
+ */
 @Data
 @Builder
 public class MeResponse {

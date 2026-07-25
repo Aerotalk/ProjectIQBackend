@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 import java.util.List;
 
+/**
+ * Data Transfer Object for RolePermissionAssignRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

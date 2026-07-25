@@ -12,6 +12,9 @@ import java.net.URI;
 
 import software.amazon.awssdk.services.s3.S3Configuration;
 
+/**
+ * Configuration class for S3Config.
+ */
 @Configuration
 public class S3Config {
 

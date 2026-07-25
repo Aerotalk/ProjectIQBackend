@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for ExpenseDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

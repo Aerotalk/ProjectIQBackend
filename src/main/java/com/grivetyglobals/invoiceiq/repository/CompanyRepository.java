@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for CompanyRepository.
+ */
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
     org.springframework.data.domain.Page<Company> findByOrganizationId(UUID organizationId, org.springframework.data.domain.Pageable pageable);

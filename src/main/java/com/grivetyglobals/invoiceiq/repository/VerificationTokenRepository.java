@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for VerificationTokenRepository.
+ */
 @Repository
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
     Optional<VerificationToken> findByToken(String token);

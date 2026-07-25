@@ -15,6 +15,10 @@ import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 
 import java.util.UUID;
 
+/**
+ * REST controller for managing the root Organization details.
+ * Provides endpoints for retrieving and updating organization profiles.
+ */
 @RestController
 @RequestMapping("/api/org")
 @RequiredArgsConstructor
@@ -24,6 +28,12 @@ public class OrgController {
     private final OrganizationRepository organizationRepository;
     private final CompanyRepository companyRepository;
 
+    /**
+     * Retrieves the organization profile of the currently authenticated user.
+     * Requires 'org.view' authority.
+     *
+     * @return the Organization entity, or null if none is associated
+     */
     @PreAuthorize("hasAuthority('org.view')")
     @GetMapping("/profile")
     public ResponseEntity<Organization> getMyOrganization() {
@@ -42,6 +52,13 @@ public class OrgController {
         return ResponseEntity.ok(org);
     }
 
+    /**
+     * Updates the organization profile of the currently authenticated user.
+     * Requires 'org.edit' authority.
+     *
+     * @param request the updated organization details
+     * @return the updated Organization entity
+     */
     @PreAuthorize("hasAuthority('org.edit')")
     @PutMapping("/profile")
     public ResponseEntity<Organization> updateMyOrganization(
@@ -68,6 +85,12 @@ public class OrgController {
         return ResponseEntity.ok(organizationRepository.save(org));
     }
 
+    /**
+     * Retrieves a lightweight list of all companies belonging to the user's organization.
+     * Requires 'org.view' authority.
+     *
+     * @return a list of maps containing company IDs and names
+     */
     @PreAuthorize("hasAuthority('org.view')")
     @GetMapping("/companies")
     public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getMyOrganizationCompanies() {

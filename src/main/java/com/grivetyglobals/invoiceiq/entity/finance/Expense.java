@@ -15,6 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing Expense.
+ */
 @Entity
 @Table(name = "expenses")
 @Data

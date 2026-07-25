@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+/**
+ * Entity representing DocumentTemplate.
+ */
 @Entity
 @Table(name = "document_templates")
 @Getter

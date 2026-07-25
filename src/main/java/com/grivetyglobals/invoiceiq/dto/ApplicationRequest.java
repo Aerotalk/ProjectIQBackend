@@ -3,6 +3,9 @@ package com.grivetyglobals.invoiceiq.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/**
+ * Data Transfer Object for ApplicationRequest.
+ */
 @Data
 public class ApplicationRequest {
 

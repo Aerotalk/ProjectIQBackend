@@ -7,6 +7,9 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
+/**
+ * Entity representing VendorBankDetails.
+ */
 @Entity
 @Table(name = "sales_vendor_bank_details")
 @Getter

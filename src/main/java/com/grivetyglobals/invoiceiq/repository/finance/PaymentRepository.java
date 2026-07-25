@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for PaymentRepository.
+ */
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     List<Payment> findByCompanyIdOrderByCreatedAtDesc(UUID companyId);

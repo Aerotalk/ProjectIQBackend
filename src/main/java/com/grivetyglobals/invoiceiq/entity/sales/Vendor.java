@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.List;
 
+/**
+ * Entity representing Vendor.
+ */
 @Entity
 @Table(name = "sales_vendors")
 @Getter

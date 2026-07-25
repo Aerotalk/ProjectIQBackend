@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for QuotationRepository.
+ */
 @Repository
 public interface QuotationRepository extends JpaRepository<Quotation, UUID> {
     List<Quotation> findByCompanyId(UUID companyId);

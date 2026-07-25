@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for ExpenseRepository.
+ */
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     List<Expense> findByCompanyId(UUID companyId);

@@ -9,6 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for KBDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

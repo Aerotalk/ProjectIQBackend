@@ -18,6 +18,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Table(name = "organizations", indexes = {
     @Index(name = "idx_org_name", columnList = "organization_name")
 })
+/**
+ * Entity representing Organization.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

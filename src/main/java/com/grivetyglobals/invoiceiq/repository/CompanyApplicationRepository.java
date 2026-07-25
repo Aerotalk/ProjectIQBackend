@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for CompanyApplicationRepository.
+ */
 @Repository
 public interface CompanyApplicationRepository extends JpaRepository<CompanyApplication, UUID> {
     List<CompanyApplication> findByCompanyId(UUID companyId);

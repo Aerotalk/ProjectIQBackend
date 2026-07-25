@@ -13,6 +13,9 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Configuration class for DocumentTemplateSeeder.
+ */
 @Component
 @RequiredArgsConstructor
 public class DocumentTemplateSeeder implements CommandLineRunner {

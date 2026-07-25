@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for ChallanRepository.
+ */
 @Repository
 public interface ChallanRepository extends JpaRepository<Challan, UUID> {
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"linkedVendorPo"})

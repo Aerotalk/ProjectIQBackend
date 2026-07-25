@@ -13,6 +13,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Entity representing Department.
+ */
 @Entity
 @Table(name = "departments")
 @Getter

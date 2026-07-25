@@ -17,6 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
+/**
+ * REST controller for administrative operations.
+ * Handles organization, company, and user management tasks.
+ * Secured by method-level authorization checks.
+ */
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -24,18 +29,39 @@ public class AdminController {
 
     private final AdminService adminService;
 
+    /**
+     * Creates a new organization in the system.
+     * Requires 'org.create' authority.
+     *
+     * @param request the organization creation payload
+     * @return the created Organization entity
+     */
     @PreAuthorize("hasAuthority('org.create')")
     @PostMapping("/organizations")
     public ResponseEntity<Organization> createOrganization(@RequestBody OrganizationCreateRequest request) {
         return ResponseEntity.ok(adminService.createOrganization(request));
     }
 
+    /**
+     * Retrieves a paginated list of all organizations.
+     * Requires 'org.view' authority.
+     *
+     * @param pageable pagination and sorting parameters
+     * @return a paginated list of Organization entities
+     */
     @PreAuthorize("hasAuthority('org.view')")
     @GetMapping("/organizations")
     public ResponseEntity<Page<Organization>> getAllOrganizations(Pageable pageable) {
         return ResponseEntity.ok(adminService.getAllOrganizations(pageable));
     }
 
+    /**
+     * Retrieves a specific organization by its UUID.
+     * Requires 'org.view' authority.
+     *
+     * @param id the UUID of the organization
+     * @return the Organization entity
+     */
     @PreAuthorize("hasAuthority('org.view')")
     @GetMapping("/organizations/{id}")
     public ResponseEntity<Organization> getOrganizationById(@PathVariable UUID id) {
@@ -48,12 +74,26 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateOrganization(id, request));
     }
 
+    /**
+     * Creates a new company in the system.
+     * Requires 'company.create' authority.
+     *
+     * @param request the company creation payload
+     * @return the created Company entity
+     */
     @PreAuthorize("hasAuthority('company.create')")
     @PostMapping("/companies")
     public ResponseEntity<Company> createCompany(@Valid @RequestBody CompanyCreateRequest request) {
         return ResponseEntity.ok(adminService.createCompany(request));
     }
 
+    /**
+     * Creates a new user in the system.
+     * Requires 'employee.create' authority.
+     *
+     * @param request the user creation payload
+     * @return the created User entity
+     */
     @PreAuthorize("hasAuthority('employee.create')")
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody UserCreateRequest request) {
@@ -111,6 +151,13 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateCompanyStatus(id, status));
     }
 
+    /**
+     * Deletes a specific company by its UUID.
+     * Requires 'company.delete' authority.
+     *
+     * @param id the UUID of the company to delete
+     * @return a 204 No Content response
+     */
     @PreAuthorize("hasAuthority('company.delete')")
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable UUID id) {

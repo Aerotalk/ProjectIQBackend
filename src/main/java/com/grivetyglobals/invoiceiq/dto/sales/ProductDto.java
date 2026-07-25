@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for ProductDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

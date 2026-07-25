@@ -6,6 +6,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;
 
+/**
+ * Security component SecurityUtils.
+ */
 public class SecurityUtils {
 
     public static User getCurrentUser() {

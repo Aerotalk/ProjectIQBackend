@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.CookieValue;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * REST controller handling authentication and user profile operations.
+ * Provides endpoints for login, token refresh, logout, password resets, and user profile management.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -23,12 +27,27 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * Bootstraps the initial Super Admin account.
+     * Intended to be used only once during initial system setup.
+     *
+     * @param request the registration details
+     * @return a success message
+     */
     @PostMapping("/setup-super-admin")
     public ResponseEntity<String> setupSuperAdmin(@Valid @RequestBody RegisterRequest request) {
         authService.setupSuperAdmin(request);
         return ResponseEntity.ok("Super Admin created successfully.");
     }
 
+    /**
+     * Authenticates a user and issues access and refresh tokens.
+     * Tokens are set as HTTP-only cookies in the response.
+     *
+     * @param request  the login credentials
+     * @param response the HTTP response to attach cookies to
+     * @return the authentication response without raw tokens in body
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         AuthResponse authResponse = authService.login(request);
@@ -39,6 +58,14 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
+    /**
+     * Refreshes the access token using a valid refresh token cookie.
+     * Issues new tokens as HTTP-only cookies.
+     *
+     * @param refreshToken the refresh token from the cookie
+     * @param response     the HTTP response to attach new cookies to
+     * @return the new authentication response
+     */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -54,6 +81,13 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
+    /**
+     * Logs out the user by clearing their token cookies and invalidating the refresh token.
+     *
+     * @param refreshToken the refresh token from the cookie
+     * @param response     the HTTP response to clear cookies from
+     * @return a success message
+     */
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken, HttpServletResponse response) {
         if (refreshToken != null && !refreshToken.isBlank()) {
@@ -86,6 +120,12 @@ public class AuthController {
         response.addCookie(cookie);
     }
 
+    /**
+     * Verifies a user's email using a provided verification token.
+     *
+     * @param token the verification token sent via email
+     * @return a success message
+     */
     @org.springframework.web.bind.annotation.GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@org.springframework.web.bind.annotation.RequestParam String token) {
         authService.verifyEmail(token);
@@ -111,6 +151,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.updateProfile(request));
     }
 
+    /**
+     * Retrieves the current authenticated user's profile information.
+     *
+     * @return the user's profile data (MeResponse)
+     */
     @org.springframework.web.bind.annotation.GetMapping("/me")
     public ResponseEntity<com.grivetyglobals.invoiceiq.dto.MeResponse> getMe() {
         return ResponseEntity.ok(authService.getMe());

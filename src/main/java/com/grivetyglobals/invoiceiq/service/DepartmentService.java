@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service class for managing departments.
+ * Handles creation, retrieval, updating, and deletion of departments within an organization.
+ */
 @Service
 @RequiredArgsConstructor
 public class DepartmentService {
@@ -23,6 +27,12 @@ public class DepartmentService {
     private final OrganizationRepository organizationRepository;
     private final CompanyRepository companyRepository;
 
+    /**
+     * Creates a new department.
+     * 
+     * @param request the department data payload
+     * @return the created Department entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public Department createDepartment(DepartmentRequest request) {
@@ -65,6 +75,12 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
+    /**
+     * Retrieves all departments for a specific company or the current JWT-scoped company.
+     * 
+     * @param companyId the optional company ID to filter by
+     * @return a list of Department entities
+     */
     @org.springframework.cache.annotation.Cacheable(value = "departmentsList", key = "T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId() + '-' + (#companyId != null ? #companyId : T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId())")
     public List<Department> getAllDepartments(UUID companyId) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
@@ -73,6 +89,14 @@ public class DepartmentService {
         return departmentRepository.findByOrganizationIdAndCompanyId(currentOrgId, resolvedCompanyId);
     }
 
+    /**
+     * Retrieves a specific department by its UUID.
+     * Ensures the department belongs to the current organization and (if scoped) company.
+     * 
+     * @param id the UUID of the department
+     * @return the Department entity
+     * @throws RuntimeException if the department is not found or access is denied
+     */
     public Department getDepartmentById(UUID id) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
@@ -92,6 +116,13 @@ public class DepartmentService {
         return department;
     }
 
+    /**
+     * Updates an existing department.
+     * 
+     * @param id      the UUID of the department to update
+     * @param request the updated department data payload
+     * @return the updated Department entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public Department updateDepartment(UUID id, DepartmentRequest request) {
@@ -111,6 +142,11 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
+    /**
+     * Deletes a department by its UUID.
+     * 
+     * @param id the UUID of the department to delete
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "departmentsList", allEntries = true)
     @Transactional
     public void deleteDepartment(UUID id) {

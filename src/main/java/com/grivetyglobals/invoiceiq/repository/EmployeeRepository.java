@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for EmployeeRepository.
+ */
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
        

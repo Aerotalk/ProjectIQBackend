@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing ChallanLineItem.
+ */
 @Entity
 @Table(name = "challan_line_items")
 @Getter

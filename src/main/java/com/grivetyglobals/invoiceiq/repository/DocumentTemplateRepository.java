@@ -8,6 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 
+/**
+ * Repository interface for DocumentTemplateRepository.
+ */
 @Repository
 public interface DocumentTemplateRepository extends JpaRepository<DocumentTemplate, UUID> {
     

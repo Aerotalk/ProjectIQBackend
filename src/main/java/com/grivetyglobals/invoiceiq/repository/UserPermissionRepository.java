@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for UserPermissionRepository.
+ */
 @Repository
 public interface UserPermissionRepository extends JpaRepository<UserPermission, UUID> {
     List<UserPermission> findByUserId(UUID userId);

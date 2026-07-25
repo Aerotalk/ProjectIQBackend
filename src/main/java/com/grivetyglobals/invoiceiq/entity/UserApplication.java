@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Entity representing UserApplication.
+ */
 @Entity
 @Table(name = "user_applications")
 @Getter

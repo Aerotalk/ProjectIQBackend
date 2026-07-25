@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for OrganizationRepository.
+ */
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, UUID> {
     Optional<Organization> findByOrganizationCode(String organizationCode);

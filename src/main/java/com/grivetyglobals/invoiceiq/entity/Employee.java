@@ -14,6 +14,9 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Entity representing Employee.
+ */
 @Entity
 @Table(name = "employees")
 @Getter

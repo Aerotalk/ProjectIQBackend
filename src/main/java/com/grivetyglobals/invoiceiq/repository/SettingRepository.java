@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for SettingRepository.
+ */
 @Repository
 public interface SettingRepository extends JpaRepository<Setting, UUID> {
     List<Setting> findByOrganizationId(UUID organizationId);

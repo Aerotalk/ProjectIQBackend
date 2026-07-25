@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object for OrganizationCreateRequest.
+ */
 @Data
 @Builder
 @AllArgsConstructor

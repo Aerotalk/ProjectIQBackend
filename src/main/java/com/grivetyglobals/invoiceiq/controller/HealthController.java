@@ -4,9 +4,19 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for system health checks.
+ * Serves a simple HTML page indicating the service status.
+ */
 @RestController
 public class HealthController {
 
+    /**
+     * Returns an HTML page displaying the system's operational status.
+     * Unsecured endpoint accessible by anyone (load balancers, uptime monitors).
+     *
+     * @return HTML content representing system health
+     */
     @GetMapping(value = {"/", "/health"}, produces = MediaType.TEXT_HTML_VALUE)
     public String healthCheck() {
         return """

@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Entity representing Permission.
+ */
 @Entity
 @Table(name = "permissions")
 @Getter

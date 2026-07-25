@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 import java.util.Optional;
 
+/**
+ * Repository interface for PermissionGroupRepository.
+ */
 @Repository
 public interface PermissionGroupRepository extends JpaRepository<PermissionGroup, UUID> {
     Optional<PermissionGroup> findByGroupName(String groupName);

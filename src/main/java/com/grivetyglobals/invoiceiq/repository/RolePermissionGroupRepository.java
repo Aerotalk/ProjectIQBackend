@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Repository interface for RolePermissionGroupRepository.
+ */
 @Repository
 public interface RolePermissionGroupRepository extends JpaRepository<RolePermissionGroup, UUID> {
     Optional<RolePermissionGroup> findByRoleIdAndPermissionGroupId(UUID roleId, UUID permissionGroupId);

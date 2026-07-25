@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository interface for FileRepository.
+ */
 @Repository
 public interface FileRepository extends JpaRepository<File, UUID> {
 }

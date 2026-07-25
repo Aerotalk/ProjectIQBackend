@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Repository interface for VendorRepository.
+ */
 @Repository
 public interface VendorRepository extends JpaRepository<Vendor, UUID> {
     List<Vendor> findByCompanyId(UUID companyId);

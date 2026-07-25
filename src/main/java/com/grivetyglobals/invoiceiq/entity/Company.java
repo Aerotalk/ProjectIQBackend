@@ -16,6 +16,9 @@ import java.util.UUID;
     @Index(name = "idx_company_name", columnList = "company_name"),
     @Index(name = "idx_company_org", columnList = "organization_id")
 })
+/**
+ * Entity representing Company.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

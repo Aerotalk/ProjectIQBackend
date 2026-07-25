@@ -6,6 +6,9 @@ import java.util.UUID;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * Entity representing PermissionGroup.
+ */
 @Entity
 @Table(name = "permission_groups")
 @Getter

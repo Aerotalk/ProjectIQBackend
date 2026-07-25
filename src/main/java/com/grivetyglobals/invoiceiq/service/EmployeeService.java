@@ -22,6 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service class for managing employees.
+ * Provides functionality for creating, retrieving, updating, deleting, and filtering employees.
+ */
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
@@ -38,6 +42,12 @@ public class EmployeeService {
         return String.format("EMP-%04d", currentCount + 1);
     }
 
+    /**
+     * Creates a new employee.
+     * 
+     * @param request the employee creation payload
+     * @return the created Employee entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee createEmployee(EmployeeCreateRequest request) {
@@ -94,6 +104,14 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    /**
+     * Retrieves an employee by their UUID.
+     * Ensures the employee belongs to the current organization and company (if applicable).
+     * 
+     * @param employeeId the UUID of the employee
+     * @return the Employee entity
+     * @throws RuntimeException if the employee is not found or access is denied
+     */
     public Employee getEmployeeById(UUID employeeId) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
         UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
@@ -115,6 +133,14 @@ public class EmployeeService {
         return employee;
     }
 
+    /**
+     * Searches and filters employees based on department, status, and search term.
+     * 
+     * @param departmentId the optional department ID filter
+     * @param status       the optional employment status filter
+     * @param searchTerm   the optional search term (matches name or code)
+     * @return a list of Employee entities
+     */
     @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId(), #departmentId, #status, #searchTerm)")
     @Transactional(readOnly = true)
     public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String searchTerm) {
@@ -123,6 +149,12 @@ public class EmployeeService {
         return employeeRepository.searchAndFilterEmployees(organizationId, companyId, departmentId, status, searchTerm);
     }
 
+    /**
+     * Retrieves the employee profile for a specific user email.
+     * 
+     * @param email the email of the user
+     * @return the associated Employee entity
+     */
     public Employee getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -130,6 +162,13 @@ public class EmployeeService {
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
     }
 
+    /**
+     * Updates an existing employee.
+     * 
+     * @param employeeId the UUID of the employee to update
+     * @param request    the update payload
+     * @return the updated Employee entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee updateEmployee(UUID employeeId, EmployeeUpdateRequest request) {
@@ -167,12 +206,24 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    /**
+     * Deletes an employee by their UUID.
+     * 
+     * @param employeeId the UUID of the employee to delete
+     */
     @Transactional
     public void deleteEmployee(UUID employeeId) {
         Employee employee = getEmployeeById(employeeId);
         employeeRepository.delete(employee);
     }
 
+    /**
+     * Changes the employment status of an employee.
+     * 
+     * @param employeeId the UUID of the employee
+     * @param status     the new employment status
+     * @return the updated Employee entity
+     */
     @org.springframework.cache.annotation.CacheEvict(value = "employeesList", allEntries = true)
     @Transactional
     public Employee changeEmploymentStatus(UUID employeeId, String status) {

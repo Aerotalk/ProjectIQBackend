@@ -9,6 +9,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Data Transfer Object for ChallanDto.
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository interface for CompanyAddressRepository.
+ */
 @Repository
 public interface CompanyAddressRepository extends JpaRepository<CompanyAddress, UUID> {
 }

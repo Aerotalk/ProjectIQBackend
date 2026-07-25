@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity representing PurchaseOrderLineItem.
+ */
 @Entity
 @Table(name = "purchase_order_line_items")
 @Getter

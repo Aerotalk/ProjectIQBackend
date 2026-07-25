@@ -14,6 +14,9 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.grivetyglobals.invoiceiq.entity.Company;
 
+/**
+ * Entity representing Designation.
+ */
 @Entity
 @Table(name = "designations")
 @Getter

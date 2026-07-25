@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.util.UUID;
 
+/**
+ * Entity representing CompanyAddress.
+ */
 @Entity
 @Table(name = "company_addresses")
 @Getter
