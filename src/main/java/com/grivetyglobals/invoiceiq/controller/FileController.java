@@ -52,6 +52,7 @@ public class FileController {
                 .contentType(MediaType.parseMediaType(metadata.getMimeType()))
                 .contentLength(metadata.getFileSize())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + metadata.getOriginalName() + "\"")
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400") // Cache for 24 hours
                 .body(responseBody);
     }
 }

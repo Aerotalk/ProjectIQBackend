@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 @RequiredArgsConstructor
@@ -91,6 +92,7 @@ public class FileService {
         }
     }
 
+    @Cacheable(value = "fileMetadata", key = "#fileId")
     public File getFileMetadata(UUID fileId) {
         return fileRepository.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));

@@ -9,6 +9,10 @@ import com.grivetyglobals.invoiceiq.repository.project.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +28,7 @@ public class TicketService {
     private final TicketMapper ticketMapper;
     private final ProjectRepository projectRepository;
 
+    @Cacheable(value = "ticketsByCompany", key = "#companyId")
     @Transactional(readOnly = true)
     public List<TicketDto> getTicketsByCompany(UUID companyId) {
         return ticketRepository.findByCompanyIdOrderByCreatedAtDesc(companyId)
@@ -32,6 +37,7 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "tickets", key = "#id")
     @Transactional(readOnly = true)
     public TicketDto getTicket(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
@@ -39,6 +45,7 @@ public class TicketService {
         return ticketMapper.toDto(ticket);
     }
 
+    @CacheEvict(value = "ticketsByCompany", allEntries = true)
     public TicketDto createTicket(UUID companyId, TicketDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
@@ -69,6 +76,8 @@ public class TicketService {
         return ticketMapper.toDto(saved);
     }
 
+    @CachePut(value = "tickets", key = "#id")
+    @CacheEvict(value = "ticketsByCompany", allEntries = true)
     public TicketDto updateTicket(UUID id, TicketDto dto) {
         Ticket existing = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -78,6 +87,10 @@ public class TicketService {
         return ticketMapper.toDto(updated);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "tickets", key = "#id"),
+        @CacheEvict(value = "ticketsByCompany", allEntries = true)
+    })
     public void deleteTicket(UUID id) {
         ticketRepository.deleteById(id);
     }

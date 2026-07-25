@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.util.UUID;
 
 @Service
@@ -383,6 +385,7 @@ public class AdminService {
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Cacheable(value = "companyProfile", key = "#companyId")
     public Company getCompanyById(java.util.UUID companyId) {
         java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         Company company = companyRepository.findById(companyId)
@@ -401,6 +404,7 @@ public class AdminService {
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Cacheable(value = "companyProfileByEmail", key = "#email")
     public Company getMyCompanyProfile(String email) {
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
         if (companyId == null) {
@@ -409,6 +413,7 @@ public class AdminService {
         return getCompanyById(companyId);
     }
 
+    @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     @Transactional
     public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request) {
         Company company = getCompanyById(companyId);
@@ -492,6 +497,7 @@ public class AdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     public Company updateCompanyStatus(java.util.UUID companyId, String status) {
         Company company = getCompanyById(companyId);
         company.setStatus(status);

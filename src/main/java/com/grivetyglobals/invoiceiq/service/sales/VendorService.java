@@ -14,6 +14,8 @@ import com.grivetyglobals.invoiceiq.repository.sales.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +28,7 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final CompanyRepository companyRepository;
 
+    @Cacheable(value = "vendorsByCompany", key = "#companyId")
     @Transactional(readOnly = true)
     public List<VendorDto> getVendorsByCompany(UUID companyId) {
         return vendorRepository.findByCompanyId(companyId).stream()
@@ -67,6 +70,7 @@ public class VendorService {
     }
 
     @Transactional
+    @CacheEvict(value = "vendorsByCompany", allEntries = true)
     public VendorDto createVendor(UUID companyId, VendorDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
@@ -87,6 +91,7 @@ public class VendorService {
     }
 
     @Transactional
+    @CacheEvict(value = "vendorsByCompany", allEntries = true)
     public VendorDto updateVendor(UUID id, VendorDto dto) {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
@@ -105,6 +110,7 @@ public class VendorService {
     }
 
     @Transactional
+    @CacheEvict(value = "vendorsByCompany", allEntries = true)
     public void deleteVendor(UUID id) {
         vendorRepository.deleteById(id);
     }

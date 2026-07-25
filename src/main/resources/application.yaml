@@ -26,6 +26,9 @@ spring:
     hikari:
       max-lifetime: 1800000
       connection-timeout: 10000
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
   jpa:
     open-in-view: false
     hibernate:

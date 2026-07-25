@@ -9,6 +9,8 @@ import com.grivetyglobals.invoiceiq.repository.sales.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +23,8 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CompanyRepository companyRepository;
 
+    @Cacheable(value = "productsByCompany", key = "#companyId")
+    @Transactional(readOnly = true)
     public List<ProductDto> getProductsByCompany(UUID companyId) {
         return productRepository.findByCompanyId(companyId).stream()
                 .map(this::mapToDto)
@@ -33,6 +37,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "productsByCompany", allEntries = true)
     public ProductDto createProduct(UUID companyId, ProductDto dto) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
@@ -45,6 +50,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "productsByCompany", allEntries = true)
     public ProductDto updateProduct(UUID id, ProductDto dto) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -55,6 +61,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "productsByCompany", allEntries = true)
     public void deleteProduct(UUID id) {
         productRepository.deleteById(id);
     }
