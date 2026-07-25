@@ -404,7 +404,7 @@ public class AdminService {
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    @Cacheable(value = "companyProfileByEmail", key = "#email")
+    @Cacheable(value = "companyProfileByEmail", key = "#email", unless = "#result == null")
     public Company getMyCompanyProfile(String email) {
         java.util.UUID companyId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentCompanyId();
         if (companyId == null) {
