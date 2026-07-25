@@ -15,7 +15,10 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_organization", columnList = "organization_id"),
+    @Index(name = "idx_user_company", columnList = "company_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

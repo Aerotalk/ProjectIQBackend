@@ -15,7 +15,9 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name = "organizations")
+@Table(name = "organizations", indexes = {
+    @Index(name = "idx_org_name", columnList = "organization_name")
+})
 @Getter
 @Setter
 @NoArgsConstructor

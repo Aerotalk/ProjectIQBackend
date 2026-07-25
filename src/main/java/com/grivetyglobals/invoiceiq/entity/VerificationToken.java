@@ -14,7 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "verification_tokens")
+@Table(name = "verification_tokens", indexes = {
+    @Index(name = "idx_verification_token_user", columnList = "user_id")
+})
 public class VerificationToken {
 
     public enum TokenType {

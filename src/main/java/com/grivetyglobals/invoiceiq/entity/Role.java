@@ -6,7 +6,9 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", indexes = {
+    @Index(name = "idx_role_name", columnList = "role_name")
+})
 @Getter
 @Setter
 @NoArgsConstructor
