@@ -9,15 +9,15 @@ logging:
     root: INFO
     com.grivetyglobals.invoiceiq: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n%ex"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n%ex"
 spring:
   profiles:
     active: dev
   application:
     name: invoiceiq
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:.env[.properties], optional:file:ProjectIQBackend/.env[.properties]
   datasource:
     url: ${RENDER_DB_URL}?connectTimeout=10&socketTimeout=30&tcpKeepAlive=true
     username: ${RENDER_DB_USER}
