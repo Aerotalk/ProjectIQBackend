@@ -26,7 +26,7 @@ public class ProductService {
     @Cacheable(value = "productsByCompany", key = "#companyId")
     @Transactional(readOnly = true)
     public List<ProductDto> getProductsByCompany(UUID companyId) {
-        return productRepository.findByCompanyId(companyId).stream()
+        return productRepository.findByCompanyIdAndStatus(companyId, "Active").stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
