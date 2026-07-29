@@ -18,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ExpenseDto {
     private UUID id;
+    private String expenseNo;
     private UUID projectId;
     private String projectName;
     private String category;

@@ -26,7 +26,7 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public List<ExpenseDto> getExpensesByCompany(UUID companyId) {
-        return expenseRepository.findByCompanyId(companyId).stream()
+        return expenseRepository.findByCompanyIdOrderByCreatedAtDesc(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -73,6 +73,7 @@ public class ExpenseService {
             expense.setProject(null);
         }
 
+        expense.setExpenseNo(dto.getExpenseNo());
         expense.setCategory(dto.getCategory());
         expense.setExpenseDate(dto.getExpenseDate());
         expense.setAmount(dto.getAmount());
@@ -90,6 +91,7 @@ public class ExpenseService {
     private ExpenseDto mapToDto(Expense expense) {
         ExpenseDto dto = new ExpenseDto();
         dto.setId(expense.getId());
+        dto.setExpenseNo(expense.getExpenseNo());
         
         if (expense.getProject() != null) {
             dto.setProjectId(expense.getProject().getId());
