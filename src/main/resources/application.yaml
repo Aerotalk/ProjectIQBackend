@@ -28,7 +28,6 @@ spring:
       connection-timeout: 10000
   data:
     redis:
-      url: ${REDIS_URL:}
       host: ${REDISHOST:localhost}
       port: ${REDISPORT:6379}
       password: ${REDISPASSWORD:}
