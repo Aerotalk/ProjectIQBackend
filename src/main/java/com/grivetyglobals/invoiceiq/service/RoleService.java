@@ -59,30 +59,44 @@ public class RoleService {
     /**
      * Retrieves all roles, filtered by the current user's permissions and scope.
      * Non-super-admins cannot see the super admin role.
+     *
+     * Uses an optimized JOIN FETCH query to load all role-permission data in a single
+     * DB round-trip, preventing N+1 queries. Results are cached in "rolesList".
      * 
      * @return a list of accessible Role entities
      */
     @Transactional(readOnly = true)
+    @org.springframework.cache.annotation.Cacheable(value = "rolesList", key = "#root.methodName + '_' + T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentUser().getId()")
     public List<Role> getAllRoles() {
         User currentUser = SecurityUtils.getCurrentUser();
         currentUser = userRepository.findById(currentUser.getId()).orElse(currentUser);
-        java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
 
-        // Super admins and org admins can see all roles (except ROLE_SUPER_ADMIN for non-super-admins)
         boolean isSuperAdmin = currentUser.getUserRoles().stream()
                 .anyMatch(ur -> "ROLE_SUPER_ADMIN".equals(ur.getRole().getRoleName()));
         boolean isOrgAdmin = currentUser.getUserRoles().stream()
                 .anyMatch(ur -> "ROLE_ORG_ADMIN".equals(ur.getRole().getRoleName()));
 
-        return roleRepository.findAll().stream()
-                .filter(role -> {
-                    if ("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin) return false;
-                    if ("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin && !isOrgAdmin) return false;
-                    
-                    // Super admins and org admins can see all other non-filtered roles
-                    if (isSuperAdmin || isOrgAdmin) return true;
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
 
-                    // For other users, only show roles whose permissions are a subset of theirs
+        // Use a single JOIN FETCH query to avoid N+1 on permission collections
+        List<Role> allRoles = (orgId != null)
+                ? roleRepository.findAllWithPermissionsByOrgId(orgId)
+                : roleRepository.findAll();
+
+        // Super admins / org admins: just filter out ROLE_SUPER_ADMIN if not super admin
+        if (isSuperAdmin || isOrgAdmin) {
+            return allRoles.stream()
+                    .filter(role -> !("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin))
+                    .filter(role -> !("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin && !isOrgAdmin))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        // For regular users: only show roles whose permissions are a subset of theirs
+        java.util.Set<String> myPermissions = permissionService.getEffectivePermissions(currentUser);
+        return allRoles.stream()
+                .filter(role -> {
+                    if ("ROLE_SUPER_ADMIN".equals(role.getRoleName())) return false;
+                    if ("ROLE_ORG_ADMIN".equals(role.getRoleName())) return false;
                     java.util.Set<String> rolePermKeys = getEffectivePermissionKeysForRole(role);
                     return myPermissions.containsAll(rolePermKeys);
                 })
