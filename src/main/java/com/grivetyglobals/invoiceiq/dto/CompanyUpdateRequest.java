@@ -45,6 +45,7 @@ public class CompanyUpdateRequest {
     private UUID stampFileId;
     private String primaryColor;
     private String secondaryColor;
+    private String sidebarColor;
     private String termsAndConditions;
     
     // Admin Account

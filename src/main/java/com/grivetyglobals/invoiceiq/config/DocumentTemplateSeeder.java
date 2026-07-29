@@ -5,7 +5,6 @@ import com.grivetyglobals.invoiceiq.repository.DocumentTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -100,7 +99,6 @@ public class DocumentTemplateSeeder implements CommandLineRunner {
         if (name.equalsIgnoreCase("Purchase Order")) return "Standard Purchase Order";
         if (name.equalsIgnoreCase("Delivery Challan")) return "Standard Delivery Challan";
         if (name.equalsIgnoreCase("Bill")) return "Standard Bill";
-        
         return name;
     }
 
