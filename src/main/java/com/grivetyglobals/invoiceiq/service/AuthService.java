@@ -235,6 +235,7 @@ public class AuthService {
                 .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
                 .primaryColor(user.getCompany() != null ? user.getCompany().getPrimaryColor() : null)
                 .secondaryColor(user.getCompany() != null ? user.getCompany().getSecondaryColor() : null)
+                .sidebarColor(user.getCompany() != null ? user.getCompany().getSidebarColor() : null)
                 .build();
     }
 
@@ -271,6 +272,7 @@ public class AuthService {
                 .companyLogoId(user.getCompany() != null ? user.getCompany().getLogoFileId() : null)
                 .primaryColor(user.getCompany() != null ? user.getCompany().getPrimaryColor() : null)
                 .secondaryColor(user.getCompany() != null ? user.getCompany().getSecondaryColor() : null)
+                .sidebarColor(user.getCompany() != null ? user.getCompany().getSidebarColor() : null)
                 .build();
     }
 

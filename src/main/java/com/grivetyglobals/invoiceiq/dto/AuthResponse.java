@@ -26,4 +26,5 @@ public class AuthResponse {
     private java.util.UUID companyLogoId;
     private String primaryColor;
     private String secondaryColor;
+    private String sidebarColor;
 }

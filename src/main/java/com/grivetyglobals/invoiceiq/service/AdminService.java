@@ -166,6 +166,7 @@ public class AdminService {
                 .website(request.getWebsite())
                 .primaryColor(request.getPrimaryColor())
                 .secondaryColor(request.getSecondaryColor())
+                .sidebarColor(request.getSidebarColor())
                 .status(request.getStatus())
                 .logoFileId(request.getLogoFileId())
                 .invoiceLogoId(request.getInvoiceLogoId())
@@ -515,6 +516,7 @@ public class AdminService {
         company.setStampFileId(request.getStampFileId());
         company.setPrimaryColor(request.getPrimaryColor());
         company.setSecondaryColor(request.getSecondaryColor());
+        company.setSidebarColor(request.getSidebarColor());
         company.setTermsAndConditions(request.getTermsAndConditions());
 
         company = companyRepository.save(company);
