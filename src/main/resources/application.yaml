@@ -35,10 +35,6 @@ spring:
       timeout: 5s
       connect-timeout: 5s
   
-management:
-  health:
-    redis:
-      enabled: false
   jpa:
     open-in-view: false
     hibernate:
@@ -51,6 +47,11 @@ management:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+
+management:
+  health:
+    redis:
+      enabled: false
 
 jwt:
   secret: ${JWT_SECRET}
