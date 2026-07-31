@@ -135,6 +135,7 @@ public class User implements UserDetails {
         return java.util.Collections.emptySet();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private Set<UserRole> userRoles = new HashSet<>();

@@ -78,6 +78,7 @@ public class Employee {
     @JoinColumn(name = "designation_id")
     private Designation designation;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"organization", "company", "user", "department", "designation", "reportingManager", "hrManager"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporting_manager_id")
     private Employee reportingManager;
@@ -106,6 +107,7 @@ public class Employee {
     @Column(name = "grade", length = 50)
     private String grade;
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"organization", "company", "user", "department", "designation", "reportingManager", "hrManager"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hr_manager_id")
     private Employee hrManager;
