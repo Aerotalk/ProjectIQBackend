@@ -83,6 +83,12 @@ public class EmployeeService {
             company = companyRepository.findById(currentCompanyId).orElse(null);
         }
 
+        Employee hrManager = null;
+        if (request.getHrManagerId() != null) {
+            hrManager = employeeRepository.findById(request.getHrManagerId())
+                    .orElse(null); // non-mandatory
+        }
+
         Employee employee = Employee.builder()
                 .organization(organization)
                 .company(company)
@@ -99,6 +105,17 @@ public class EmployeeService {
                 .reportingManager(reportingManager)
                 .profilePicture(request.getProfilePicture())
                 .employmentStatus(request.getEmploymentStatus())
+                .maritalStatus(request.getMaritalStatus())
+                .bloodGroup(request.getBloodGroup())
+                .nationality(request.getNationality())
+                .employmentType(request.getEmploymentType())
+                .location(request.getLocation())
+                .grade(request.getGrade())
+                .hrManager(hrManager)
+                .weeklyOff(request.getWeeklyOff())
+                .fatherName(request.getFatherName())
+                .noticePeriodDays(request.getNoticePeriodDays())
+                .alternatePhone(request.getAlternatePhone())
                 .build();
 
         return employeeRepository.save(employee);
@@ -192,6 +209,12 @@ public class EmployeeService {
                     .orElseThrow(() -> new RuntimeException("Reporting Manager not found"));
         }
 
+        Employee hrManager = null;
+        if (request.getHrManagerId() != null) {
+            hrManager = employeeRepository.findById(request.getHrManagerId())
+                    .orElse(null);
+        }
+
         employee.setFirstName(request.getFirstName());
         employee.setMiddleName(request.getMiddleName());
         employee.setLastName(request.getLastName());
@@ -202,6 +225,18 @@ public class EmployeeService {
         employee.setDesignation(designation);
         employee.setReportingManager(reportingManager);
         employee.setProfilePicture(request.getProfilePicture());
+
+        employee.setMaritalStatus(request.getMaritalStatus());
+        employee.setBloodGroup(request.getBloodGroup());
+        employee.setNationality(request.getNationality());
+        employee.setEmploymentType(request.getEmploymentType());
+        employee.setLocation(request.getLocation());
+        employee.setGrade(request.getGrade());
+        employee.setHrManager(hrManager);
+        employee.setWeeklyOff(request.getWeeklyOff());
+        employee.setFatherName(request.getFatherName());
+        employee.setNoticePeriodDays(request.getNoticePeriodDays());
+        employee.setAlternatePhone(request.getAlternatePhone());
 
         return employeeRepository.save(employee);
     }

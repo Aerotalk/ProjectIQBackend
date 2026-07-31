@@ -51,4 +51,16 @@ public class EmployeeCreateRequest {
 
     @NotBlank(message = "Employment Status is required")
     private String employmentStatus;
+
+    private String maritalStatus;
+    private String bloodGroup;
+    private String nationality;
+    private String employmentType;
+    private String location;
+    private String grade;
+    private UUID hrManagerId;
+    private String weeklyOff;
+    private String fatherName;
+    private Integer noticePeriodDays;
+    private String alternatePhone;
 }

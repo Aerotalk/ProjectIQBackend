@@ -88,6 +88,40 @@ public class Employee {
     @Column(name = "employment_status", length = 20)
     private String employmentStatus;
 
+    @Column(name = "marital_status", length = 20)
+    private String maritalStatus;
+
+    @Column(name = "blood_group", length = 10)
+    private String bloodGroup;
+
+    @Column(name = "nationality", length = 50)
+    private String nationality;
+
+    @Column(name = "employment_type", length = 50)
+    private String employmentType;
+
+    @Column(name = "location", length = 100)
+    private String location;
+
+    @Column(name = "grade", length = 50)
+    private String grade;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hr_manager_id")
+    private Employee hrManager;
+
+    @Column(name = "weekly_off", length = 50)
+    private String weeklyOff;
+
+    @Column(name = "father_name", length = 100)
+    private String fatherName;
+
+    @Column(name = "notice_period_days")
+    private Integer noticePeriodDays;
+
+    @Column(name = "alternate_phone", length = 20)
+    private String alternatePhone;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
