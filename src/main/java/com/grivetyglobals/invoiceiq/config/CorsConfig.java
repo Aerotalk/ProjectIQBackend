@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost:5173,https://bumblecrm4.vercel.app,https://bumblecrm4-git-main-aerotalks-projects.vercel.app}")
+    @Value("${cors.allowed-origins:http://localhost:*,http://127.0.0.1:*,http://localhost:5173,https://bumblecrm4.vercel.app,https://bumblecrm4-git-main-aerotalks-projects.vercel.app,http://localhost:64871/*}")
     private String allowedOrigins;
 
     @Bean
