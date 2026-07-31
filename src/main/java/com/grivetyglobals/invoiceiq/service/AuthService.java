@@ -226,6 +226,7 @@ public class AuthService {
                 .token(jwtToken)
                 .refreshToken(refreshToken.getToken())
                 .username(user.getActualUsername())
+                .email(user.getEmail())
                 .roles(roles)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
