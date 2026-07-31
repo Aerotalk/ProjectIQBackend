@@ -64,8 +64,9 @@ public class EmployeeController {
     public ResponseEntity<List<Employee>> searchAndFilterEmployees(
             @RequestParam(required = false) UUID departmentId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(employeeService.searchAndFilterEmployees(departmentId, status, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String roleName) {
+        return ResponseEntity.ok(employeeService.searchAndFilterEmployees(departmentId, status, keyword, roleName));
     }
 
     /**

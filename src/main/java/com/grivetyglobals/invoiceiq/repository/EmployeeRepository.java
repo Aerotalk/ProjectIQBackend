@@ -31,14 +31,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
                      "AND (cast(:companyId as uuid) IS NULL OR EXISTS (SELECT 1 FROM UserRole ur WHERE ur.user = e.user AND ur.company.id = :companyId)) " +
                      "AND (cast(:departmentId as uuid) IS NULL OR e.department.id = :departmentId) " +
                      "AND (:status IS NULL OR e.employmentStatus = :status) " +
-                     "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) "
-                     +
+                     "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
                      "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
-                     "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')))")
+                     "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%'))) " +
+                     "AND (CAST(:roleName AS text) IS NULL OR LOWER(e.designation.role.roleName) LIKE LOWER(CONCAT('%', CAST(:roleName AS text), '%')))")
        List<Employee> searchAndFilterEmployees(
                      @Param("organizationId") UUID organizationId,
                      @Param("companyId") UUID companyId,
                      @Param("departmentId") UUID departmentId,
                      @Param("status") String status,
-                     @Param("keyword") String keyword);
+                     @Param("keyword") String keyword,
+                     @Param("roleName") String roleName);
 }

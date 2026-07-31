@@ -158,12 +158,12 @@ public class EmployeeService {
      * @param searchTerm   the optional search term (matches name or code)
      * @return a list of Employee entities
      */
-    @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId(), #departmentId, #status, #searchTerm)")
+    @org.springframework.cache.annotation.Cacheable(value = "employeesList", key = "T(java.util.Objects).hash(T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentOrganizationId(), T(com.grivetyglobals.invoiceiq.security.SecurityUtils).getCurrentCompanyId(), #departmentId, #status, #searchTerm, #roleName)")
     @Transactional(readOnly = true)
-    public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String searchTerm) {
+    public List<Employee> searchAndFilterEmployees(UUID departmentId, String status, String searchTerm, String roleName) {
         UUID organizationId = SecurityUtils.getCurrentOrganizationId();
         UUID companyId = SecurityUtils.getCurrentCompanyId();
-        return employeeRepository.searchAndFilterEmployees(organizationId, companyId, departmentId, status, searchTerm);
+        return employeeRepository.searchAndFilterEmployees(organizationId, companyId, departmentId, status, searchTerm, roleName);
     }
 
     /**
