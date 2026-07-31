@@ -23,7 +23,7 @@ public class DesignationRequest {
     @NotBlank(message = "Designation Name is required")
     private String designationName;
 
-    private Integer hierarchyLevel;
+    private UUID roleId;
 
     private UUID companyId;
 

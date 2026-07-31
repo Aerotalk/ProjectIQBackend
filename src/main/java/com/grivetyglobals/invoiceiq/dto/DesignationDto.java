@@ -20,7 +20,8 @@ public class DesignationDto {
     private UUID organizationId;
     private String designationCode;
     private String designationName;
-    private Integer hierarchyLevel;
+    private UUID roleId;
+    private String roleName;
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

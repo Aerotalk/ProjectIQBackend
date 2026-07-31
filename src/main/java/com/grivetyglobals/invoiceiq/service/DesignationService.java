@@ -7,6 +7,8 @@ import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.DesignationRepository;
 import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
+import com.grivetyglobals.invoiceiq.repository.RoleRepository;
+import com.grivetyglobals.invoiceiq.entity.Role;
 import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class DesignationService {
     private final DesignationRepository designationRepository;
     private final OrganizationRepository organizationRepository;
     private final CompanyRepository companyRepository;
+    private final RoleRepository roleRepository;
 
     /**
      * Creates a new designation.
@@ -57,12 +60,18 @@ public class DesignationService {
             }
         }
 
+        Role role = null;
+        if (request.getRoleId() != null) {
+            role = roleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+        }
+
         Designation designation = Designation.builder()
                 .organization(organization)
                 .company(company)
                 .designationCode(request.getDesignationCode())
                 .designationName(request.getDesignationName())
-                .hierarchyLevel(request.getHierarchyLevel())
+                .role(role)
                 .description(request.getDescription())
                 .build();
 
@@ -115,9 +124,15 @@ public class DesignationService {
     public Designation updateDesignation(UUID id, DesignationRequest request) {
         Designation designation = getDesignationById(id);
 
+        Role role = null;
+        if (request.getRoleId() != null) {
+            role = roleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+        }
+
         designation.setDesignationCode(request.getDesignationCode());
         designation.setDesignationName(request.getDesignationName());
-        designation.setHierarchyLevel(request.getHierarchyLevel());
+        designation.setRole(role);
         designation.setDescription(request.getDescription());
 
         return designationRepository.save(designation);

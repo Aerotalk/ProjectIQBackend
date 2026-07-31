@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.grivetyglobals.invoiceiq.entity.Company;
+import com.grivetyglobals.invoiceiq.entity.Role;
 
 /**
  * Entity representing Designation.
@@ -52,8 +53,9 @@ public class Designation {
     @Column(name = "designation_name", length = 150)
     private String designationName;
 
-    @Column(name = "hierarchy_level")
-    private Integer hierarchyLevel;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
