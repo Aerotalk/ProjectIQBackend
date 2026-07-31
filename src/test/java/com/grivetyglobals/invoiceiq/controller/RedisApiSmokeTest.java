@@ -33,25 +33,30 @@ public class RedisApiSmokeTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private CompanyRepository companyRepository;
+    private com.grivetyglobals.invoiceiq.repository.UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private com.grivetyglobals.invoiceiq.repository.CompanyRepository companyRepository;
 
     @Test
     public void testFullScaleRedisCachingAndSerialization() throws Exception {
-        // 1. Setup Super Admin
-        System.out.println("--- STEP 0: SETUP ADMIN ---");
-        com.grivetyglobals.invoiceiq.dto.RegisterRequest registerRequest = new com.grivetyglobals.invoiceiq.dto.RegisterRequest();
-        registerRequest.setUsername("testadmin");
-        registerRequest.setEmail("test_admin@grivety.com");
-        registerRequest.setPassword("admin123");
-        
-        mockMvc.perform(post("/api/auth/setup-super-admin")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)));
+        // 0. Prepare Super Admin
+        System.out.println("--- STEP 0: PREPARE SUPER ADMIN ---");
+        com.grivetyglobals.invoiceiq.entity.User adminUser = userRepository.findAll().stream()
+                .filter(u -> u.getUserRoles().stream().anyMatch(ur -> ur.getRole().getRoleName().equals("ROLE_SUPER_ADMIN")))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No Super Admin found in DB"));
+                
+        adminUser.setPassword(passwordEncoder.encode("admin123"));
+        userRepository.save(adminUser);
 
-        // 2. Authenticate to get a token
+        // 1. Authenticate to get a token
         System.out.println("--- STEP 1: AUTHENTICATING ---");
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test_admin@grivety.com");
+        loginRequest.setEmail(adminUser.getEmail());
         loginRequest.setPassword("admin123");
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")

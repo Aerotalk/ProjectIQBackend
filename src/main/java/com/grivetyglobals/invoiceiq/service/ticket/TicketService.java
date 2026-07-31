@@ -76,8 +76,10 @@ public class TicketService {
         return ticketMapper.toDto(saved);
     }
 
-    @CachePut(value = "tickets", key = "#id")
-    @CacheEvict(value = "ticketsByCompany", allEntries = true)
+    @Caching(
+        put = @CachePut(value = "tickets", key = "#id"),
+        evict = @CacheEvict(value = "ticketsByCompany", allEntries = true)
+    )
     public TicketDto updateTicket(UUID id, TicketDto dto) {
         Ticket existing = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));

@@ -465,9 +465,9 @@ public class AdminService {
         }
 
         if (company.getAddresses() != null)
-            company.getAddresses().size();
+            org.hibernate.Hibernate.initialize(company.getAddresses());
         if (company.getBankAccounts() != null)
-            company.getBankAccounts().size();
+            org.hibernate.Hibernate.initialize(company.getBankAccounts());
 
         return company;
     }
