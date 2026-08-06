@@ -31,6 +31,35 @@ export RENDER_DB_PASSWORD=$(strip_quotes "$RENDER_DB_PASSWORD")
 export JWT_SECRET=$(strip_quotes "$JWT_SECRET")
 export CORS_ALLOWED_ORIGINS=$(strip_quotes "$CORS_ALLOWED_ORIGINS")
 
+# Format and sanitize RENDER_DB_URL for Spring Boot JDBC
+if [ -n "$RENDER_DB_URL" ]; then
+    if [[ "$RENDER_DB_URL" == postgres://* ]]; then
+        RENDER_DB_URL="jdbc:postgresql://${RENDER_DB_URL#postgres://}"
+    elif [[ "$RENDER_DB_URL" == postgresql://* ]]; then
+        RENDER_DB_URL="jdbc:postgresql://${RENDER_DB_URL#postgresql://}"
+    elif [[ "$RENDER_DB_URL" != jdbc:* ]]; then
+        RENDER_DB_URL="jdbc:postgresql://${RENDER_DB_URL}"
+    fi
+
+    if [[ "$RENDER_DB_URL" != *"sslmode="* && "$RENDER_DB_URL" != *"ssl="* ]]; then
+        if [[ "$RENDER_DB_URL" == *"?"* ]]; then
+            RENDER_DB_URL="${RENDER_DB_URL}&sslmode=require"
+        else
+            RENDER_DB_URL="${RENDER_DB_URL}?sslmode=require"
+        fi
+    fi
+
+    if [[ "$RENDER_DB_URL" != *"connectTimeout="* ]]; then
+        if [[ "$RENDER_DB_URL" == *"?"* ]]; then
+            RENDER_DB_URL="${RENDER_DB_URL}&connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
+        else
+            RENDER_DB_URL="${RENDER_DB_URL}?connectTimeout=10&socketTimeout=30&tcpKeepAlive=true"
+        fi
+    fi
+    export RENDER_DB_URL
+    echo "ℹ️ Formatted RENDER_DB_URL: ${RENDER_DB_URL//:*@/:***@}"
+fi
+
 echo "🚀 Starting InvoiceIQ Backend from $FOUND_JAR..."
 # We use JVM flags optimized for fast startup on low-CPU/low-RAM cloud environments like Railway
 java -XX:TieredStopAtLevel=1 -XX:+UseSerialGC -Xverify:none -Xmx256m -jar "$FOUND_JAR" &

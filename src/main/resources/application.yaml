@@ -19,7 +19,7 @@ spring:
   config:
     import: optional:file:.env[.properties], optional:file:ProjectIQBackend/.env[.properties]
   datasource:
-    url: ${RENDER_DB_URL}?connectTimeout=10&socketTimeout=30&tcpKeepAlive=true
+    url: ${RENDER_DB_URL}
     username: ${RENDER_DB_USER}
     password: ${RENDER_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
