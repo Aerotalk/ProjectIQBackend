@@ -31,7 +31,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
                      "LEFT JOIN e.designation d " +
                      "LEFT JOIN d.role r " +
                      "WHERE e.organization.id = :organizationId " +
-                     "AND (cast(:companyId as uuid) IS NULL OR EXISTS (SELECT 1 FROM UserRole ur WHERE ur.user = e.user AND ur.company.id = :companyId)) " +
+                     "AND (cast(:companyId as uuid) IS NULL OR e.company.id = :companyId OR EXISTS (SELECT 1 FROM UserRole ur WHERE ur.user = e.user AND ur.company.id = :companyId)) " +
                      "AND (cast(:departmentId as uuid) IS NULL OR e.department.id = :departmentId) " +
                      "AND (:status IS NULL OR e.employmentStatus = :status) " +
                      "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
