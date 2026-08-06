@@ -116,7 +116,18 @@ public class EmployeeService {
                 .fatherName(request.getFatherName())
                 .noticePeriodDays(request.getNoticePeriodDays())
                 .alternatePhone(request.getAlternatePhone())
+                .workEmail(request.getWorkEmail())
+                .phone(request.getPhone())
                 .build();
+
+        // Keep User entity in sync with work contact details
+        if (request.getWorkEmail() != null && !request.getWorkEmail().isBlank()) {
+            user.setEmail(request.getWorkEmail());
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setMobile(request.getPhone());
+        }
+        userRepository.save(user);
 
         return employeeRepository.save(employee);
     }
@@ -237,6 +248,20 @@ public class EmployeeService {
         employee.setFatherName(request.getFatherName());
         employee.setNoticePeriodDays(request.getNoticePeriodDays());
         employee.setAlternatePhone(request.getAlternatePhone());
+        employee.setWorkEmail(request.getWorkEmail());
+        employee.setPhone(request.getPhone());
+
+        // Keep User entity in sync with work contact details
+        if (employee.getUser() != null) {
+            User linkedUser = employee.getUser();
+            if (request.getWorkEmail() != null && !request.getWorkEmail().isBlank()) {
+                linkedUser.setEmail(request.getWorkEmail());
+            }
+            if (request.getPhone() != null && !request.getPhone().isBlank()) {
+                linkedUser.setMobile(request.getPhone());
+            }
+            userRepository.save(linkedUser);
+        }
 
         return employeeRepository.save(employee);
     }
