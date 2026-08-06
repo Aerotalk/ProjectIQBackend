@@ -5,9 +5,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.cache.annotation.EnableCaching;
 
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+
 @SpringBootApplication
 @EnableAsync
 @EnableCaching
+@EnableJpaRepositories(basePackages = "com.grivetyglobals.invoiceiq.repository")
+@EnableRedisRepositories(basePackages = {})
 public class InvoiceiqApplication {
 
 	public static void main(String[] args) {
