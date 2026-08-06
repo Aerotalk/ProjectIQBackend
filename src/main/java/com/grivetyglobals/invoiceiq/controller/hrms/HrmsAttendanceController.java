@@ -496,4 +496,13 @@ public class HrmsAttendanceController {
     public ResponseEntity<List<ProcessedAttendance>> getProcessedAttendanceByPeriodId(@PathVariable UUID periodId) {
         return ResponseEntity.ok(hrmsAttendanceService.getProcessedAttendanceByPeriodId(periodId));
     }
+
+    // ─────────────────────────────────────────────────────────
+    // DASHBOARD
+    // ─────────────────────────────────────────────────────────
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/attendance/dashboard/kpis")
+    public ResponseEntity<Map<String, Object>> getAttendanceDashboardKPIs() {
+        return ResponseEntity.ok(hrmsAttendanceService.getAttendanceDashboardKPIs());
+    }
 }

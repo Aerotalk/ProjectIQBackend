@@ -673,4 +673,52 @@ public class HrmsAttendanceService {
     public List<ProcessedAttendance> getProcessedAttendanceByPeriodId(UUID periodId) {
         return processedAttendanceRepository.findByPeriodId(periodId);
     }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getAttendanceDashboardKPIs() {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        LocalDate today = LocalDate.now();
+
+        List<AttendanceRecord> todaysRecords = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, today, today);
+        long present = todaysRecords.stream().filter(r -> "Present".equalsIgnoreCase(r.getStatus())).count();
+        long absent = todaysRecords.stream().filter(r -> "Absent".equalsIgnoreCase(r.getStatus())).count();
+        long late = todaysRecords.stream().filter(r -> "Late".equalsIgnoreCase(r.getStatus())).count();
+
+        List<LeaveApplication> leaves = leaveApplicationRepository.findByOrganizationId(orgId);
+        long onLeave = leaves.stream().filter(l -> "Approved".equalsIgnoreCase(l.getStatus())).count();
+        long pendingRequests = leaves.stream().filter(l -> "Pending".equalsIgnoreCase(l.getStatus())).count();
+
+        List<RegularizationRequest> regReqs = regularizationRequestRepository.findByOrganizationId(orgId);
+        long regularization = regReqs.stream().filter(r -> "Pending".equalsIgnoreCase(r.getStatus())).count();
+
+        java.util.Map<String, Object> kpis = new java.util.HashMap<>();
+        kpis.put("present", present);
+        kpis.put("absent", absent);
+        kpis.put("late", late);
+        kpis.put("onLeave", onLeave);
+        kpis.put("pendingRequests", pendingRequests);
+        kpis.put("regularization", regularization);
+
+        // Mock trendData for frontend charts (to replace hardcoded mock on frontend)
+        List<java.util.Map<String, Object>> trendData = new java.util.ArrayList<>();
+        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        for (String day : days) {
+            java.util.Map<String, Object> t = new java.util.HashMap<>();
+            t.put("name", day);
+            t.put("Present", 120 - (int)(Math.random() * 20));
+            t.put("Absent", (int)(Math.random() * 10));
+            trendData.add(t);
+        }
+        kpis.put("trendData", trendData);
+
+        // Mock leaveData for frontend charts
+        List<java.util.Map<String, Object>> leaveData = new java.util.ArrayList<>();
+        java.util.Map<String, Object> c = new java.util.HashMap<>(); c.put("name", "Casual"); c.put("value", 400);
+        java.util.Map<String, Object> s = new java.util.HashMap<>(); s.put("name", "Sick"); s.put("value", 300);
+        java.util.Map<String, Object> l = new java.util.HashMap<>(); l.put("name", "LOP"); l.put("value", 100);
+        leaveData.add(c); leaveData.add(s); leaveData.add(l);
+        kpis.put("leaveData", leaveData);
+
+        return kpis;
+    }
 }

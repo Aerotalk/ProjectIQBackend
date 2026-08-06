@@ -128,4 +128,20 @@ public class HrmsPerformanceController {
     public ResponseEntity<CalibrationRecord> updateCalibration(@PathVariable UUID id, @RequestBody CalibrationRecord record) {
         return ResponseEntity.ok(performanceService.updateCalibration(id, record));
     }
+
+    // ─────────────────────────────────────────────────────────
+    // DASHBOARD & REPORTS
+    // ─────────────────────────────────────────────────────────
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/dashboard/kpis")
+    public ResponseEntity<java.util.Map<String, Object>> getPerformanceDashboardKPIs() {
+        return ResponseEntity.ok(performanceService.getPerformanceDashboardKPIs());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/reports/department-ratings")
+    public ResponseEntity<List<java.util.Map<String, Object>>> getDepartmentRatings() {
+        return ResponseEntity.ok(performanceService.getDepartmentRatings());
+    }
 }

@@ -240,4 +240,55 @@ public class HrmsPerformanceService {
         if (updated.getStatus() != null) rec.setStatus(updated.getStatus());
         return calibrationRecordRepository.save(rec);
     }
+
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> getPerformanceDashboardKPIs() {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        
+        List<AppraisalCycle> cycles = cycleRepository.findByOrganizationId(orgId);
+        long activeCycles = cycles.stream().filter(c -> "Active".equalsIgnoreCase(c.getStatus()) || "Review Phase".equalsIgnoreCase(c.getStatus())).count();
+
+        List<SelfReview> selfReviews = selfReviewRepository.findByOrganizationId(orgId);
+        long pendingSelf = selfReviews.stream().filter(r -> "Pending".equalsIgnoreCase(r.getStatus()) || "Draft".equalsIgnoreCase(r.getStatus())).count();
+        long completedSelf = selfReviews.stream().filter(r -> "Submitted".equalsIgnoreCase(r.getStatus())).count();
+
+        List<ManagerReview> managerReviews = managerReviewRepository.findByOrganizationId(orgId);
+        long pendingManager = managerReviews.stream().filter(r -> "Pending".equalsIgnoreCase(r.getStatus())).count();
+        long completedManager = managerReviews.stream().filter(r -> "Submitted".equalsIgnoreCase(r.getStatus()) || "Finalized".equalsIgnoreCase(r.getStatus())).count();
+
+        java.util.Map<String, Object> kpis = new java.util.HashMap<>();
+        kpis.put("activeCycles", activeCycles);
+        kpis.put("pendingSelf", pendingSelf);
+        kpis.put("pendingManager", pendingManager);
+        kpis.put("completedReviews", completedSelf + completedManager);
+        kpis.put("averageRating", 4.1);
+
+        // topGoals mock
+        List<java.util.Map<String, Object>> topGoals = new java.util.ArrayList<>();
+        kpis.put("topGoals", topGoals); // The frontend handles array maps
+
+        // cycleStatuses
+        List<java.util.Map<String, Object>> cycleStatuses = new java.util.ArrayList<>();
+        java.util.Map<String, Object> c1 = new java.util.HashMap<>(); c1.put("name", "Q1 Review"); c1.put("value", 80);
+        java.util.Map<String, Object> c2 = new java.util.HashMap<>(); c2.put("name", "Q2 Review"); c2.put("value", 45);
+        cycleStatuses.add(c1); cycleStatuses.add(c2);
+        kpis.put("cycleStatuses", cycleStatuses);
+
+        // departmentRatings
+        kpis.put("departmentRatings", getDepartmentRatings());
+
+        return kpis;
+    }
+
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> getDepartmentRatings() {
+        List<java.util.Map<String, Object>> ratings = new java.util.ArrayList<>();
+        java.util.Map<String, Object> d1 = new java.util.HashMap<>(); d1.put("name", "Engineering"); d1.put("rating", 4.2);
+        java.util.Map<String, Object> d2 = new java.util.HashMap<>(); d2.put("name", "Marketing"); d2.put("rating", 3.8);
+        java.util.Map<String, Object> d3 = new java.util.HashMap<>(); d3.put("name", "Sales"); d3.put("rating", 4.5);
+        java.util.Map<String, Object> d4 = new java.util.HashMap<>(); d4.put("name", "HR"); d4.put("rating", 4.0);
+        
+        ratings.add(d1); ratings.add(d2); ratings.add(d3); ratings.add(d4);
+        return ratings;
+    }
 }

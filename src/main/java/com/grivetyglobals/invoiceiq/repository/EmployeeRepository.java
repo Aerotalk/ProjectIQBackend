@@ -27,14 +27,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
        long countByOrganizationId(@Param("organizationId") UUID organizationId);
 
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "department", "designation"})
-       @Query("SELECT e FROM Employee e WHERE e.organization.id = :organizationId " +
+       @Query("SELECT e FROM Employee e " +
+                     "LEFT JOIN e.designation d " +
+                     "LEFT JOIN d.role r " +
+                     "WHERE e.organization.id = :organizationId " +
                      "AND (cast(:companyId as uuid) IS NULL OR EXISTS (SELECT 1 FROM UserRole ur WHERE ur.user = e.user AND ur.company.id = :companyId)) " +
                      "AND (cast(:departmentId as uuid) IS NULL OR e.department.id = :departmentId) " +
                      "AND (:status IS NULL OR e.employmentStatus = :status) " +
                      "AND (CAST(:keyword AS text) IS NULL OR LOWER(e.firstName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
                      "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%')) " +
                      "OR LOWER(e.employeeCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS text), '%'))) " +
-                     "AND (CAST(:roleName AS text) IS NULL OR LOWER(e.designation.role.roleName) LIKE LOWER(CONCAT('%', CAST(:roleName AS text), '%')))")
+                     "AND (CAST(:roleName AS text) IS NULL OR LOWER(r.roleName) LIKE LOWER(CONCAT('%', CAST(:roleName AS text), '%')))")
        List<Employee> searchAndFilterEmployees(
                      @Param("organizationId") UUID organizationId,
                      @Param("companyId") UUID companyId,
