@@ -124,6 +124,14 @@ public class Employee {
     @Column(name = "alternate_phone", length = 20)
     private String alternatePhone;
 
+    /** Work email — mirrored from user.email for direct read-back on employee edit. */
+    @Column(name = "work_email", length = 150)
+    private String workEmail;
+
+    /** Primary work phone — mirrored from user.mobile for direct read-back on employee edit. */
+    @Column(name = "phone", length = 30)
+    private String phone;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

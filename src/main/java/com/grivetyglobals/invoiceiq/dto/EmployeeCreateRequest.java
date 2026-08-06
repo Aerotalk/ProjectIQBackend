@@ -63,4 +63,6 @@ public class EmployeeCreateRequest {
     private String fatherName;
     private Integer noticePeriodDays;
     private String alternatePhone;
+    private String workEmail;
+    private String phone;
 }
