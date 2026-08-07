@@ -93,7 +93,7 @@ public class GlobalExceptionHandler {
 
         Map<String, String> response = new HashMap<>();
         response.put("error", "Internal Server Error");
-        response.put("message", "We are experiencing technical difficulties. Our team has been notified.");
+        response.put("message", "We are experiencing technical difficulties. Please try again later.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
