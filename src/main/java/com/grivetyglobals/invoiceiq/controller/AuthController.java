@@ -151,6 +151,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.updateProfile(request));
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    @org.springframework.web.bind.annotation.PutMapping("/password")
+    public ResponseEntity<String> changePassword(
+            @RequestBody com.grivetyglobals.invoiceiq.dto.ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ResponseEntity.ok("Password updated successfully");
+    }
+
     /**
      * Retrieves the current authenticated user's profile information.
      *

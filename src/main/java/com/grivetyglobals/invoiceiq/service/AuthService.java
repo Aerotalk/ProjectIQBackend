@@ -293,11 +293,29 @@ public class AuthService {
             user.setUsername(request.getUsername());
         }
 
-        // Allow setting to null (removing photo) or updating to a new file ID
         user.setProfilePhotoId(request.getProfilePhotoId());
 
         userRepository.save(user);
         return getMe();
+    }
+
+    /**
+     * Changes the password of the currently authenticated user.
+     * 
+     * @param request the change password payload
+     */
+    @Transactional
+    public void changePassword(com.grivetyglobals.invoiceiq.dto.ChangePasswordRequest request) {
+        User user = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentUser();
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     /**
