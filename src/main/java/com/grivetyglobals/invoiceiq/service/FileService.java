@@ -45,7 +45,11 @@ public class FileService {
     @Transactional
     public File uploadFile(MultipartFile multipartFile, UUID uploadedBy, String module) {
         try {
-            UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+            UUID organizationId = null;
+            try {
+                organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
+            } catch (Exception ignored) {}
+
             if (multipartFile.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }
@@ -63,6 +67,7 @@ public class FileService {
             String yearMonth = java.time.YearMonth.now().toString(); // e.g. 2026-07
             String storagePath = orgPath + "/" + safeModule + "/" + yearMonth + "/" + storedFilename;
 
+            // Direct S3 upload
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(storagePath)
@@ -84,7 +89,7 @@ public class FileService {
             return fileRepository.save(file);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file in S3.", e);
+            throw new RuntimeException("Failed to store file.", e);
         }
     }
 
@@ -106,7 +111,7 @@ public class FileService {
 
             return s3Client.getObject(getObjectRequest);
         } catch (Exception e) {
-            throw new RuntimeException("Could not read file from S3: " + fileEntity.getOriginalName(), e);
+            throw new RuntimeException("Could not read file from storage: " + fileEntity.getOriginalName(), e);
         }
     }
 

@@ -6,13 +6,12 @@ import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.finance.Challan;
 import com.grivetyglobals.invoiceiq.entity.finance.ChallanLineItem;
 import com.grivetyglobals.invoiceiq.entity.project.Project;
-import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
+import com.grivetyglobals.invoiceiq.entity.sales.Client;
 import com.grivetyglobals.invoiceiq.exception.ResourceNotFoundException;
 import com.grivetyglobals.invoiceiq.repository.CompanyRepository;
 import com.grivetyglobals.invoiceiq.repository.finance.ChallanRepository;
-import com.grivetyglobals.invoiceiq.repository.finance.PurchaseOrderRepository;
 import com.grivetyglobals.invoiceiq.repository.project.ProjectRepository;
-import com.grivetyglobals.invoiceiq.repository.sales.VendorRepository;
+import com.grivetyglobals.invoiceiq.repository.sales.ClientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +26,8 @@ public class ChallanService {
 
     private final ChallanRepository challanRepository;
     private final CompanyRepository companyRepository;
-    private final VendorRepository vendorRepository;
+    private final ClientRepository clientRepository;
     private final ProjectRepository projectRepository;
-    private final PurchaseOrderRepository purchaseOrderRepository;
 
     @Transactional(readOnly = true)
     public List<ChallanDto> getChallansByCompany(UUID companyId) {
@@ -72,12 +70,12 @@ public class ChallanService {
     }
 
     private void mapToEntity(ChallanDto dto, Challan challan) {
-        if (dto.getVendorId() != null) {
-            Vendor vendor = vendorRepository.findById(dto.getVendorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
-            challan.setVendor(vendor);
+        if (dto.getClientId() != null) {
+            Client client = clientRepository.findById(dto.getClientId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
+            challan.setClient(client);
         } else {
-            challan.setVendor(null);
+            challan.setClient(null);
         }
 
         if (dto.getProjectId() != null) {
@@ -86,17 +84,6 @@ public class ChallanService {
             challan.setProject(project);
         } else {
             challan.setProject(null);
-        }
-
-        if (dto.getLinkedVendorPoId() != null) {
-            com.grivetyglobals.invoiceiq.entity.finance.PurchaseOrder po = purchaseOrderRepository.findById(dto.getLinkedVendorPoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Purchase Order not found"));
-            if (!po.getCompany().getId().equals(challan.getCompany().getId())) {
-                throw new ResourceNotFoundException("Purchase Order not found");
-            }
-            challan.setLinkedVendorPo(po);
-        } else {
-            challan.setLinkedVendorPo(null);
         }
 
         challan.setChallanNumber(dto.getChallanNumber());
@@ -109,15 +96,67 @@ public class ChallanService {
         challan.setAttachmentName(dto.getAttachmentName());
         challan.setTemplateName(dto.getTemplateName());
         challan.setTransportMode(dto.getTransportMode());
-        challan.setBillingAddress(dto.getBillingAddress());
-        challan.setShippingAddress(dto.getShippingAddress());
-        challan.setDeliveryLocation(dto.getDeliveryLocation());
-        challan.setPlaceOfSupply(dto.getPlaceOfSupply());
-        challan.setContactName(dto.getContactName());
-        challan.setContactEmail(dto.getContactEmail());
-        challan.setContactMobile(dto.getContactMobile());
         challan.setPoNumber(dto.getPoNumber());
         challan.setPoDate(dto.getPoDate());
+
+        Client client = challan.getClient();
+        if (dto.getDeliveryLocation() != null && !dto.getDeliveryLocation().isBlank()) {
+            challan.setDeliveryLocation(dto.getDeliveryLocation());
+        } else if (client != null) {
+            challan.setDeliveryLocation(buildDeliveryLocation(client));
+        } else {
+            challan.setDeliveryLocation(null);
+        }
+
+        if (dto.getBillingAddress() != null && !dto.getBillingAddress().isBlank()) {
+            challan.setBillingAddress(dto.getBillingAddress());
+        } else if (client != null) {
+            challan.setBillingAddress(buildBillingAddress(client));
+        } else {
+            challan.setBillingAddress(null);
+        }
+
+        if (dto.getShippingAddress() != null && !dto.getShippingAddress().isBlank()) {
+            challan.setShippingAddress(dto.getShippingAddress());
+        } else if (client != null) {
+            challan.setShippingAddress(buildShippingAddress(client));
+        } else {
+            challan.setShippingAddress(null);
+        }
+
+        if (dto.getPlaceOfSupply() != null && !dto.getPlaceOfSupply().isBlank()) {
+            challan.setPlaceOfSupply(dto.getPlaceOfSupply());
+        } else if (client != null) {
+            String pos = client.getPlaceOfSupply() != null ? client.getPlaceOfSupply()
+                    : (client.getShippingState() != null ? client.getShippingState() : client.getBillingState());
+            challan.setPlaceOfSupply(pos);
+        } else {
+            challan.setPlaceOfSupply(null);
+        }
+
+        if (dto.getContactName() != null && !dto.getContactName().isBlank()) {
+            challan.setContactName(dto.getContactName());
+        } else if (client != null) {
+            challan.setContactName(client.getPrimaryContactPerson() != null ? client.getPrimaryContactPerson() : client.getDisplayName());
+        } else {
+            challan.setContactName(null);
+        }
+
+        if (dto.getContactEmail() != null && !dto.getContactEmail().isBlank()) {
+            challan.setContactEmail(dto.getContactEmail());
+        } else if (client != null) {
+            challan.setContactEmail(client.getEmail());
+        } else {
+            challan.setContactEmail(null);
+        }
+
+        if (dto.getContactMobile() != null && !dto.getContactMobile().isBlank()) {
+            challan.setContactMobile(dto.getContactMobile());
+        } else if (client != null) {
+            challan.setContactMobile(client.getPhone());
+        } else {
+            challan.setContactMobile(null);
+        }
 
         if (challan.getLineItems() == null) {
             challan.setLineItems(new java.util.ArrayList<>());
@@ -164,9 +203,11 @@ public class ChallanService {
         ChallanDto dto = new ChallanDto();
         dto.setId(challan.getId());
         
-        if (challan.getVendor() != null) {
-            dto.setVendorId(challan.getVendor().getId());
-            dto.setVendorName(challan.getVendor().getCompanyName());
+        if (challan.getClient() != null) {
+            dto.setClientId(challan.getClient().getId());
+            dto.setClientName(challan.getClient().getDisplayName() != null 
+                    ? challan.getClient().getDisplayName() 
+                    : challan.getClient().getCompanyName());
         }
         
         if (challan.getProject() != null) {
@@ -178,27 +219,45 @@ public class ChallanService {
         dto.setEwayBillNo(challan.getEwayBillNo());
         dto.setChallanDate(challan.getChallanDate());
         dto.setDescription(challan.getDescription());
-        
-        if (challan.getLinkedVendorPo() != null) {
-            dto.setLinkedVendorPoId(challan.getLinkedVendorPo().getId());
-            dto.setLinkedVendorPoNumber(challan.getLinkedVendorPo().getPoNumber());
-        }
         dto.setRemarks(challan.getRemarks());
         dto.setStatus(challan.getStatus());
         dto.setAttachmentFileId(challan.getAttachmentFileId());
         dto.setAttachmentName(challan.getAttachmentName());
         dto.setTemplateName(challan.getTemplateName());
         dto.setTransportMode(challan.getTransportMode());
-        dto.setBillingAddress(challan.getBillingAddress());
-        dto.setShippingAddress(challan.getShippingAddress());
-        dto.setDeliveryLocation(challan.getDeliveryLocation());
-        dto.setPlaceOfSupply(challan.getPlaceOfSupply());
-        dto.setContactName(challan.getContactName());
-        dto.setContactEmail(challan.getContactEmail());
-        dto.setContactMobile(challan.getContactMobile());
         dto.setPoNumber(challan.getPoNumber());
         dto.setPoDate(challan.getPoDate());
         dto.setCreatedAt(challan.getCreatedAt());
+
+        Client c = challan.getClient();
+        dto.setBillingAddress(challan.getBillingAddress() != null ? challan.getBillingAddress() : buildBillingAddress(c));
+        dto.setShippingAddress(challan.getShippingAddress() != null ? challan.getShippingAddress() : buildShippingAddress(c));
+        dto.setDeliveryLocation(challan.getDeliveryLocation() != null ? challan.getDeliveryLocation() : buildDeliveryLocation(c));
+        
+        if (challan.getPlaceOfSupply() != null) {
+            dto.setPlaceOfSupply(challan.getPlaceOfSupply());
+        } else if (c != null) {
+            dto.setPlaceOfSupply(c.getPlaceOfSupply() != null ? c.getPlaceOfSupply()
+                    : (c.getShippingState() != null ? c.getShippingState() : c.getBillingState()));
+        }
+
+        if (challan.getContactName() != null) {
+            dto.setContactName(challan.getContactName());
+        } else if (c != null) {
+            dto.setContactName(c.getPrimaryContactPerson() != null ? c.getPrimaryContactPerson() : c.getDisplayName());
+        }
+
+        if (challan.getContactEmail() != null) {
+            dto.setContactEmail(challan.getContactEmail());
+        } else if (c != null) {
+            dto.setContactEmail(c.getEmail());
+        }
+
+        if (challan.getContactMobile() != null) {
+            dto.setContactMobile(challan.getContactMobile());
+        } else if (c != null) {
+            dto.setContactMobile(c.getPhone());
+        }
 
         if (challan.getLineItems() != null) {
             dto.setLineItems(challan.getLineItems().stream().map(item -> {
@@ -216,5 +275,63 @@ public class ChallanService {
         }
         
         return dto;
+    }
+
+    private String buildDeliveryLocation(Client c) {
+        if (c == null) return null;
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        if (c.getShippingAddressLine1() != null && !c.getShippingAddressLine1().isBlank()) {
+            parts.add(c.getShippingAddressLine1());
+            if (c.getShippingAddressLine2() != null && !c.getShippingAddressLine2().isBlank()) parts.add(c.getShippingAddressLine2());
+            if (c.getShippingCity() != null && !c.getShippingCity().isBlank()) parts.add(c.getShippingCity());
+            if (c.getShippingState() != null && !c.getShippingState().isBlank()) parts.add(c.getShippingState());
+            if (c.getShippingPinCode() != null && !c.getShippingPinCode().isBlank()) parts.add(c.getShippingPinCode());
+            if (c.getShippingCountry() != null && !c.getShippingCountry().isBlank()) parts.add(c.getShippingCountry());
+        } else if (c.getBillingAddressLine1() != null && !c.getBillingAddressLine1().isBlank()) {
+            parts.add(c.getBillingAddressLine1());
+            if (c.getBillingAddressLine2() != null && !c.getBillingAddressLine2().isBlank()) parts.add(c.getBillingAddressLine2());
+            if (c.getBillingCity() != null && !c.getBillingCity().isBlank()) parts.add(c.getBillingCity());
+            if (c.getBillingState() != null && !c.getBillingState().isBlank()) parts.add(c.getBillingState());
+            if (c.getBillingPinCode() != null && !c.getBillingPinCode().isBlank()) parts.add(c.getBillingPinCode());
+            if (c.getBillingCountry() != null && !c.getBillingCountry().isBlank()) parts.add(c.getBillingCountry());
+        }
+        return parts.isEmpty() ? null : String.join(", ", parts);
+    }
+
+    private String buildShippingAddress(Client c) {
+        if (c == null) return null;
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        if (c.getDisplayName() != null) parts.add(c.getDisplayName());
+        if (c.getShippingAddressLine1() != null && !c.getShippingAddressLine1().isBlank()) {
+            parts.add(c.getShippingAddressLine1());
+            if (c.getShippingAddressLine2() != null && !c.getShippingAddressLine2().isBlank()) parts.add(c.getShippingAddressLine2());
+            String cityStatePin = java.util.stream.Stream.of(c.getShippingCity(), c.getShippingState(), c.getShippingPinCode())
+                    .filter(s -> s != null && !s.isBlank()).collect(Collectors.joining(", "));
+            if (!cityStatePin.isBlank()) parts.add(cityStatePin);
+            if (c.getShippingCountry() != null && !c.getShippingCountry().isBlank()) parts.add(c.getShippingCountry());
+        } else if (c.getBillingAddressLine1() != null && !c.getBillingAddressLine1().isBlank()) {
+            parts.add(c.getBillingAddressLine1());
+            if (c.getBillingAddressLine2() != null && !c.getBillingAddressLine2().isBlank()) parts.add(c.getBillingAddressLine2());
+            String cityStatePin = java.util.stream.Stream.of(c.getBillingCity(), c.getBillingState(), c.getBillingPinCode())
+                    .filter(s -> s != null && !s.isBlank()).collect(Collectors.joining(", "));
+            if (!cityStatePin.isBlank()) parts.add(cityStatePin);
+            if (c.getBillingCountry() != null && !c.getBillingCountry().isBlank()) parts.add(c.getBillingCountry());
+        }
+        return parts.isEmpty() ? null : String.join("\n", parts);
+    }
+
+    private String buildBillingAddress(Client c) {
+        if (c == null) return null;
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        if (c.getDisplayName() != null) parts.add(c.getDisplayName());
+        if (c.getBillingAddressLine1() != null && !c.getBillingAddressLine1().isBlank()) {
+            parts.add(c.getBillingAddressLine1());
+            if (c.getBillingAddressLine2() != null && !c.getBillingAddressLine2().isBlank()) parts.add(c.getBillingAddressLine2());
+            String cityStatePin = java.util.stream.Stream.of(c.getBillingCity(), c.getBillingState(), c.getBillingPinCode())
+                    .filter(s -> s != null && !s.isBlank()).collect(Collectors.joining(", "));
+            if (!cityStatePin.isBlank()) parts.add(cityStatePin);
+            if (c.getBillingCountry() != null && !c.getBillingCountry().isBlank()) parts.add(c.getBillingCountry());
+        }
+        return parts.isEmpty() ? null : String.join("\n", parts);
     }
 }

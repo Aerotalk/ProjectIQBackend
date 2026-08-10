@@ -1,5 +1,7 @@
 package com.grivetyglobals.invoiceiq.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,8 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Data Transfer Object for EmployeeCreateRequest.
@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class EmployeeCreateRequest {
 
     private UUID organizationId;
+
+    private UUID companyId;
 
     @NotNull(message = "User ID is required")
     private UUID userId;
@@ -39,6 +41,7 @@ public class EmployeeCreateRequest {
 
     private LocalDate dateOfBirth;
 
+    @JsonAlias({"dateOfJoining", "joiningDate"})
     private LocalDate joiningDate;
 
     private UUID departmentId;
@@ -47,6 +50,7 @@ public class EmployeeCreateRequest {
 
     private UUID reportingManagerId;
 
+    @JsonAlias({"profilePhoto", "profilePicture"})
     private UUID profilePicture;
 
     @NotBlank(message = "Employment Status is required")
@@ -66,3 +70,4 @@ public class EmployeeCreateRequest {
     private String workEmail;
     private String phone;
 }
+

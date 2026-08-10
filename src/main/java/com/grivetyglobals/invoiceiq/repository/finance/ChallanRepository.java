@@ -12,6 +12,6 @@ import java.util.UUID;
  */
 @Repository
 public interface ChallanRepository extends JpaRepository<Challan, UUID> {
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"linkedVendorPo"})
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"client", "project"})
     List<Challan> findByCompanyId(UUID companyId);
 }

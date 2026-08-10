@@ -11,6 +11,8 @@ import com.grivetyglobals.invoiceiq.dto.EmployeeSalaryRevisionRequest;
 import com.grivetyglobals.invoiceiq.dto.EmployeeEducationRequest;
 import com.grivetyglobals.invoiceiq.dto.EmployeeFamilyRequest;
 import com.grivetyglobals.invoiceiq.dto.EmployeeContractRequest;
+import com.grivetyglobals.invoiceiq.dto.EmployeePositionChangeRequest;
+import com.grivetyglobals.invoiceiq.dto.EmployeeSeparationRequest;
 import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.service.EmployeeService;
 import com.grivetyglobals.invoiceiq.service.EmployeeDetailService;
@@ -309,4 +311,51 @@ public class EmployeeController {
     public ResponseEntity<?> getContract(@PathVariable UUID id) {
         return ResponseEntity.ok(employeeDetailService.getContract(id));
     }
+
+    // ─────────────────────────────────────────────────────────
+    // Position Change
+    // ─────────────────────────────────────────────────────────
+
+    /** Record or update a position change for an employee. */
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.edit')")
+    @PutMapping("/{id}/position-change")
+    public ResponseEntity<?> savePositionChangePut(@PathVariable UUID id,
+                                                   @RequestBody EmployeePositionChangeRequest request) {
+        return ResponseEntity.ok(employeeDetailService.savePositionChange(id, request));
+    }
+
+    /** Record a new position change (historical) for an employee. */
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.edit')")
+    @PostMapping("/{id}/position-change")
+    public ResponseEntity<?> savePositionChangePost(@PathVariable UUID id,
+                                                    @RequestBody EmployeePositionChangeRequest request) {
+        return ResponseEntity.ok(employeeDetailService.savePositionChange(id, request));
+    }
+
+    /** Get position changes for an employee. */
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.view')")
+    @GetMapping("/{id}/position-change")
+    public ResponseEntity<?> getPositionChanges(@PathVariable UUID id) {
+        return ResponseEntity.ok(employeeDetailService.getPositionChanges(id));
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Separation / Exit
+    // ─────────────────────────────────────────────────────────
+
+    /** Save (upsert) separation / exit record for an employee. */
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.edit')")
+    @PutMapping("/{id}/separation")
+    public ResponseEntity<?> saveSeparation(@PathVariable UUID id,
+                                            @RequestBody EmployeeSeparationRequest request) {
+        return ResponseEntity.ok(employeeDetailService.saveSeparation(id, request));
+    }
+
+    /** Get separation / exit details for an employee. */
+    @PreAuthorize("hasPermission(#id, 'Employee', 'employee.view')")
+    @GetMapping("/{id}/separation")
+    public ResponseEntity<?> getSeparation(@PathVariable UUID id) {
+        return ResponseEntity.ok(employeeDetailService.getSeparation(id));
+    }
 }
+

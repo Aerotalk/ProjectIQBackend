@@ -86,20 +86,39 @@ public class OrgController {
     }
 
     /**
-     * Retrieves a lightweight list of all companies belonging to the user's organization.
-     * Requires 'org.view' authority.
+     * Retrieves a lightweight list of all companies belonging to the user's organization that the user is assigned to.
+     * If the user is an organization-level admin with no company restrictions, returns all organization companies.
      *
      * @return a list of maps containing company IDs and names
      */
-    @PreAuthorize("hasAuthority('org.view')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/companies")
     public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getMyOrganizationCompanies() {
+        User user = SecurityUtils.getCurrentUser();
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
         if (orgId == null) {
             return ResponseEntity.ok(java.util.Collections.emptyList());
         }
+
+        java.util.List<Company> assignedCompanies = companyRepository.findAssignedCompaniesForUser(orgId, user.getId());
+
+        java.util.List<Company> targetCompanies;
+        if (!assignedCompanies.isEmpty()) {
+            targetCompanies = assignedCompanies;
+        } else {
+            boolean isOrgAdmin = user.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("org.view")
+                                || a.getAuthority().equals("ROLE_ADMIN")
+                                || a.getAuthority().equals("ROLE_SUPERADMIN")
+                                || a.getAuthority().equals("ROLE_ORG_ADMIN"));
+            if (isOrgAdmin) {
+                targetCompanies = companyRepository.findAllByOrganizationId(orgId);
+            } else {
+                targetCompanies = java.util.Collections.emptyList();
+            }
+        }
         
-        java.util.List<java.util.Map<String, Object>> response = companyRepository.findAllByOrganizationId(orgId)
+        java.util.List<java.util.Map<String, Object>> response = targetCompanies
                 .stream()
                 .map(company -> java.util.Map.of(
                         "id", (Object) company.getId(),

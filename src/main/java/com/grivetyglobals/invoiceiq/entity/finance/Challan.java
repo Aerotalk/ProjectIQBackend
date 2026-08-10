@@ -2,7 +2,7 @@ package com.grivetyglobals.invoiceiq.entity.finance;
 
 import com.grivetyglobals.invoiceiq.entity.Company;
 import com.grivetyglobals.invoiceiq.entity.project.Project;
-import com.grivetyglobals.invoiceiq.entity.sales.Vendor;
+import com.grivetyglobals.invoiceiq.entity.sales.Client;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -38,8 +38,8 @@ public class Challan {
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vendor_id")
-    private Vendor vendor;
+    @JoinColumn(name = "client_id")
+    private Client client;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
@@ -56,10 +56,6 @@ public class Challan {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "linked_vendor_po_id")
-    private PurchaseOrder linkedVendorPo;
 
     @Column(columnDefinition = "TEXT")
     private String remarks;
