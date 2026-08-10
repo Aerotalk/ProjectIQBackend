@@ -1,5 +1,7 @@
 package com.grivetyglobals.invoiceiq.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +18,10 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EmployeeUpdateRequest {
+
+    private UUID companyId;
 
     @NotBlank(message = "First Name is required")
     private String firstName;
@@ -30,6 +35,7 @@ public class EmployeeUpdateRequest {
 
     private LocalDate dateOfBirth;
 
+    @JsonAlias({"dateOfJoining", "joiningDate"})
     private LocalDate joiningDate;
 
     private UUID departmentId;
@@ -38,6 +44,7 @@ public class EmployeeUpdateRequest {
 
     private UUID reportingManagerId;
 
+    @JsonAlias({"profilePhoto", "profilePicture"})
     private UUID profilePicture;
 
     private String maritalStatus;
@@ -54,3 +61,4 @@ public class EmployeeUpdateRequest {
     private String workEmail;
     private String phone;
 }
+

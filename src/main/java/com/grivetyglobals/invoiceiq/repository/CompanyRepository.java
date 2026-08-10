@@ -23,4 +23,15 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
     @Query("SELECT c FROM Company c WHERE c.organization.id = :organizationId AND c.deletedAt IS NULL ORDER BY c.createdAt ASC")
     List<Company> findAllByOrganizationId(@Param("organizationId") UUID organizationId);
+
+    @Query("SELECT DISTINCT c FROM Company c " +
+           "WHERE c.organization.id = :organizationId " +
+           "AND c.deletedAt IS NULL " +
+           "AND (" +
+           "   c.id = (SELECT u.company.id FROM User u WHERE u.id = :userId) " +
+           "   OR EXISTS (SELECT 1 FROM UserRole ur WHERE ur.user.id = :userId AND ur.company.id = c.id) " +
+           "   OR EXISTS (SELECT 1 FROM Employee e WHERE e.user.id = :userId AND e.company.id = c.id) " +
+           ") " +
+           "ORDER BY c.createdAt ASC")
+    List<Company> findAssignedCompaniesForUser(@Param("organizationId") UUID organizationId, @Param("userId") UUID userId);
 }

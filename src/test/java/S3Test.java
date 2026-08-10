@@ -37,18 +37,22 @@ public class S3Test {
         System.out.println("    Region: " + region);
         System.out.println("    Bucket: " + bucketName);
 
-        System.out.println("    Building S3Client...");
+        System.out.println("    Building S3Client with S3Config settings...");
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
         
         S3Configuration serviceConfiguration = S3Configuration.builder()
                 .pathStyleAccessEnabled(true)
                 .build();
 
+        System.out.println("    Testing with region: " + region);
         S3Client s3Client = S3Client.builder()
                 .region(Region.of(region))
                 .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .serviceConfiguration(serviceConfiguration)
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .chunkedEncodingEnabled(false)
+                        .build())
                 .build();
 
         String testContent = "Hello from automated test at " + System.currentTimeMillis();
@@ -60,8 +64,13 @@ public class S3Test {
                 .key(testKey)
                 .build();
 
-        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(testContent.getBytes()));
-
-        System.out.println("    UPLOAD SUCCESSFUL! Signature calculation was perfect.");
+        try {
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(testContent.getBytes()));
+            System.out.println("    UPLOAD SUCCESSFUL! Signature calculation was perfect.");
+        } catch (Exception e) {
+            System.out.println("    FAILED EXCEPTION: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

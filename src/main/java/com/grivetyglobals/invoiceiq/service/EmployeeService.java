@@ -77,10 +77,12 @@ public class EmployeeService {
                     .orElseThrow(() -> new RuntimeException("Reporting Manager not found"));
         }
 
-        UUID currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        UUID targetCompanyId = request.getCompanyId() != null
+                ? request.getCompanyId()
+                : SecurityUtils.getCurrentCompanyId();
         Company company = null;
-        if (currentCompanyId != null) {
-            company = companyRepository.findById(currentCompanyId).orElse(null);
+        if (targetCompanyId != null) {
+            company = companyRepository.findById(targetCompanyId).orElse(null);
         }
 
         Employee hrManager = null;
@@ -224,6 +226,11 @@ public class EmployeeService {
         if (request.getHrManagerId() != null) {
             hrManager = employeeRepository.findById(request.getHrManagerId())
                     .orElse(null);
+        }
+
+        if (request.getCompanyId() != null) {
+            Company company = companyRepository.findById(request.getCompanyId()).orElse(null);
+            employee.setCompany(company);
         }
 
         employee.setFirstName(request.getFirstName());
