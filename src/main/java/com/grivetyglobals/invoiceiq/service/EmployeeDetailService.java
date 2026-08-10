@@ -33,6 +33,8 @@ public class EmployeeDetailService {
     private final EmployeeEducationRepository educationRepository;
     private final EmployeeFamilyRepository familyRepository;
     private final EmployeeContractRepository contractRepository;
+    private final EmployeePositionChangeRepository positionChangeRepository;
+    private final EmployeeSeparationRepository separationRepository;
 
     // ─────────────────────────────────────────────
     // Address
@@ -336,6 +338,64 @@ public class EmployeeDetailService {
     public EmployeeContract getContract(UUID employeeId) {
         employeeService.getEmployeeById(employeeId);
         return contractRepository.findByEmployeeId(employeeId).orElse(null);
+    }
+
+    // ─────────────────────────────────────────────
+    // Position Change
+    // ─────────────────────────────────────────────
+
+    @Transactional
+    public EmployeePositionChange savePositionChange(UUID employeeId, EmployeePositionChangeRequest req) {
+        Employee employee = employeeService.getEmployeeById(employeeId);
+
+        EmployeePositionChange change = EmployeePositionChange.builder()
+                .employee(employee)
+                .changeType(req.getPositionChangeType())
+                .effectiveDate(parseDate(req.getPositionChangeEffectiveDate()))
+                .departmentId(req.getPositionChangeDepartmentId())
+                .designationId(req.getPositionChangeDesignationId())
+                .grade(req.getPositionChangeGrade())
+                .location(req.getPositionChangeLocation())
+                .reportingManagerId(req.getPositionChangeReportingManagerId())
+                .remarks(req.getPositionChangeRemarks())
+                .build();
+
+        return positionChangeRepository.save(change);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmployeePositionChange> getPositionChanges(UUID employeeId) {
+        employeeService.getEmployeeById(employeeId);
+        return positionChangeRepository.findByEmployeeIdOrderByCreatedAtDesc(employeeId);
+    }
+
+    // ─────────────────────────────────────────────
+    // Separation / Exit
+    // ─────────────────────────────────────────────
+
+    @Transactional
+    public EmployeeSeparation saveSeparation(UUID employeeId, EmployeeSeparationRequest req) {
+        Employee employee = employeeService.getEmployeeById(employeeId);
+
+        EmployeeSeparation separation = separationRepository
+                .findByEmployeeId(employeeId)
+                .orElse(EmployeeSeparation.builder().employee(employee).build());
+
+        separation.setSeparationType(req.getSeparationType());
+        separation.setResignationDate(parseDate(req.getResignationDate()));
+        separation.setLastWorkingDate(parseDate(req.getLastWorkingDate()));
+        separation.setNoticePeriodDays(req.getExitNoticePeriod());
+        separation.setSeparationReason(req.getSeparationReason());
+        separation.setExitInterview(req.getExitInterview() != null ? req.getExitInterview() : false);
+        separation.setSeparationRemarks(req.getSeparationRemarks());
+
+        return separationRepository.save(separation);
+    }
+
+    @Transactional(readOnly = true)
+    public EmployeeSeparation getSeparation(UUID employeeId) {
+        employeeService.getEmployeeById(employeeId);
+        return separationRepository.findByEmployeeId(employeeId).orElse(null);
     }
 
     // ─────────────────────────────────────────────
