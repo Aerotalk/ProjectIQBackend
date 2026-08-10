@@ -18,16 +18,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ChallanDto {
     private UUID id;
-    private UUID vendorId;
-    private String vendorName;
+    private UUID clientId;
+    private String clientName;
     private UUID projectId;
     private String projectName;
     private String challanNumber;
     private String ewayBillNo;
     private LocalDate challanDate;
     private String description;
-    private UUID linkedVendorPoId;
-    private String linkedVendorPoNumber;
     private String remarks;
     private String status;
     private UUID attachmentFileId;
