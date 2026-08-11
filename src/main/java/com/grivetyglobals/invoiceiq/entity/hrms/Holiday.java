@@ -68,4 +68,19 @@ public class Holiday {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("holidayListId")
+    public UUID getListId() {
+        return holidayList != null ? holidayList.getId() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("holidayListId")
+    public void setListId(UUID listId) {
+        if (listId != null) {
+            this.holidayList = new HolidayList();
+            this.holidayList.setId(listId);
+        }
+    }
 }

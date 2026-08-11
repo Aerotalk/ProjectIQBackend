@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface HolidayRepository extends JpaRepository<Holiday, UUID> {
     List<Holiday> findByHolidayListId(UUID holidayListId);
+    List<Holiday> findByHolidayListOrganizationId(UUID organizationId);
 }
