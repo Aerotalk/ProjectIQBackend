@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.entity.hrms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import jakarta.persistence.*;
@@ -62,4 +63,34 @@ public class ReviewerAssignment {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @JsonProperty("employeeName")
+    public String getFlatEmployeeName() {
+        return employee != null ? employee.getFirstName() + " " + employee.getLastName() : null;
+    }
+
+    @Transient
+    @JsonProperty("templateName")
+    public String getFlatTemplateName() {
+        return template != null ? template.getTemplateName() : null;
+    }
+
+    @Transient
+    @JsonProperty("reviewer1Name")
+    public String getFlatReviewer1Name() {
+        return reviewer1 != null ? reviewer1.getFirstName() + " " + reviewer1.getLastName() : null;
+    }
+
+    @Transient
+    @JsonProperty("reviewer2Name")
+    public String getFlatReviewer2Name() {
+        return reviewer2 != null ? reviewer2.getFirstName() + " " + reviewer2.getLastName() : null;
+    }
+
+    @Transient
+    @JsonProperty("reviewer3Name")
+    public String getFlatReviewer3Name() {
+        return reviewer3 != null ? reviewer3.getFirstName() + " " + reviewer3.getLastName() : null;
+    }
 }

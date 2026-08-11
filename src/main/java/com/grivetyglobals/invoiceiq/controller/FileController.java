@@ -44,6 +44,18 @@ public class FileController {
     }
 
     /**
+     * Retrieves all files uploaded by the authenticated user.
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/my-files")
+    public ResponseEntity<java.util.List<File>> getMyFiles(@AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user) {
+        if (user == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(fileService.getUserFiles(user.getId()));
+    }
+
+    /**
      * Downloads a file from the system storage via a streaming response.
      * Requires the user to be authenticated.
      *

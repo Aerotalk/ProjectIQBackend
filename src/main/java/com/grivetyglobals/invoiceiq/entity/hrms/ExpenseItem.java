@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.entity.hrms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.grivetyglobals.invoiceiq.entity.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
@@ -75,4 +76,16 @@ public class ExpenseItem {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @JsonProperty("categoryName")
+    public String getFlatCategoryName() {
+        return category != null ? category.getCategory() : null;
+    }
+
+    @Transient
+    @JsonProperty("projectName")
+    public String getFlatProjectName() {
+        return project != null ? project.getProjectName() : null;
+    }
 }

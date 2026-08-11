@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.entity.hrms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.entity.User;
 import jakarta.persistence.*;
@@ -69,4 +70,10 @@ public class ClaimBatch {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @JsonProperty("createdByName")
+    public String getFlatCreatedByName() {
+        return createdBy != null ? createdBy.getActualUsername() : null;
+    }
 }

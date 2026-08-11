@@ -64,6 +64,12 @@ public class HrmsExpenseClaimsService {
         return categoryRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public ExpenseCategoryConfig getCategoryById(UUID id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+    }
+
     @Transactional
     public ExpenseCategoryConfig createCategory(ExpenseCategoryConfig category) {
         category.setOrganization(getCurrentOrganization());
@@ -96,6 +102,12 @@ public class HrmsExpenseClaimsService {
     @Transactional(readOnly = true)
     public List<ExpenseClaimTemplate> getTemplates() {
         return templateRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public ExpenseClaimTemplate getTemplateById(UUID id) {
+        return templateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Template not found"));
     }
 
     @Transactional
@@ -203,6 +215,15 @@ public class HrmsExpenseClaimsService {
     }
 
     @Transactional
+    public ExpenseClaim updateClaim(UUID id, ExpenseClaim updated) {
+        ExpenseClaim claim = getClaimById(id);
+        claim.setTitle(updated.getTitle());
+        claim.setCurrency(updated.getCurrency());
+        if (updated.getTemplate() != null) claim.setTemplate(updated.getTemplate());
+        return claimRepository.save(claim);
+    }
+
+    @Transactional
     public ExpenseClaim submitClaim(UUID id) {
         ExpenseClaim claim = getClaimById(id);
         claim.setStatus("Submitted");
@@ -289,6 +310,12 @@ public class HrmsExpenseClaimsService {
         return advanceRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public ExpenseAdvance getAdvanceById(UUID id) {
+        return advanceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Advance not found"));
+    }
+
     @Transactional
     public ExpenseAdvance createAdvance(ExpenseAdvance advance) {
         advance.setOrganization(getCurrentOrganization());
@@ -301,6 +328,18 @@ public class HrmsExpenseClaimsService {
         ExpenseAdvance saved = advanceRepository.save(advance);
         logAudit("Advance", saved.getId(), saved.getStatus(), "Create", "Advance request created");
         return saved;
+    }
+
+    @Transactional
+    public ExpenseAdvance updateAdvance(UUID id, ExpenseAdvance updated) {
+        ExpenseAdvance advance = getAdvanceById(id);
+        advance.setTripOrProject(updated.getTripOrProject());
+        advance.setPurpose(updated.getPurpose());
+        advance.setAmount(updated.getAmount());
+        advance.setCurrency(updated.getCurrency());
+        advance.setRequestedDate(updated.getRequestedDate());
+        advance.setRequiredDate(updated.getRequiredDate());
+        return advanceRepository.save(advance);
     }
 
     @Transactional
@@ -327,6 +366,12 @@ public class HrmsExpenseClaimsService {
         return batchRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public ClaimBatch getBatchById(UUID id) {
+        return batchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+    }
+
     @Transactional
     public ClaimBatch createBatch(ClaimBatch batch) {
         batch.setOrganization(getCurrentOrganization());
@@ -337,6 +382,15 @@ public class HrmsExpenseClaimsService {
         ClaimBatch saved = batchRepository.save(batch);
         logAudit("Batch", saved.getId(), saved.getStatus(), "Create", "Payment batch created");
         return saved;
+    }
+
+    @Transactional
+    public ClaimBatch updateBatch(UUID id, ClaimBatch updated) {
+        ClaimBatch batch = getBatchById(id);
+        batch.setPayrollPeriod(updated.getPayrollPeriod());
+        batch.setPaymentMethod(updated.getPaymentMethod());
+        batch.setRemarks(updated.getRemarks());
+        return batchRepository.save(batch);
     }
 
     @Transactional
