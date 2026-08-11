@@ -23,6 +23,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
        @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "department", "designation"})
        Optional<Employee> findById(UUID id);
 
+       List<Employee> findByOrganizationId(UUID organizationId);
+
        @Query("SELECT COUNT(e) FROM Employee e WHERE e.organization.id = :organizationId")
        long countByOrganizationId(@Param("organizationId") UUID organizationId);
 

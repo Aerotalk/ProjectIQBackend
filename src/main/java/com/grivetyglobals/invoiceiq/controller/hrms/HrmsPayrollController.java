@@ -1,5 +1,6 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
+import com.grivetyglobals.invoiceiq.dto.hrms.PayrollVarianceDto;
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsPayrollService;
 import lombok.RequiredArgsConstructor;
@@ -265,9 +266,21 @@ public class HrmsPayrollController {
     // ─────────────────────────────────────────────────────────
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/eligibility-check")
+    public ResponseEntity<List<Map<String, Object>>> getPayrollEligibilityCheck() {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollEligibilityCheck());
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/runs")
     public ResponseEntity<List<PayrollRun>> getPayrollRuns() {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollRuns());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/{id}")
+    public ResponseEntity<PayrollRun> getPayrollRunById(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollRunById(id));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -299,6 +312,12 @@ public class HrmsPayrollController {
     @GetMapping("/runs/{id}/details")
     public ResponseEntity<List<PayrollRunDetail>> getPayrollRunDetails(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollRunDetails(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/{id}/variances")
+    public ResponseEntity<List<PayrollVarianceDto>> getPayrollVariances(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollVariances(id));
     }
 
     // ─────────────────────────────────────────────────────────
