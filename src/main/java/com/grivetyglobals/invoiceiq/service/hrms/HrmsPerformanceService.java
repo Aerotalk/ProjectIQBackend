@@ -89,6 +89,9 @@ public class HrmsPerformanceService {
     @Transactional
     public AppraisalCycle updateCycle(UUID id, AppraisalCycle updated) {
         AppraisalCycle cycle = cycleRepository.findById(id).orElseThrow(() -> new RuntimeException("Cycle not found"));
+        if (!cycle.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         cycle.setName(updated.getName());
         cycle.setType(updated.getType());
         cycle.setPeriod(updated.getPeriod());
@@ -122,6 +125,9 @@ public class HrmsPerformanceService {
     @Transactional
     public PerformanceGoal updateGoal(UUID id, PerformanceGoal updated) {
         PerformanceGoal goal = goalRepository.findById(id).orElseThrow(() -> new RuntimeException("Goal not found"));
+        if (!goal.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         goal.setTitle(updated.getTitle());
         goal.setDescription(updated.getDescription());
         goal.setCategory(updated.getCategory());
@@ -212,6 +218,9 @@ public class HrmsPerformanceService {
     @Transactional
     public ManagerReview submitManagerReview(UUID id, ManagerReview updated) {
         ManagerReview review = managerReviewRepository.findById(id).orElseThrow(() -> new RuntimeException("Manager Review not found"));
+        if (!review.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         review.setPromotionRecommendation(updated.getPromotionRecommendation());
         review.setTrainingRecommendation(updated.getTrainingRecommendation());
         review.setImprovementPlan(updated.getImprovementPlan());
@@ -234,6 +243,9 @@ public class HrmsPerformanceService {
     @Transactional
     public CalibrationRecord updateCalibration(UUID id, CalibrationRecord updated) {
         CalibrationRecord rec = calibrationRecordRepository.findById(id).orElseThrow(() -> new RuntimeException("Calibration record not found"));
+        if (!rec.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         rec.setProposedRating(updated.getProposedRating());
         rec.setFinalRating(updated.getFinalRating());
         rec.setReviewer(updated.getReviewer());
