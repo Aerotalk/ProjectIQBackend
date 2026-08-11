@@ -11,5 +11,6 @@ import java.util.UUID;
 @Repository
 public interface ITDeclarationRepository extends JpaRepository<ITDeclaration, UUID> {
     List<ITDeclaration> findByOrganizationId(UUID organizationId);
-    Optional<ITDeclaration> findByEmployeeIdAndFinancialYear(UUID employeeId, String financialYear);
+    List<ITDeclaration> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
+    Optional<ITDeclaration> findByOrganizationIdAndEmployeeIdAndFinancialYear(UUID organizationId, UUID employeeId, String financialYear);
 }

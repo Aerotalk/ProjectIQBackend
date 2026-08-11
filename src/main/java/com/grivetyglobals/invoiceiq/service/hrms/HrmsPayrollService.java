@@ -182,6 +182,11 @@ public class HrmsPayrollService {
         return employeeLOPRepository.findByOrganizationId(orgId);
     }
 
+    @Transactional(readOnly = true)
+    public List<EmployeeLOP> getEmployeeLOPsByEmployee(UUID employeeId) {
+        return employeeLOPRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
+    }
+
     @Transactional
     public EmployeeLOP createEmployeeLOP(EmployeeLOP lop) {
         lop.setOrganization(getCurrentOrganization());
@@ -277,10 +282,49 @@ public class HrmsPayrollService {
         return itDeclarationRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<ITDeclaration> getITDeclarationsByEmployee(UUID employeeId) {
+        return itDeclarationRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
+    }
+
     @Transactional
     public ITDeclaration createITDeclaration(ITDeclaration decl) {
-        decl.setOrganization(getCurrentOrganization());
+        Organization org = getCurrentOrganization();
+        decl.setOrganization(org);
+        // Enforce uniqueness: one declaration per employee per financial year
+        if (decl.getEmployee() != null && decl.getFinancialYear() != null) {
+            itDeclarationRepository.findByOrganizationIdAndEmployeeIdAndFinancialYear(
+                org.getId(), decl.getEmployee().getId(), decl.getFinancialYear()
+            ).ifPresent(existing -> {
+                throw new IllegalStateException("An IT Declaration already exists for this employee for FY " + decl.getFinancialYear());
+            });
+        }
         return itDeclarationRepository.save(decl);
+    }
+
+    @Transactional
+    public ITDeclaration updateITDeclaration(UUID id, ITDeclaration updated) {
+        ITDeclaration decl = itDeclarationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("IT Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        if (updated.getTaxRegime() != null) decl.setTaxRegime(updated.getTaxRegime());
+        if (updated.getFinancialYear() != null) decl.setFinancialYear(updated.getFinancialYear());
+        return itDeclarationRepository.save(decl);
+    }
+
+    @Transactional
+    public void deleteITDeclaration(UUID id) {
+        ITDeclaration decl = itDeclarationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("IT Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        // Delete associated items first
+        List<ITDeclarationItem> items = itDeclarationItemRepository.findByDeclarationId(id);
+        itDeclarationItemRepository.deleteAll(items);
+        itDeclarationRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
@@ -303,11 +347,42 @@ public class HrmsPayrollService {
         return reimbursementClaimRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<ReimbursementClaim> getReimbursementClaimsByEmployee(UUID employeeId) {
+        return reimbursementClaimRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
+    }
+
     @Transactional
     public ReimbursementClaim createReimbursementClaim(ReimbursementClaim claim) {
         claim.setOrganization(getCurrentOrganization());
         if (claim.getStatus() == null) claim.setStatus("Pending");
         return reimbursementClaimRepository.save(claim);
+    }
+
+    @Transactional
+    public ReimbursementClaim updateReimbursementClaim(UUID id, ReimbursementClaim updated) {
+        ReimbursementClaim claim = reimbursementClaimRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        if (!claim.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        if (updated.getReimbursementType() != null) claim.setReimbursementType(updated.getReimbursementType());
+        if (updated.getClaimPeriod() != null) claim.setClaimPeriod(updated.getClaimPeriod());
+        if (updated.getClaimedAmount() != null) claim.setClaimedAmount(updated.getClaimedAmount());
+        if (updated.getBillDate() != null) claim.setBillDate(updated.getBillDate());
+        if (updated.getBillNumber() != null) claim.setBillNumber(updated.getBillNumber());
+        if (updated.getRemarks() != null) claim.setRemarks(updated.getRemarks());
+        return reimbursementClaimRepository.save(claim);
+    }
+
+    @Transactional
+    public void deleteReimbursementClaim(UUID id) {
+        ReimbursementClaim claim = reimbursementClaimRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        if (!claim.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        reimbursementClaimRepository.deleteById(id);
     }
 
     @Transactional
