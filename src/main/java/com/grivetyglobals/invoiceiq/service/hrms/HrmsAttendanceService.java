@@ -8,6 +8,7 @@ import com.grivetyglobals.invoiceiq.repository.OrganizationRepository;
 import com.grivetyglobals.invoiceiq.repository.hrms.*;
 import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HrmsAttendanceService {
@@ -66,12 +68,14 @@ public class HrmsAttendanceService {
                     .referenceId(refId)
                     .module(module)
                     .action(action)
-                    .performedBy("System User")
+                    .performedBy(SecurityUtils.getCurrentUsername())
                     .performedOn(LocalDateTime.now())
                     .remarks(remarks)
                     .build();
             approvalHistoryRepository.save(history);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Failed to record approval history for module={} action={} refId={}: {}", module, action, refId, e.getMessage());
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -123,6 +127,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteShift(UUID id) {
+        getShiftById(id); // validates ownership
         shiftRepository.deleteById(id);
     }
 
@@ -161,6 +166,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteShiftRotationPattern(UUID id) {
+        getShiftRotationPatternById(id); // validates ownership
         shiftRotationPatternRepository.deleteById(id);
     }
 
@@ -202,6 +208,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteShiftRoster(UUID id) {
+        getShiftRosterById(id); // validates ownership
         shiftRosterRepository.deleteById(id);
     }
 
@@ -240,6 +247,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteHolidayList(UUID id) {
+        getHolidayListById(id); // validates ownership
         holidayListRepository.deleteById(id);
     }
 
@@ -297,6 +305,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteHoliday(UUID id) {
+        getHolidayById(id); // validates ownership via parent HolidayList
         holidayRepository.deleteById(id);
     }
 
@@ -345,6 +354,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendanceScheme(UUID id) {
+        getAttendanceSchemeById(id); // validates ownership
         attendanceSchemeRepository.deleteById(id);
     }
 
@@ -379,6 +389,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteIpMapping(UUID id) {
+        getIpMappingById(id); // validates ownership
         ipMappingRepository.deleteById(id);
     }
 
@@ -413,6 +424,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteLockConfiguration(UUID id) {
+        getLockConfigurationById(id); // validates ownership
         lockConfigurationRepository.deleteById(id);
     }
 
@@ -465,6 +477,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteLeaveType(UUID id) {
+        getLeaveTypeById(id); // validates ownership
         leaveTypeRepository.deleteById(id);
     }
 
@@ -499,6 +512,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteLeaveScheme(UUID id) {
+        getLeaveSchemeById(id); // validates ownership
         leaveSchemeRepository.deleteById(id);
     }
 
@@ -508,10 +522,12 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public List<LeaveBalance> getLeaveBalances(UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
         if (employeeId != null) {
-            return leaveBalanceRepository.findByEmployeeId(employeeId);
+            // Restrict to this org's employees only
+            return leaveBalanceRepository.findByEmployeeOrganizationIdAndEmployeeId(orgId, employeeId);
         }
-        return leaveBalanceRepository.findAll();
+        return leaveBalanceRepository.findByEmployeeOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -562,6 +578,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteLeaveApplication(UUID id) {
+        getLeaveApplicationById(id); // validates ownership
         leaveApplicationRepository.deleteById(id);
     }
 
@@ -661,6 +678,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendanceRecord(UUID id) {
+        getAttendanceRecordById(id); // validates ownership
         attendanceRecordRepository.deleteById(id);
     }
 
@@ -749,6 +767,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteRegularizationRequest(UUID id) {
+        getRegularizationRequestById(id); // validates ownership
         regularizationRequestRepository.deleteById(id);
     }
 
@@ -826,6 +845,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deletePermissionRequest(UUID id) {
+        getPermissionRequestById(id); // validates ownership
         permissionRequestRepository.deleteById(id);
     }
 
@@ -893,6 +913,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendanceException(UUID id) {
+        getAttendanceExceptionById(id); // validates ownership
         attendanceExceptionRepository.deleteById(id);
     }
 
@@ -935,6 +956,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendanceLog(UUID id) {
+        getAttendanceLogById(id); // validates ownership
         attendanceLogRepository.deleteById(id);
     }
 
@@ -972,6 +994,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendanceDevice(UUID id) {
+        getAttendanceDeviceById(id); // validates ownership
         attendanceDeviceRepository.deleteById(id);
     }
 
@@ -1012,6 +1035,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteAttendancePeriod(UUID id) {
+        getAttendancePeriodById(id); // validates ownership
         attendancePeriodRepository.deleteById(id);
     }
 
@@ -1062,6 +1086,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteProcessedAttendance(UUID id) {
+        getProcessedAttendanceById(id); // validates ownership via parent period
         processedAttendanceRepository.deleteById(id);
     }
 
@@ -1100,6 +1125,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public void deleteApprovalHistory(UUID id) {
+        getApprovalHistoryById(id); // validates ownership
         approvalHistoryRepository.deleteById(id);
     }
 
