@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
+import com.grivetyglobals.invoiceiq.entity.hrms.ApprovalHistory;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsAttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -461,16 +462,34 @@ public class HrmsAttendanceController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-in")
-    public ResponseEntity<AttendanceRecord> checkIn(@RequestBody Map<String, String> body) {
-        UUID employeeId = UUID.fromString(body.get("employeeId"));
+    public ResponseEntity<?> checkIn(@RequestBody Map<String, String> body) {
+        String empIdStr = body.get("employeeId");
+        if (empIdStr == null || empIdStr.isBlank()) {
+            return ResponseEntity.badRequest().body("employeeId is required");
+        }
+        UUID employeeId;
+        try {
+            employeeId = UUID.fromString(empIdStr);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid employeeId format");
+        }
         String source = body.get("source");
         return ResponseEntity.ok(hrmsAttendanceService.checkIn(employeeId, source));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-out")
-    public ResponseEntity<AttendanceRecord> checkOut(@RequestBody Map<String, String> body) {
-        UUID employeeId = UUID.fromString(body.get("employeeId"));
+    public ResponseEntity<?> checkOut(@RequestBody Map<String, String> body) {
+        String empIdStr = body.get("employeeId");
+        if (empIdStr == null || empIdStr.isBlank()) {
+            return ResponseEntity.badRequest().body("employeeId is required");
+        }
+        UUID employeeId;
+        try {
+            employeeId = UUID.fromString(empIdStr);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid employeeId format");
+        }
         return ResponseEntity.ok(hrmsAttendanceService.checkOut(employeeId));
     }
 

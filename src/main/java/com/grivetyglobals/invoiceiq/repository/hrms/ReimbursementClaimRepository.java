@@ -10,5 +10,5 @@ import java.util.UUID;
 @Repository
 public interface ReimbursementClaimRepository extends JpaRepository<ReimbursementClaim, UUID> {
     List<ReimbursementClaim> findByOrganizationId(UUID organizationId);
-    List<ReimbursementClaim> findByEmployeeId(UUID employeeId);
+    List<ReimbursementClaim> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
 }

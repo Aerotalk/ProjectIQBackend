@@ -197,7 +197,11 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public ExpenseClaim getClaimById(UUID id) {
-        return claimRepository.findById(id).orElseThrow(() -> new RuntimeException("Claim not found"));
+        var claim = claimRepository.findById(id).orElseThrow(() -> new RuntimeException("Claim not found"));
+        if (!claim.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return claim;
     }
 
     @Transactional
@@ -345,6 +349,9 @@ public class HrmsExpenseClaimsService {
     @Transactional
     public ExpenseAdvance approveAdvance(UUID id) {
         ExpenseAdvance advance = advanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Advance not found"));
+        if (!advance.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         advance.setStatus("Approved");
         ExpenseAdvance saved = advanceRepository.save(advance);
         logAudit("Advance", saved.getId(), "Approved", "Approve", "Advance approved");
@@ -354,6 +361,9 @@ public class HrmsExpenseClaimsService {
     @Transactional
     public ExpenseAdvance disburseAdvance(UUID id) {
         ExpenseAdvance advance = advanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Advance not found"));
+        if (!advance.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         advance.setStatus("Disbursed");
         advance.setDisbursed(true);
         ExpenseAdvance saved = advanceRepository.save(advance);
@@ -396,6 +406,9 @@ public class HrmsExpenseClaimsService {
     @Transactional
     public ClaimBatch markBatchPaid(UUID id) {
         ClaimBatch batch = batchRepository.findById(id).orElseThrow(() -> new RuntimeException("Batch not found"));
+        if (!batch.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         batch.setStatus("Paid");
         batch.setPaidOn(LocalDateTime.now());
         ClaimBatch saved = batchRepository.save(batch);

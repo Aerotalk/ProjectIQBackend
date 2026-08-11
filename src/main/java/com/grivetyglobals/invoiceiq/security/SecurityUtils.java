@@ -34,4 +34,12 @@ public class SecurityUtils {
         }
         return null; // Some users (like super admin or org admin) might not have a specific company
     }
+
+    public static String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            return user.getUsername();
+        }
+        return "System";
+    }
 }

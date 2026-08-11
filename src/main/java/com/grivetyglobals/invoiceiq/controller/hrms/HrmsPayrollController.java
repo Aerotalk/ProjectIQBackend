@@ -1,5 +1,6 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
+import com.grivetyglobals.invoiceiq.dto.hrms.PayrollVarianceDto;
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsPayrollService;
 import lombok.RequiredArgsConstructor;
@@ -107,7 +108,12 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/employee-lop")
-    public ResponseEntity<List<EmployeeLOP>> getEmployeeLOPs(@RequestParam(required = false) String period) {
+    public ResponseEntity<List<EmployeeLOP>> getEmployeeLOPs(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getEmployeeLOPsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getEmployeeLOPs(period));
     }
 
@@ -190,7 +196,10 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/it-declarations")
-    public ResponseEntity<List<ITDeclaration>> getITDeclarations() {
+    public ResponseEntity<List<ITDeclaration>> getITDeclarations(@RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getITDeclarationsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getITDeclarations());
     }
 
@@ -198,6 +207,19 @@ public class HrmsPayrollController {
     @PostMapping("/it-declarations")
     public ResponseEntity<ITDeclaration> createITDeclaration(@RequestBody ITDeclaration decl) {
         return ResponseEntity.ok(hrmsPayrollService.createITDeclaration(decl));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/it-declarations/{id}")
+    public ResponseEntity<ITDeclaration> updateITDeclaration(@PathVariable UUID id, @RequestBody ITDeclaration decl) {
+        return ResponseEntity.ok(hrmsPayrollService.updateITDeclaration(id, decl));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/it-declarations/{id}")
+    public ResponseEntity<Void> deleteITDeclaration(@PathVariable UUID id) {
+        hrmsPayrollService.deleteITDeclaration(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -214,7 +236,10 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/reimbursements")
-    public ResponseEntity<List<ReimbursementClaim>> getReimbursementClaims() {
+    public ResponseEntity<List<ReimbursementClaim>> getReimbursementClaims(@RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getReimbursementClaimsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getReimbursementClaims());
     }
 
@@ -222,6 +247,19 @@ public class HrmsPayrollController {
     @PostMapping("/reimbursements")
     public ResponseEntity<ReimbursementClaim> createReimbursementClaim(@RequestBody ReimbursementClaim claim) {
         return ResponseEntity.ok(hrmsPayrollService.createReimbursementClaim(claim));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/reimbursements/{id}")
+    public ResponseEntity<ReimbursementClaim> updateReimbursementClaim(@PathVariable UUID id, @RequestBody ReimbursementClaim claim) {
+        return ResponseEntity.ok(hrmsPayrollService.updateReimbursementClaim(id, claim));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/reimbursements/{id}")
+    public ResponseEntity<Void> deleteReimbursementClaim(@PathVariable UUID id) {
+        hrmsPayrollService.deleteReimbursementClaim(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -265,9 +303,21 @@ public class HrmsPayrollController {
     // ─────────────────────────────────────────────────────────
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/eligibility-check")
+    public ResponseEntity<List<Map<String, Object>>> getPayrollEligibilityCheck() {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollEligibilityCheck());
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/runs")
     public ResponseEntity<List<PayrollRun>> getPayrollRuns() {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollRuns());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/{id}")
+    public ResponseEntity<PayrollRun> getPayrollRunById(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollRunById(id));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -299,6 +349,12 @@ public class HrmsPayrollController {
     @GetMapping("/runs/{id}/details")
     public ResponseEntity<List<PayrollRunDetail>> getPayrollRunDetails(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollRunDetails(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/{id}/variances")
+    public ResponseEntity<List<PayrollVarianceDto>> getPayrollVariances(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.getPayrollVariances(id));
     }
 
     // ─────────────────────────────────────────────────────────
