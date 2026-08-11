@@ -16,7 +16,8 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 public class InvoiceiqApplication {
 
 	public static void main(String[] args) {
-		// Strip literal double quotes from environment variables injected by Railway/Render
+		// Strip literal double quotes from environment variables injected by
+		// Railway/Render
 		System.getenv().forEach((key, val) -> {
 			if (val != null && val.startsWith("\"") && val.endsWith("\"") && val.length() > 1) {
 				String cleaned = val.substring(1, val.length() - 1);

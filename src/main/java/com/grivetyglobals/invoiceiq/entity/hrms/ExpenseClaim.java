@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.entity.hrms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.grivetyglobals.invoiceiq.entity.Department;
 import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.entity.Organization;
@@ -90,4 +91,34 @@ public class ExpenseClaim {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @JsonProperty("employeeName")
+    public String getFlatEmployeeName() {
+        return employee != null ? employee.getFirstName() + " " + employee.getLastName() : null;
+    }
+
+    @Transient
+    @JsonProperty("departmentName")
+    public String getFlatDepartmentName() {
+        return department != null ? department.getDepartmentName() : null;
+    }
+
+    @Transient
+    @JsonProperty("projectName")
+    public String getFlatProjectName() {
+        return project != null ? project.getProjectName() : null;
+    }
+
+    @Transient
+    @JsonProperty("templateName")
+    public String getFlatTemplateName() {
+        return template != null ? template.getTemplateName() : null;
+    }
+
+    @Transient
+    @JsonProperty("templateId")
+    public UUID getFlatTemplateId() {
+        return template != null ? template.getId() : null;
+    }
 }

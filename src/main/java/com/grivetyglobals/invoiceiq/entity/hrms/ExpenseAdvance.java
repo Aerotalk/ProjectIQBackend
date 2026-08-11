@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.entity.hrms;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import jakarta.persistence.*;
@@ -79,4 +80,10 @@ public class ExpenseAdvance {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @JsonProperty("employeeName")
+    public String getFlatEmployeeName() {
+        return employee != null ? employee.getFirstName() + " " + employee.getLastName() : null;
+    }
 }

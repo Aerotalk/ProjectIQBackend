@@ -14,6 +14,7 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -100,19 +101,25 @@ public class FileService {
      * @return an InputStream of the file content
      */
     public java.io.InputStream getFileInputStream(UUID fileId) {
-        File fileEntity = fileRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+        File file = getFileMetadata(fileId);
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(file.getStoragePath())
+                .build();
 
         try {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(fileEntity.getStoragePath())
-                    .build();
-
             return s3Client.getObject(getObjectRequest);
-        } catch (Exception e) {
-            throw new RuntimeException("Could not read file from storage: " + fileEntity.getOriginalName(), e);
+        } catch (S3Exception e) {
+            throw new RuntimeException("Failed to download file from S3: " + e.awsErrorDetails().errorMessage(), e);
         }
+    }
+
+    /**
+     * Retrieves all files uploaded by a specific user.
+     */
+    public java.util.List<File> getUserFiles(UUID userId) {
+        return fileRepository.findAllByUploadedByOrderByUploadedAtDesc(userId);
     }
 
     /**

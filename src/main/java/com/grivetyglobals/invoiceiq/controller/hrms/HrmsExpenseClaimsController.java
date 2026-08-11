@@ -30,6 +30,12 @@ public class HrmsExpenseClaimsController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<ExpenseCategoryConfig> getCategoryById(@PathVariable UUID id) {
+        return ResponseEntity.ok(expenseClaimsService.getCategoryById(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/categories")
     public ResponseEntity<ExpenseCategoryConfig> createCategory(@RequestBody ExpenseCategoryConfig category) {
         return ResponseEntity.ok(expenseClaimsService.createCategory(category));
@@ -56,6 +62,12 @@ public class HrmsExpenseClaimsController {
     @GetMapping("/templates")
     public ResponseEntity<List<ExpenseClaimTemplate>> getTemplates() {
         return ResponseEntity.ok(expenseClaimsService.getTemplates());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/templates/{id}")
+    public ResponseEntity<ExpenseClaimTemplate> getTemplateById(@PathVariable UUID id) {
+        return ResponseEntity.ok(expenseClaimsService.getTemplateById(id));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -144,6 +156,12 @@ public class HrmsExpenseClaimsController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @PutMapping("/claims/{id}")
+    public ResponseEntity<ExpenseClaim> updateClaim(@PathVariable UUID id, @RequestBody ExpenseClaim claim) {
+        return ResponseEntity.ok(expenseClaimsService.updateClaim(id, claim));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/claims/{id}/submit")
     public ResponseEntity<ExpenseClaim> submitClaim(@PathVariable UUID id) {
         return ResponseEntity.ok(expenseClaimsService.submitClaim(id));
@@ -214,9 +232,21 @@ public class HrmsExpenseClaimsController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/advances/{id}")
+    public ResponseEntity<ExpenseAdvance> getAdvanceById(@PathVariable UUID id) {
+        return ResponseEntity.ok(expenseClaimsService.getAdvanceById(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/advances")
     public ResponseEntity<ExpenseAdvance> createAdvance(@RequestBody ExpenseAdvance advance) {
         return ResponseEntity.ok(expenseClaimsService.createAdvance(advance));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/advances/{id}")
+    public ResponseEntity<ExpenseAdvance> updateAdvance(@PathVariable UUID id, @RequestBody ExpenseAdvance advance) {
+        return ResponseEntity.ok(expenseClaimsService.updateAdvance(id, advance));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -238,9 +268,21 @@ public class HrmsExpenseClaimsController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/batches/{id}")
+    public ResponseEntity<ClaimBatch> getBatchById(@PathVariable UUID id) {
+        return ResponseEntity.ok(expenseClaimsService.getBatchById(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/batches")
     public ResponseEntity<ClaimBatch> createBatch(@RequestBody ClaimBatch batch) {
         return ResponseEntity.ok(expenseClaimsService.createBatch(batch));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/batches/{id}")
+    public ResponseEntity<ClaimBatch> updateBatch(@PathVariable UUID id, @RequestBody ClaimBatch batch) {
+        return ResponseEntity.ok(expenseClaimsService.updateBatch(id, batch));
     }
 
     @PreAuthorize("isAuthenticated()")
