@@ -19,5 +19,11 @@ public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, UUID
 
     @EntityGraph(attributePaths = {"employee", "employee.department", "leaveType"})
     Optional<LeaveBalance> findByEmployeeIdAndLeaveTypeIdAndYear(UUID employeeId, UUID leaveTypeId, Integer year);
+
+    @EntityGraph(attributePaths = {"employee", "employee.department", "leaveType"})
+    List<LeaveBalance> findByEmployeeOrganizationId(UUID organizationId);
+
+    @EntityGraph(attributePaths = {"employee", "employee.department", "leaveType"})
+    List<LeaveBalance> findByEmployeeOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
 }
 

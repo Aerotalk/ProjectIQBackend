@@ -76,6 +76,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayComponent updatePayComponent(UUID id, PayComponent updated) {
         PayComponent comp = payComponentRepository.findById(id).orElseThrow(() -> new RuntimeException("Pay Component not found"));
+        if (!comp.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         comp.setComponentName(updated.getComponentName());
         comp.setCode(updated.getCode());
         comp.setType(updated.getType());
@@ -116,6 +119,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayslipTemplate updatePayslipTemplate(UUID id, PayslipTemplate updated) {
         PayslipTemplate tmpl = payslipTemplateRepository.findById(id).orElseThrow(() -> new RuntimeException("Template not found"));
+        if (!tmpl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         tmpl.setTemplateName(updated.getTemplateName());
         tmpl.setLayoutHTML(updated.getLayoutHTML());
         tmpl.setPreviewImage(updated.getPreviewImage());
@@ -150,6 +156,9 @@ public class HrmsPayrollService {
     @Transactional
     public SalaryInput updateSalaryInput(UUID id, SalaryInput updated) {
         SalaryInput input = salaryInputRepository.findById(id).orElseThrow(() -> new RuntimeException("Salary Input not found"));
+        if (!input.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         input.setPayComponent(updated.getPayComponent());
         input.setAmount(updated.getAmount());
         input.setInputType(updated.getInputType());
@@ -182,6 +191,9 @@ public class HrmsPayrollService {
     @Transactional
     public EmployeeLOP updateEmployeeLOP(UUID id, EmployeeLOP updated) {
         EmployeeLOP lop = employeeLOPRepository.findById(id).orElseThrow(() -> new RuntimeException("LOP record not found"));
+        if (!lop.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         lop.setLopDays(updated.getLopDays());
         lop.setSource(updated.getSource());
         lop.setReason(updated.getReason());
@@ -212,6 +224,9 @@ public class HrmsPayrollService {
     @Transactional
     public SalaryHold updateSalaryHold(UUID id, SalaryHold updated) {
         SalaryHold hold = salaryHoldRepository.findById(id).orElseThrow(() -> new RuntimeException("Salary Hold not found"));
+        if (!hold.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         hold.setHoldAmount(updated.getHoldAmount());
         hold.setReason(updated.getReason());
         if (updated.getActive() != null) hold.setActive(updated.getActive());
@@ -238,6 +253,9 @@ public class HrmsPayrollService {
     @Transactional
     public SalaryStop updateSalaryStop(UUID id, SalaryStop updated) {
         SalaryStop stop = salaryStopRepository.findById(id).orElseThrow(() -> new RuntimeException("Salary Stop not found"));
+        if (!stop.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         stop.setStopFromDate(updated.getStopFromDate());
         stop.setStopUntilDate(updated.getStopUntilDate());
         stop.setReason(updated.getReason());
@@ -273,6 +291,9 @@ public class HrmsPayrollService {
     @Transactional
     public ITDeclarationItem addITDeclarationItem(UUID declarationId, ITDeclarationItem item) {
         ITDeclaration decl = itDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         item.setDeclaration(decl);
         return itDeclarationItemRepository.save(item);
     }
@@ -292,6 +313,9 @@ public class HrmsPayrollService {
     @Transactional
     public ReimbursementClaim approveReimbursementClaim(UUID id) {
         ReimbursementClaim claim = reimbursementClaimRepository.findById(id).orElseThrow(() -> new RuntimeException("Claim not found"));
+        if (!claim.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         claim.setStatus("Approved");
         return reimbursementClaimRepository.save(claim);
     }
@@ -299,6 +323,9 @@ public class HrmsPayrollService {
     @Transactional
     public ReimbursementClaim rejectReimbursementClaim(UUID id) {
         ReimbursementClaim claim = reimbursementClaimRepository.findById(id).orElseThrow(() -> new RuntimeException("Claim not found"));
+        if (!claim.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         claim.setStatus("Rejected");
         return reimbursementClaimRepository.save(claim);
     }
@@ -322,6 +349,9 @@ public class HrmsPayrollService {
     @Transactional
     public FBPDeclarationItem addFBPDeclarationItem(UUID declarationId, FBPDeclarationItem item) {
         FBPDeclaration decl = fbpDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("FBP Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         item.setDeclaration(decl);
         return fbpDeclarationItemRepository.save(item);
     }
@@ -369,7 +399,11 @@ public class HrmsPayrollService {
 
     @Transactional(readOnly = true)
     public PayrollRun getPayrollRunById(UUID id) {
-        return payrollRunRepository.findById(id).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        var payrollRun = payrollRunRepository.findById(id).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!payrollRun.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return payrollRun;
     }
 
     @Transactional
@@ -383,6 +417,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayrollRun processPayrollRun(UUID id) {
         PayrollRun run = payrollRunRepository.findById(id).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!run.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         
         // 1. Delete old details if re-processing
         List<PayrollRunDetail> oldDetails = payrollRunDetailRepository.findByPayrollRunId(id);
@@ -466,6 +503,9 @@ public class HrmsPayrollService {
     @Transactional(readOnly = true)
     public List<PayrollVarianceDto> getPayrollVariances(UUID runId) {
         PayrollRun run = payrollRunRepository.findById(runId).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!run.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         
         List<PayrollVarianceDto> variances = new ArrayList<>();
         // Compare with dummy data for immediate integration (as "previous" requires complex historical querying)
@@ -479,6 +519,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayrollRun approvePayrollRun(UUID id) {
         PayrollRun run = payrollRunRepository.findById(id).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!run.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         run.setStatus("Approved");
         run.setApprovedOn(LocalDateTime.now());
         return payrollRunRepository.save(run);
@@ -487,6 +530,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayrollRun updatePayoutStatus(UUID id, String status) {
         PayrollRun run = payrollRunRepository.findById(id).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!run.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         run.setPayoutStatus(status);
         return payrollRunRepository.save(run);
     }
@@ -515,6 +561,9 @@ public class HrmsPayrollService {
     @Transactional
     public FinalSettlement processFinalSettlement(UUID id) {
         FinalSettlement settlement = finalSettlementRepository.findById(id).orElseThrow(() -> new RuntimeException("Settlement not found"));
+        if (!settlement.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         settlement.setStatus("Processed");
         return finalSettlementRepository.save(settlement);
     }
@@ -527,6 +576,9 @@ public class HrmsPayrollService {
     @Transactional
     public FinalSettlementItem addFinalSettlementItem(UUID settlementId, FinalSettlementItem item) {
         FinalSettlement settlement = finalSettlementRepository.findById(settlementId).orElseThrow(() -> new RuntimeException("Settlement not found"));
+        if (!settlement.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         item.setSettlement(settlement);
         return finalSettlementItemRepository.save(item);
     }
