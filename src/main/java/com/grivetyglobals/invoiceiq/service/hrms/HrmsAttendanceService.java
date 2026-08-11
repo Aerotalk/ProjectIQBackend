@@ -85,7 +85,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public Shift getShiftById(UUID id) {
-        return shiftRepository.findById(id).orElseThrow(() -> new RuntimeException("Shift not found"));
+        var shift = shiftRepository.findById(id).orElseThrow(() -> new RuntimeException("Shift not found"));
+        if (!shift.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return shift;
     }
 
     @Transactional
@@ -133,7 +137,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public ShiftRotationPattern getShiftRotationPatternById(UUID id) {
-        return shiftRotationPatternRepository.findById(id).orElseThrow(() -> new RuntimeException("Rotation pattern not found"));
+        var shiftRotationPattern = shiftRotationPatternRepository.findById(id).orElseThrow(() -> new RuntimeException("Rotation pattern not found"));
+        if (!shiftRotationPattern.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return shiftRotationPattern;
     }
 
     @Transactional
@@ -167,7 +175,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public ShiftRoster getShiftRosterById(UUID id) {
-        return shiftRosterRepository.findById(id).orElseThrow(() -> new RuntimeException("Roster not found"));
+        var shiftRoster = shiftRosterRepository.findById(id).orElseThrow(() -> new RuntimeException("Roster not found"));
+        if (!shiftRoster.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return shiftRoster;
     }
 
     @Transactional
@@ -204,7 +216,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public HolidayList getHolidayListById(UUID id) {
-        return holidayListRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday list not found"));
+        var holidayList = holidayListRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday list not found"));
+        if (!holidayList.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return holidayList;
     }
 
     @Transactional
@@ -239,7 +255,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public Holiday getHolidayById(UUID id) {
-        return holidayRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday not found"));
+        var holiday = holidayRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday not found"));
+        if (!holiday.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return holiday;
     }
 
     @Transactional
@@ -291,7 +311,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendanceScheme getAttendanceSchemeById(UUID id) {
-        return attendanceSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Scheme not found"));
+        var attendanceScheme = attendanceSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Scheme not found"));
+        if (!attendanceScheme.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendanceScheme;
     }
 
     @Transactional
@@ -331,7 +355,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public IpMapping getIpMappingById(UUID id) {
-        return ipMappingRepository.findById(id).orElseThrow(() -> new RuntimeException("IP Mapping not found"));
+        var ipMapping = ipMappingRepository.findById(id).orElseThrow(() -> new RuntimeException("IP Mapping not found"));
+        if (!ipMapping.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return ipMapping;
     }
 
     @Transactional
@@ -361,7 +389,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public LockConfiguration getLockConfigurationById(UUID id) {
-        return lockConfigurationRepository.findById(id).orElseThrow(() -> new RuntimeException("Lock config not found"));
+        var lockConfiguration = lockConfigurationRepository.findById(id).orElseThrow(() -> new RuntimeException("Lock config not found"));
+        if (!lockConfiguration.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return lockConfiguration;
     }
 
     @Transactional
@@ -395,7 +427,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public LeaveType getLeaveTypeById(UUID id) {
-        return leaveTypeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave type not found"));
+        var leaveType = leaveTypeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave type not found"));
+        if (!leaveType.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return leaveType;
     }
 
     @Transactional
@@ -439,7 +475,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public LeaveScheme getLeaveSchemeById(UUID id) {
-        return leaveSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave scheme not found"));
+        var leaveScheme = leaveSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave scheme not found"));
+        if (!leaveScheme.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return leaveScheme;
     }
 
     @Transactional
@@ -491,7 +531,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public LeaveApplication getLeaveApplicationById(UUID id) {
-        return leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
+        var leaveApplication = leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
+        if (!leaveApplication.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return leaveApplication;
     }
 
     @Transactional
@@ -591,7 +635,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendanceRecord getAttendanceRecordById(UUID id) {
-        return attendanceRecordRepository.findById(id).orElseThrow(() -> new RuntimeException("Attendance record not found"));
+        var attendanceRecord = attendanceRecordRepository.findById(id).orElseThrow(() -> new RuntimeException("Attendance record not found"));
+        if (!attendanceRecord.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendanceRecord;
     }
 
     @Transactional
@@ -619,6 +667,9 @@ public class HrmsAttendanceService {
     @Transactional
     public AttendanceRecord checkIn(UUID employeeId, String source) {
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> new RuntimeException("Employee not found"));
+        if (!employee.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
         LocalDate today = LocalDate.now();
 
         AttendanceRecord record = attendanceRecordRepository.findByEmployeeIdAndAttendanceDate(employeeId, today)
@@ -669,7 +720,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public RegularizationRequest getRegularizationRequestById(UUID id) {
-        return regularizationRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        var regularizationRequest = regularizationRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        if (!regularizationRequest.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return regularizationRequest;
     }
 
     @Transactional
@@ -742,7 +797,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public PermissionRequest getPermissionRequestById(UUID id) {
-        return permissionRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        var permissionRequest = permissionRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        if (!permissionRequest.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return permissionRequest;
     }
 
     @Transactional
@@ -809,7 +868,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendanceException getAttendanceExceptionById(UUID id) {
-        return attendanceExceptionRepository.findById(id).orElseThrow(() -> new RuntimeException("Exception not found"));
+        var attendanceException = attendanceExceptionRepository.findById(id).orElseThrow(() -> new RuntimeException("Exception not found"));
+        if (!attendanceException.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendanceException;
     }
 
     @Transactional
@@ -848,7 +911,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendanceLog getAttendanceLogById(UUID id) {
-        return attendanceLogRepository.findById(id).orElseThrow(() -> new RuntimeException("Log not found"));
+        var attendanceLog = attendanceLogRepository.findById(id).orElseThrow(() -> new RuntimeException("Log not found"));
+        if (!attendanceLog.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendanceLog;
     }
 
     @Transactional
@@ -878,7 +945,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendanceDevice getAttendanceDeviceById(UUID id) {
-        return attendanceDeviceRepository.findById(id).orElseThrow(() -> new RuntimeException("Device not found"));
+        var attendanceDevice = attendanceDeviceRepository.findById(id).orElseThrow(() -> new RuntimeException("Device not found"));
+        if (!attendanceDevice.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendanceDevice;
     }
 
     @Transactional
@@ -915,7 +986,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public AttendancePeriod getAttendancePeriodById(UUID id) {
-        return attendancePeriodRepository.findById(id).orElseThrow(() -> new RuntimeException("Period not found"));
+        var attendancePeriod = attendancePeriodRepository.findById(id).orElseThrow(() -> new RuntimeException("Period not found"));
+        if (!attendancePeriod.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return attendancePeriod;
     }
 
     @Transactional
@@ -965,7 +1040,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public ProcessedAttendance getProcessedAttendanceById(UUID id) {
-        return processedAttendanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Processed attendance not found"));
+        var processedAttendance = processedAttendanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Processed attendance not found"));
+        if (!processedAttendance.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return processedAttendance;
     }
 
     @Transactional
@@ -997,7 +1076,11 @@ public class HrmsAttendanceService {
 
     @Transactional(readOnly = true)
     public ApprovalHistory getApprovalHistoryById(UUID id) {
-        return approvalHistoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Approval history not found"));
+        var approvalHistory = approvalHistoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Approval history not found"));
+        if (!approvalHistory.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        return approvalHistory;
     }
 
     @Transactional
