@@ -75,4 +75,34 @@ public class ShiftRoster {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeName")
+    public String getEmployeeName() {
+        if (employee != null) {
+            String name = "";
+            if (employee.getFirstName() != null) name += employee.getFirstName();
+            if (employee.getLastName() != null) name += (name.isEmpty() ? "" : " ") + employee.getLastName();
+            return name;
+        }
+        return null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeCode")
+    public String getEmployeeCode() {
+        return employee != null ? employee.getEmployeeCode() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("department")
+    public String getDepartment() {
+        return employee != null && employee.getDepartment() != null ? employee.getDepartment().getDepartmentName() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("assignedShiftId")
+    public UUID getAssignedShiftId() {
+        return assignedShift != null ? assignedShift.getId() : null;
+    }
 }

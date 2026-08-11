@@ -103,4 +103,46 @@ public class AttendanceRecord {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeName")
+    public String getEmployeeName() {
+        if (employee != null) {
+            String name = "";
+            if (employee.getFirstName() != null) name += employee.getFirstName();
+            if (employee.getLastName() != null) name += (name.isEmpty() ? "" : " ") + employee.getLastName();
+            return name;
+        }
+        return null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeCode")
+    public String getEmployeeCode() {
+        return employee != null ? employee.getEmployeeCode() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("departmentId")
+    public String getDepartmentId() {
+        return employee != null && employee.getDepartment() != null ? employee.getDepartment().getId().toString() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("designationId")
+    public String getDesignationId() {
+        return employee != null && employee.getDesignation() != null ? employee.getDesignation().getId().toString() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("locationId")
+    public String getLocationId() {
+        return employee != null ? employee.getLocation() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("shiftName")
+    public String getShiftName() {
+        return shift != null ? shift.getShiftName() : null;
+    }
 }

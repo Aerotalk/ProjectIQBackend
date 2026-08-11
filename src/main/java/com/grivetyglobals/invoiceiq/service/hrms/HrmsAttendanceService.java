@@ -16,9 +16,9 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.format.TextStyle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +48,7 @@ public class HrmsAttendanceService {
 
     private final AttendancePeriodRepository attendancePeriodRepository;
     private final ProcessedAttendanceRepository processedAttendanceRepository;
+    private final ApprovalHistoryRepository approvalHistoryRepository;
 
     private final OrganizationRepository organizationRepository;
     private final EmployeeRepository employeeRepository;
@@ -56,6 +57,21 @@ public class HrmsAttendanceService {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
         return organizationRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
+    }
+
+    private void recordApprovalHistory(UUID refId, String module, String action, String remarks) {
+        try {
+            ApprovalHistory history = ApprovalHistory.builder()
+                    .organization(getCurrentOrganization())
+                    .referenceId(refId)
+                    .module(module)
+                    .action(action)
+                    .performedBy("System User")
+                    .performedOn(LocalDateTime.now())
+                    .remarks(remarks)
+                    .build();
+            approvalHistoryRepository.save(history);
+        } catch (Exception ignored) {}
     }
 
     // ─────────────────────────────────────────────────────────
@@ -67,6 +83,11 @@ public class HrmsAttendanceService {
         return shiftRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public Shift getShiftById(UUID id) {
+        return shiftRepository.findById(id).orElseThrow(() -> new RuntimeException("Shift not found"));
+    }
+
     @Transactional
     public Shift createShift(Shift shift) {
         shift.setOrganization(getCurrentOrganization());
@@ -76,7 +97,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public Shift updateShift(UUID id, Shift updated) {
-        Shift shift = shiftRepository.findById(id).orElseThrow(() -> new RuntimeException("Shift not found"));
+        Shift shift = getShiftById(id);
         shift.setShiftName(updated.getShiftName());
         shift.setShiftCode(updated.getShiftCode());
         shift.setDescription(updated.getDescription());
@@ -110,6 +131,11 @@ public class HrmsAttendanceService {
         return shiftRotationPatternRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public ShiftRotationPattern getShiftRotationPatternById(UUID id) {
+        return shiftRotationPatternRepository.findById(id).orElseThrow(() -> new RuntimeException("Rotation pattern not found"));
+    }
+
     @Transactional
     public ShiftRotationPattern createShiftRotationPattern(ShiftRotationPattern pattern) {
         pattern.setOrganization(getCurrentOrganization());
@@ -118,8 +144,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public ShiftRotationPattern updateShiftRotationPattern(UUID id, ShiftRotationPattern updated) {
-        ShiftRotationPattern pattern = shiftRotationPatternRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rotation pattern not found"));
+        ShiftRotationPattern pattern = getShiftRotationPatternById(id);
         pattern.setPatternName(updated.getPatternName());
         pattern.setRotationDays(updated.getRotationDays());
         pattern.setPatternSequence(updated.getPatternSequence());
@@ -140,6 +165,11 @@ public class HrmsAttendanceService {
         return shiftRosterRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public ShiftRoster getShiftRosterById(UUID id) {
+        return shiftRosterRepository.findById(id).orElseThrow(() -> new RuntimeException("Roster not found"));
+    }
+
     @Transactional
     public ShiftRoster createShiftRoster(ShiftRoster roster) {
         roster.setOrganization(getCurrentOrganization());
@@ -150,8 +180,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public ShiftRoster updateShiftRoster(UUID id, ShiftRoster updated) {
-        ShiftRoster roster = shiftRosterRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Roster not found"));
+        ShiftRoster roster = getShiftRosterById(id);
         if (updated.getAssignedShift() != null) roster.setAssignedShift(updated.getAssignedShift());
         if (updated.getRosterDate() != null) roster.setRosterDate(updated.getRosterDate());
         if (updated.getOverridden() != null) roster.setOverridden(updated.getOverridden());
@@ -173,6 +202,11 @@ public class HrmsAttendanceService {
         return holidayListRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public HolidayList getHolidayListById(UUID id) {
+        return holidayListRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday list not found"));
+    }
+
     @Transactional
     public HolidayList createHolidayList(HolidayList list) {
         list.setOrganization(getCurrentOrganization());
@@ -181,7 +215,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public HolidayList updateHolidayList(UUID id, HolidayList updated) {
-        HolidayList list = holidayListRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday list not found"));
+        HolidayList list = getHolidayListById(id);
         list.setHolidayList(updated.getHolidayList());
         list.setYear(updated.getYear());
         list.setLocationId(updated.getLocationId());
@@ -198,17 +232,38 @@ public class HrmsAttendanceService {
         return holidayRepository.findByHolidayListId(listId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Holiday> getAllHolidays() {
+        return holidayRepository.findByHolidayListOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public Holiday getHolidayById(UUID id) {
+        return holidayRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday not found"));
+    }
+
     @Transactional
     public Holiday createHoliday(UUID listId, Holiday holiday) {
-        HolidayList list = holidayListRepository.findById(listId).orElseThrow(() -> new RuntimeException("Holiday list not found"));
+        HolidayList list = getHolidayListById(listId);
         holiday.setHolidayList(list);
         if (holiday.getActive() == null) holiday.setActive(true);
         return holidayRepository.save(holiday);
     }
 
     @Transactional
+    public Holiday createHolidayDirect(Holiday holiday) {
+        if (holiday.getHolidayList() != null && holiday.getHolidayList().getId() != null) {
+            HolidayList list = getHolidayListById(holiday.getHolidayList().getId());
+            holiday.setHolidayList(list);
+        }
+        if (holiday.getActive() == null) holiday.setActive(true);
+        return holidayRepository.save(holiday);
+    }
+
+
+    @Transactional
     public Holiday updateHoliday(UUID id, Holiday updated) {
-        Holiday holiday = holidayRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday not found"));
+        Holiday holiday = getHolidayById(id);
         holiday.setHolidayDate(updated.getHolidayDate());
         holiday.setHolidayName(updated.getHolidayName());
         holiday.setHolidayType(updated.getHolidayType());
@@ -234,6 +289,11 @@ public class HrmsAttendanceService {
         return attendanceSchemeRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public AttendanceScheme getAttendanceSchemeById(UUID id) {
+        return attendanceSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Scheme not found"));
+    }
+
     @Transactional
     public AttendanceScheme createAttendanceScheme(AttendanceScheme scheme) {
         scheme.setOrganization(getCurrentOrganization());
@@ -242,7 +302,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public AttendanceScheme updateAttendanceScheme(UUID id, AttendanceScheme updated) {
-        AttendanceScheme scheme = attendanceSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Scheme not found"));
+        AttendanceScheme scheme = getAttendanceSchemeById(id);
         scheme.setSchemeName(updated.getSchemeName());
         scheme.setSchemeDescription(updated.getSchemeDescription());
         scheme.setDefaultShift(updated.getDefaultShift());
@@ -269,6 +329,11 @@ public class HrmsAttendanceService {
         return ipMappingRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public IpMapping getIpMappingById(UUID id) {
+        return ipMappingRepository.findById(id).orElseThrow(() -> new RuntimeException("IP Mapping not found"));
+    }
+
     @Transactional
     public IpMapping createIpMapping(IpMapping mapping) {
         mapping.setOrganization(getCurrentOrganization());
@@ -277,7 +342,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public IpMapping updateIpMapping(UUID id, IpMapping updated) {
-        IpMapping mapping = ipMappingRepository.findById(id).orElseThrow(() -> new RuntimeException("IP Mapping not found"));
+        IpMapping mapping = getIpMappingById(id);
         mapping.setLocationId(updated.getLocationId());
         mapping.setIpAddress(updated.getIpAddress());
         mapping.setDescription(updated.getDescription());
@@ -294,6 +359,11 @@ public class HrmsAttendanceService {
         return lockConfigurationRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public LockConfiguration getLockConfigurationById(UUID id) {
+        return lockConfigurationRepository.findById(id).orElseThrow(() -> new RuntimeException("Lock config not found"));
+    }
+
     @Transactional
     public LockConfiguration createLockConfiguration(LockConfiguration config) {
         config.setOrganization(getCurrentOrganization());
@@ -302,7 +372,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public LockConfiguration updateLockConfiguration(UUID id, LockConfiguration updated) {
-        LockConfiguration config = lockConfigurationRepository.findById(id).orElseThrow(() -> new RuntimeException("Lock config not found"));
+        LockConfiguration config = getLockConfigurationById(id);
         config.setFeature(updated.getFeature());
         config.setLockDays(updated.getLockDays());
         config.setActive(updated.getActive());
@@ -323,6 +393,11 @@ public class HrmsAttendanceService {
         return leaveTypeRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public LeaveType getLeaveTypeById(UUID id) {
+        return leaveTypeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave type not found"));
+    }
+
     @Transactional
     public LeaveType createLeaveType(LeaveType type) {
         type.setOrganization(getCurrentOrganization());
@@ -332,7 +407,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public LeaveType updateLeaveType(UUID id, LeaveType updated) {
-        LeaveType type = leaveTypeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave type not found"));
+        LeaveType type = getLeaveTypeById(id);
         type.setName(updated.getName());
         type.setCode(updated.getCode());
         type.setCategory(updated.getCategory());
@@ -362,6 +437,11 @@ public class HrmsAttendanceService {
         return leaveSchemeRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public LeaveScheme getLeaveSchemeById(UUID id) {
+        return leaveSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave scheme not found"));
+    }
+
     @Transactional
     public LeaveScheme createLeaveScheme(LeaveScheme scheme) {
         scheme.setOrganization(getCurrentOrganization());
@@ -370,7 +450,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public LeaveScheme updateLeaveScheme(UUID id, LeaveScheme updated) {
-        LeaveScheme scheme = leaveSchemeRepository.findById(id).orElseThrow(() -> new RuntimeException("Leave scheme not found"));
+        LeaveScheme scheme = getLeaveSchemeById(id);
         scheme.setSchemeName(updated.getSchemeName());
         scheme.setDefaultScheme(updated.getDefaultScheme());
         scheme.setDescription(updated.getDescription());
@@ -395,8 +475,23 @@ public class HrmsAttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<LeaveApplication> getLeaveApplications() {
-        return leaveApplicationRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    public List<LeaveApplication> getLeaveApplicationsFiltered(String status, UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (status != null && !status.isEmpty() && employeeId != null) {
+            return leaveApplicationRepository.findByOrganizationIdAndStatus(orgId, status)
+                    .stream().filter(l -> l.getEmployee() != null && employeeId.equals(l.getEmployee().getId()))
+                    .collect(Collectors.toList());
+        } else if (status != null && !status.isEmpty()) {
+            return leaveApplicationRepository.findByOrganizationIdAndStatus(orgId, status);
+        } else if (employeeId != null) {
+            return leaveApplicationRepository.findByOrganizationIdAndEmployeeId(orgId, employeeId);
+        }
+        return leaveApplicationRepository.findByOrganizationId(orgId);
+    }
+
+    @Transactional(readOnly = true)
+    public LeaveApplication getLeaveApplicationById(UUID id) {
+        return leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
     }
 
     @Transactional
@@ -411,41 +506,62 @@ public class HrmsAttendanceService {
     }
 
     @Transactional
+    public LeaveApplication updateLeaveApplication(UUID id, LeaveApplication updated) {
+        LeaveApplication app = getLeaveApplicationById(id);
+        if (updated.getReason() != null) app.setReason(updated.getReason());
+        if (updated.getFromDate() != null) app.setFromDate(updated.getFromDate());
+        if (updated.getToDate() != null) app.setToDate(updated.getToDate());
+        if (updated.getDuration() != null) app.setDuration(updated.getDuration());
+        if (updated.getStatus() != null) app.setStatus(updated.getStatus());
+        return leaveApplicationRepository.save(app);
+    }
+
+    @Transactional
+    public void deleteLeaveApplication(UUID id) {
+        leaveApplicationRepository.deleteById(id);
+    }
+
+    @Transactional
     public LeaveApplication approveLeaveApplication(UUID id, String remarks) {
-        LeaveApplication app = leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
+        LeaveApplication app = getLeaveApplicationById(id);
         app.setStatus("Approved");
         app.setApprovalRemarks(remarks);
         app.setApprovedAt(LocalDateTime.now());
 
         // Deduct from leave balance
-        int currentYear = app.getFromDate().getYear();
-        leaveBalanceRepository.findByEmployeeIdAndLeaveTypeIdAndYear(app.getEmployee().getId(), app.getLeaveType().getId(), currentYear)
-                .ifPresent(bal -> {
-                    BigDecimal availed = bal.getAvailed() != null ? bal.getAvailed() : BigDecimal.ZERO;
-                    BigDecimal duration = app.getDuration() != null ? app.getDuration() : BigDecimal.ONE;
-                    bal.setAvailed(availed.add(duration));
-                    BigDecimal avail = bal.getAvailable() != null ? bal.getAvailable() : BigDecimal.ZERO;
-                    bal.setAvailable(avail.subtract(duration));
-                    leaveBalanceRepository.save(bal);
-                });
+        int currentYear = app.getFromDate() != null ? app.getFromDate().getYear() : LocalDate.now().getYear();
+        if (app.getEmployee() != null && app.getLeaveType() != null) {
+            leaveBalanceRepository.findByEmployeeIdAndLeaveTypeIdAndYear(app.getEmployee().getId(), app.getLeaveType().getId(), currentYear)
+                    .ifPresent(bal -> {
+                        BigDecimal availed = bal.getAvailed() != null ? bal.getAvailed() : BigDecimal.ZERO;
+                        BigDecimal duration = app.getDuration() != null ? app.getDuration() : BigDecimal.ONE;
+                        bal.setAvailed(availed.add(duration));
+                        BigDecimal avail = bal.getAvailable() != null ? bal.getAvailable() : BigDecimal.ZERO;
+                        bal.setAvailable(avail.subtract(duration));
+                        leaveBalanceRepository.save(bal);
+                    });
+        }
 
+        recordApprovalHistory(app.getId(), "Leave", "Approved", remarks);
         return leaveApplicationRepository.save(app);
     }
 
     @Transactional
     public LeaveApplication rejectLeaveApplication(UUID id, String remarks) {
-        LeaveApplication app = leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
+        LeaveApplication app = getLeaveApplicationById(id);
         app.setStatus("Rejected");
         app.setApprovalRemarks(remarks);
         app.setApprovedAt(LocalDateTime.now());
+        recordApprovalHistory(app.getId(), "Leave", "Rejected", remarks);
         return leaveApplicationRepository.save(app);
     }
 
     @Transactional
     public LeaveApplication cancelLeaveApplication(UUID id, String reason) {
-        LeaveApplication app = leaveApplicationRepository.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
+        LeaveApplication app = getLeaveApplicationById(id);
         app.setStatus("Cancelled");
         app.setCancelReason(reason);
+        recordApprovalHistory(app.getId(), "Leave", "Cancelled", reason);
         return leaveApplicationRepository.save(app);
     }
 
@@ -458,10 +574,46 @@ public class HrmsAttendanceService {
         return attendanceRecordRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<AttendanceRecord> getAttendanceRecordsFiltered(String status, UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (status != null && !status.isEmpty() && employeeId != null) {
+            return attendanceRecordRepository.findByOrganizationIdAndStatus(orgId, status)
+                    .stream().filter(r -> r.getEmployee() != null && employeeId.equals(r.getEmployee().getId()))
+                    .collect(Collectors.toList());
+        } else if (status != null && !status.isEmpty()) {
+            return attendanceRecordRepository.findByOrganizationIdAndStatus(orgId, status);
+        } else if (employeeId != null) {
+            return attendanceRecordRepository.findByOrganizationIdAndEmployeeId(orgId, employeeId);
+        }
+        return getAttendanceRecords();
+    }
+
+    @Transactional(readOnly = true)
+    public AttendanceRecord getAttendanceRecordById(UUID id) {
+        return attendanceRecordRepository.findById(id).orElseThrow(() -> new RuntimeException("Attendance record not found"));
+    }
+
     @Transactional
     public AttendanceRecord createOrUpdateRecord(AttendanceRecord rec) {
         rec.setOrganization(getCurrentOrganization());
         return attendanceRecordRepository.save(rec);
+    }
+
+    @Transactional
+    public AttendanceRecord updateAttendanceRecord(UUID id, AttendanceRecord updated) {
+        AttendanceRecord rec = getAttendanceRecordById(id);
+        if (updated.getCheckIn() != null) rec.setCheckIn(updated.getCheckIn());
+        if (updated.getCheckOut() != null) rec.setCheckOut(updated.getCheckOut());
+        if (updated.getStatus() != null) rec.setStatus(updated.getStatus());
+        if (updated.getWorkingHours() != null) rec.setWorkingHours(updated.getWorkingHours());
+        if (updated.getRemarks() != null) rec.setRemarks(updated.getRemarks());
+        return attendanceRecordRepository.save(rec);
+    }
+
+    @Transactional
+    public void deleteAttendanceRecord(UUID id) {
+        attendanceRecordRepository.deleteById(id);
     }
 
     @Transactional
@@ -507,6 +659,19 @@ public class HrmsAttendanceService {
         return regularizationRequestRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<RegularizationRequest> getRegularizationRequestsFiltered(String status) {
+        if (status != null && !status.isEmpty()) {
+            return regularizationRequestRepository.findByOrganizationIdAndStatus(SecurityUtils.getCurrentOrganizationId(), status);
+        }
+        return getRegularizationRequests();
+    }
+
+    @Transactional(readOnly = true)
+    public RegularizationRequest getRegularizationRequestById(UUID id) {
+        return regularizationRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+    }
+
     @Transactional
     public RegularizationRequest createRegularizationRequest(RegularizationRequest req) {
         req.setOrganization(getCurrentOrganization());
@@ -518,35 +683,66 @@ public class HrmsAttendanceService {
     }
 
     @Transactional
+    public RegularizationRequest updateRegularizationRequest(UUID id, RegularizationRequest updated) {
+        RegularizationRequest req = getRegularizationRequestById(id);
+        if (updated.getReason() != null) req.setReason(updated.getReason());
+        if (updated.getRequestedCheckIn() != null) req.setRequestedCheckIn(updated.getRequestedCheckIn());
+        if (updated.getRequestedCheckOut() != null) req.setRequestedCheckOut(updated.getRequestedCheckOut());
+        if (updated.getStatus() != null) req.setStatus(updated.getStatus());
+        return regularizationRequestRepository.save(req);
+    }
+
+    @Transactional
+    public void deleteRegularizationRequest(UUID id) {
+        regularizationRequestRepository.deleteById(id);
+    }
+
+    @Transactional
     public RegularizationRequest approveRegularizationRequest(UUID id, String remarks) {
-        RegularizationRequest req = regularizationRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        RegularizationRequest req = getRegularizationRequestById(id);
         req.setStatus("Approved");
         req.setApprovalRemarks(remarks);
         req.setApprovedAt(LocalDateTime.now());
 
-        // Update corresponding attendance record if exists
-        attendanceRecordRepository.findByEmployeeIdAndAttendanceDate(req.getEmployee().getId(), req.getDate())
-                .ifPresent(rec -> {
-                    rec.setRegularized(true);
-                    rec.setRegularizationStatus("Approved");
-                    attendanceRecordRepository.save(rec);
-                });
+        if (req.getEmployee() != null && req.getDate() != null) {
+            attendanceRecordRepository.findByEmployeeIdAndAttendanceDate(req.getEmployee().getId(), req.getDate())
+                    .ifPresent(rec -> {
+                        rec.setRegularized(true);
+                        rec.setRegularizationStatus("Approved");
+                        attendanceRecordRepository.save(rec);
+                    });
+        }
 
+        recordApprovalHistory(req.getId(), "Regularization", "Approved", remarks);
         return regularizationRequestRepository.save(req);
     }
 
     @Transactional
     public RegularizationRequest rejectRegularizationRequest(UUID id, String remarks) {
-        RegularizationRequest req = regularizationRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        RegularizationRequest req = getRegularizationRequestById(id);
         req.setStatus("Rejected");
         req.setApprovalRemarks(remarks);
         req.setApprovedAt(LocalDateTime.now());
+        recordApprovalHistory(req.getId(), "Regularization", "Rejected", remarks);
         return regularizationRequestRepository.save(req);
     }
 
     @Transactional(readOnly = true)
     public List<PermissionRequest> getPermissionRequests() {
         return permissionRequestRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PermissionRequest> getPermissionRequestsFiltered(String status) {
+        if (status != null && !status.isEmpty()) {
+            return permissionRequestRepository.findByOrganizationIdAndStatus(SecurityUtils.getCurrentOrganizationId(), status);
+        }
+        return getPermissionRequests();
+    }
+
+    @Transactional(readOnly = true)
+    public PermissionRequest getPermissionRequestById(UUID id) {
+        return permissionRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
     }
 
     @Transactional
@@ -560,20 +756,37 @@ public class HrmsAttendanceService {
     }
 
     @Transactional
+    public PermissionRequest updatePermissionRequest(UUID id, PermissionRequest updated) {
+        PermissionRequest req = getPermissionRequestById(id);
+        if (updated.getReason() != null) req.setReason(updated.getReason());
+        if (updated.getStartTime() != null) req.setStartTime(updated.getStartTime());
+        if (updated.getEndTime() != null) req.setEndTime(updated.getEndTime());
+        if (updated.getStatus() != null) req.setStatus(updated.getStatus());
+        return permissionRequestRepository.save(req);
+    }
+
+    @Transactional
+    public void deletePermissionRequest(UUID id) {
+        permissionRequestRepository.deleteById(id);
+    }
+
+    @Transactional
     public PermissionRequest approvePermissionRequest(UUID id, String remarks) {
-        PermissionRequest req = permissionRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        PermissionRequest req = getPermissionRequestById(id);
         req.setStatus("Approved");
         req.setApprovalRemarks(remarks);
         req.setApprovedAt(LocalDateTime.now());
+        recordApprovalHistory(req.getId(), "Permission", "Approved", remarks);
         return permissionRequestRepository.save(req);
     }
 
     @Transactional
     public PermissionRequest rejectPermissionRequest(UUID id, String remarks) {
-        PermissionRequest req = permissionRequestRepository.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
+        PermissionRequest req = getPermissionRequestById(id);
         req.setStatus("Rejected");
         req.setApprovalRemarks(remarks);
         req.setApprovedAt(LocalDateTime.now());
+        recordApprovalHistory(req.getId(), "Permission", "Rejected", remarks);
         return permissionRequestRepository.save(req);
     }
 
@@ -586,9 +799,43 @@ public class HrmsAttendanceService {
         return attendanceExceptionRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<AttendanceException> getAttendanceExceptionsFiltered(Boolean resolved) {
+        if (resolved != null) {
+            return attendanceExceptionRepository.findByOrganizationIdAndResolved(SecurityUtils.getCurrentOrganizationId(), resolved);
+        }
+        return getAttendanceExceptions();
+    }
+
+    @Transactional(readOnly = true)
+    public AttendanceException getAttendanceExceptionById(UUID id) {
+        return attendanceExceptionRepository.findById(id).orElseThrow(() -> new RuntimeException("Exception not found"));
+    }
+
+    @Transactional
+    public AttendanceException createAttendanceException(AttendanceException exc) {
+        exc.setOrganization(getCurrentOrganization());
+        if (exc.getResolved() == null) exc.setResolved(false);
+        return attendanceExceptionRepository.save(exc);
+    }
+
+    @Transactional
+    public AttendanceException updateAttendanceException(UUID id, AttendanceException updated) {
+        AttendanceException exc = getAttendanceExceptionById(id);
+        if (updated.getDescription() != null) exc.setDescription(updated.getDescription());
+        if (updated.getSeverity() != null) exc.setSeverity(updated.getSeverity());
+        if (updated.getResolved() != null) exc.setResolved(updated.getResolved());
+        return attendanceExceptionRepository.save(exc);
+    }
+
+    @Transactional
+    public void deleteAttendanceException(UUID id) {
+        attendanceExceptionRepository.deleteById(id);
+    }
+
     @Transactional
     public AttendanceException resolveAttendanceException(UUID id) {
-        AttendanceException exc = attendanceExceptionRepository.findById(id).orElseThrow(() -> new RuntimeException("Exception not found"));
+        AttendanceException exc = getAttendanceExceptionById(id);
         exc.setResolved(true);
         exc.setResolvedAt(LocalDateTime.now());
         return attendanceExceptionRepository.save(exc);
@@ -599,6 +846,11 @@ public class HrmsAttendanceService {
         return attendanceLogRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public AttendanceLog getAttendanceLogById(UUID id) {
+        return attendanceLogRepository.findById(id).orElseThrow(() -> new RuntimeException("Log not found"));
+    }
+
     @Transactional
     public AttendanceLog ingestAttendanceLog(AttendanceLog log) {
         log.setOrganization(getCurrentOrganization());
@@ -606,9 +858,27 @@ public class HrmsAttendanceService {
         return attendanceLogRepository.save(log);
     }
 
+    @Transactional
+    public AttendanceLog updateAttendanceLog(UUID id, AttendanceLog updated) {
+        AttendanceLog log = getAttendanceLogById(id);
+        if (updated.getDirection() != null) log.setDirection(updated.getDirection());
+        if (updated.getDevice() != null) log.setDevice(updated.getDevice());
+        return attendanceLogRepository.save(log);
+    }
+
+    @Transactional
+    public void deleteAttendanceLog(UUID id) {
+        attendanceLogRepository.deleteById(id);
+    }
+
     @Transactional(readOnly = true)
     public List<AttendanceDevice> getAttendanceDevices() {
         return attendanceDeviceRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public AttendanceDevice getAttendanceDeviceById(UUID id) {
+        return attendanceDeviceRepository.findById(id).orElseThrow(() -> new RuntimeException("Device not found"));
     }
 
     @Transactional
@@ -620,7 +890,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public AttendanceDevice updateAttendanceDevice(UUID id, AttendanceDevice updated) {
-        AttendanceDevice device = attendanceDeviceRepository.findById(id).orElseThrow(() -> new RuntimeException("Device not found"));
+        AttendanceDevice device = getAttendanceDeviceById(id);
         device.setDeviceName(updated.getDeviceName());
         device.setDeviceType(updated.getDeviceType());
         device.setLocation(updated.getLocation());
@@ -643,6 +913,11 @@ public class HrmsAttendanceService {
         return attendancePeriodRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public AttendancePeriod getAttendancePeriodById(UUID id) {
+        return attendancePeriodRepository.findById(id).orElseThrow(() -> new RuntimeException("Period not found"));
+    }
+
     @Transactional
     public AttendancePeriod createAttendancePeriod(AttendancePeriod period) {
         period.setOrganization(getCurrentOrganization());
@@ -652,8 +927,22 @@ public class HrmsAttendanceService {
     }
 
     @Transactional
+    public AttendancePeriod updateAttendancePeriod(UUID id, AttendancePeriod updated) {
+        AttendancePeriod period = getAttendancePeriodById(id);
+        if (updated.getPeriodName() != null) period.setPeriodName(updated.getPeriodName());
+        if (updated.getStatus() != null) period.setStatus(updated.getStatus());
+        if (updated.getProcessingStatus() != null) period.setProcessingStatus(updated.getProcessingStatus());
+        return attendancePeriodRepository.save(period);
+    }
+
+    @Transactional
+    public void deleteAttendancePeriod(UUID id) {
+        attendancePeriodRepository.deleteById(id);
+    }
+
+    @Transactional
     public AttendancePeriod lockAttendancePeriod(UUID id) {
-        AttendancePeriod period = attendancePeriodRepository.findById(id).orElseThrow(() -> new RuntimeException("Period not found"));
+        AttendancePeriod period = getAttendancePeriodById(id);
         period.setStatus("Locked");
         period.setProcessingStatus("Locked");
         period.setLockedAt(LocalDateTime.now());
@@ -662,7 +951,7 @@ public class HrmsAttendanceService {
 
     @Transactional
     public AttendancePeriod processAttendancePeriod(UUID id) {
-        AttendancePeriod period = attendancePeriodRepository.findById(id).orElseThrow(() -> new RuntimeException("Period not found"));
+        AttendancePeriod period = getAttendancePeriodById(id);
         period.setProcessingStatus("Processed");
         period.setStatus("Processed");
         period.setProcessedOn(LocalDateTime.now());
@@ -675,14 +964,135 @@ public class HrmsAttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.Map<String, Object> getAttendanceDashboardKPIs() {
+    public ProcessedAttendance getProcessedAttendanceById(UUID id) {
+        return processedAttendanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Processed attendance not found"));
+    }
+
+    @Transactional
+    public ProcessedAttendance createProcessedAttendance(ProcessedAttendance pa) {
+        return processedAttendanceRepository.save(pa);
+    }
+
+    @Transactional
+    public ProcessedAttendance updateProcessedAttendance(UUID id, ProcessedAttendance updated) {
+        ProcessedAttendance pa = getProcessedAttendanceById(id);
+        if (updated.getStatus() != null) pa.setStatus(updated.getStatus());
+        if (updated.getPayableDays() != null) pa.setPayableDays(updated.getPayableDays());
+        return processedAttendanceRepository.save(pa);
+    }
+
+    @Transactional
+    public void deleteProcessedAttendance(UUID id) {
+        processedAttendanceRepository.deleteById(id);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // APPROVAL HISTORIES
+    // ─────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<ApprovalHistory> getApprovalHistories() {
+        return approvalHistoryRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public ApprovalHistory getApprovalHistoryById(UUID id) {
+        return approvalHistoryRepository.findById(id).orElseThrow(() -> new RuntimeException("Approval history not found"));
+    }
+
+    @Transactional
+    public ApprovalHistory createApprovalHistory(ApprovalHistory history) {
+        history.setOrganization(getCurrentOrganization());
+        if (history.getPerformedOn() == null) history.setPerformedOn(LocalDateTime.now());
+        return approvalHistoryRepository.save(history);
+    }
+
+    @Transactional
+    public ApprovalHistory updateApprovalHistory(UUID id, ApprovalHistory updated) {
+        ApprovalHistory h = getApprovalHistoryById(id);
+        if (updated.getRemarks() != null) h.setRemarks(updated.getRemarks());
+        if (updated.getAction() != null) h.setAction(updated.getAction());
+        return approvalHistoryRepository.save(h);
+    }
+
+    @Transactional
+    public void deleteApprovalHistory(UUID id) {
+        approvalHistoryRepository.deleteById(id);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // EMPLOYEE ATTENDANCE SUMMARIES
+    // ─────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getEmployeeAttendanceSummaries(UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        List<AttendanceRecord> records = employeeId != null ?
+                attendanceRecordRepository.findByOrganizationIdAndEmployeeId(orgId, employeeId) :
+                attendanceRecordRepository.findByOrganizationId(orgId);
+
+        Map<UUID, List<AttendanceRecord>> grouped = records.stream()
+                .filter(r -> r.getEmployee() != null)
+                .collect(Collectors.groupingBy(r -> r.getEmployee().getId()));
+
+        List<Map<String, Object>> summaries = new ArrayList<>();
+        grouped.forEach((empId, empRecords) -> {
+            long present = empRecords.stream().filter(r -> "Present".equalsIgnoreCase(r.getStatus())).count();
+            long absent = empRecords.stream().filter(r -> "Absent".equalsIgnoreCase(r.getStatus())).count();
+            long leave = empRecords.stream().filter(r -> "Leave".equalsIgnoreCase(r.getStatus())).count();
+            long late = empRecords.stream().filter(r -> r.getLateBy() != null && r.getLateBy() > 0).count();
+            long halfDay = empRecords.stream().filter(r -> "Half Day".equalsIgnoreCase(r.getStatus())).count();
+            double overtime = empRecords.stream()
+                    .filter(r -> r.getOvertimeHours() != null)
+                    .mapToDouble(r -> r.getOvertimeHours().doubleValue()).sum();
+
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("id", empId.toString());
+            summary.put("employeeId", empId.toString());
+            summary.put("present", present);
+            summary.put("absent", absent);
+            summary.put("leave", leave);
+            summary.put("late", late);
+            summary.put("halfDay", halfDay);
+            summary.put("overtime", overtime);
+            summary.put("payableDays", present + leave + (halfDay * 0.5));
+            summaries.add(summary);
+        });
+
+        return summaries;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getEmployeeAttendanceSummaryById(UUID id) {
+        List<Map<String, Object>> summaries = getEmployeeAttendanceSummaries(id);
+        if (!summaries.isEmpty()) return summaries.get(0);
+
+        Map<String, Object> empty = new HashMap<>();
+        empty.put("id", id.toString());
+        empty.put("employeeId", id.toString());
+        empty.put("present", 0);
+        empty.put("absent", 0);
+        empty.put("leave", 0);
+        empty.put("late", 0);
+        empty.put("halfDay", 0);
+        empty.put("overtime", 0);
+        empty.put("payableDays", 0);
+        return empty;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // DASHBOARD
+    // ─────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getAttendanceDashboardKPIs() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
         LocalDate today = LocalDate.now();
 
         List<AttendanceRecord> todaysRecords = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, today, today);
         long present = todaysRecords.stream().filter(r -> "Present".equalsIgnoreCase(r.getStatus())).count();
         long absent = todaysRecords.stream().filter(r -> "Absent".equalsIgnoreCase(r.getStatus())).count();
-        long late = todaysRecords.stream().filter(r -> "Late".equalsIgnoreCase(r.getStatus())).count();
+        long late = todaysRecords.stream().filter(r -> "Late".equalsIgnoreCase(r.getStatus()) || (r.getLateBy() != null && r.getLateBy() > 0)).count();
 
         List<LeaveApplication> leaves = leaveApplicationRepository.findByOrganizationId(orgId);
         long onLeave = leaves.stream().filter(l -> "Approved".equalsIgnoreCase(l.getStatus())).count();
@@ -691,7 +1101,7 @@ public class HrmsAttendanceService {
         List<RegularizationRequest> regReqs = regularizationRequestRepository.findByOrganizationId(orgId);
         long regularization = regReqs.stream().filter(r -> "Pending".equalsIgnoreCase(r.getStatus())).count();
 
-        java.util.Map<String, Object> kpis = new java.util.HashMap<>();
+        Map<String, Object> kpis = new HashMap<>();
         kpis.put("present", present);
         kpis.put("absent", absent);
         kpis.put("late", late);
@@ -699,24 +1109,41 @@ public class HrmsAttendanceService {
         kpis.put("pendingRequests", pendingRequests);
         kpis.put("regularization", regularization);
 
-        // Mock trendData for frontend charts (to replace hardcoded mock on frontend)
-        List<java.util.Map<String, Object>> trendData = new java.util.ArrayList<>();
-        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-        for (String day : days) {
-            java.util.Map<String, Object> t = new java.util.HashMap<>();
-            t.put("name", day);
-            t.put("Present", 120 - (int)(Math.random() * 20));
-            t.put("Absent", (int)(Math.random() * 10));
+        // Calculate real 7-day trend data
+        List<Map<String, Object>> trendData = new ArrayList<>();
+        LocalDate startOfWeek = today.minusDays(6);
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = startOfWeek.plusDays(i);
+            List<AttendanceRecord> dayRecs = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, date, date);
+            long dayPresent = dayRecs.stream().filter(r -> "Present".equalsIgnoreCase(r.getStatus())).count();
+            long dayAbsent = dayRecs.stream().filter(r -> "Absent".equalsIgnoreCase(r.getStatus())).count();
+
+            Map<String, Object> t = new HashMap<>();
+            t.put("name", date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+            t.put("Present", dayPresent);
+            t.put("Absent", dayAbsent);
             trendData.add(t);
         }
         kpis.put("trendData", trendData);
 
-        // Mock leaveData for frontend charts
-        List<java.util.Map<String, Object>> leaveData = new java.util.ArrayList<>();
-        java.util.Map<String, Object> c = new java.util.HashMap<>(); c.put("name", "Casual"); c.put("value", 400);
-        java.util.Map<String, Object> s = new java.util.HashMap<>(); s.put("name", "Sick"); s.put("value", 300);
-        java.util.Map<String, Object> l = new java.util.HashMap<>(); l.put("name", "LOP"); l.put("value", 100);
-        leaveData.add(c); leaveData.add(s); leaveData.add(l);
+        // Leave category breakdown from real applications
+        Map<String, Long> leaveCounts = leaves.stream()
+                .filter(l -> l.getLeaveType() != null && l.getLeaveType().getName() != null)
+                .collect(Collectors.groupingBy(l -> l.getLeaveType().getName(), Collectors.counting()));
+
+        List<Map<String, Object>> leaveData = new ArrayList<>();
+        if (leaveCounts.isEmpty()) {
+            Map<String, Object> c = new HashMap<>(); c.put("name", "Casual"); c.put("value", 0);
+            Map<String, Object> s = new HashMap<>(); s.put("name", "Sick"); s.put("value", 0);
+            leaveData.add(c); leaveData.add(s);
+        } else {
+            leaveCounts.forEach((typeName, count) -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("name", typeName);
+                item.put("value", count);
+                leaveData.add(item);
+            });
+        }
         kpis.put("leaveData", leaveData);
 
         return kpis;
