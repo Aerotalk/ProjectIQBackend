@@ -256,7 +256,7 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public Holiday getHolidayById(UUID id) {
         var holiday = holidayRepository.findById(id).orElseThrow(() -> new RuntimeException("Holiday not found"));
-        if (!holiday.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+        if (holiday.getHolidayList() != null && !holiday.getHolidayList().getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
             throw new SecurityException("Access Denied");
         }
         return holiday;
@@ -1041,7 +1041,7 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public ProcessedAttendance getProcessedAttendanceById(UUID id) {
         var processedAttendance = processedAttendanceRepository.findById(id).orElseThrow(() -> new RuntimeException("Processed attendance not found"));
-        if (!processedAttendance.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+        if (processedAttendance.getPeriod() != null && !processedAttendance.getPeriod().getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
             throw new SecurityException("Access Denied");
         }
         return processedAttendance;
