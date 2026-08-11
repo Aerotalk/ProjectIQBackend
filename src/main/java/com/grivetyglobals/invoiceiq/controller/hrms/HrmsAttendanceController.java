@@ -1,6 +1,7 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
+import com.grivetyglobals.invoiceiq.entity.hrms.ApprovalHistory;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsAttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
