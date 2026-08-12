@@ -51,6 +51,27 @@ public class PayrollRunDetail {
     @Column(name = "payable_days", precision = 5, scale = 2)
     private BigDecimal payableDays;
 
+    @Column(name = "basic_pay", precision = 12, scale = 2)
+    private BigDecimal basicPay;
+
+    @Column(name = "hra", precision = 12, scale = 2)
+    private BigDecimal hra;
+
+    @Column(name = "special_allowance", precision = 12, scale = 2)
+    private BigDecimal specialAllowance;
+
+    @Column(name = "pf_deduction", precision = 12, scale = 2)
+    private BigDecimal pfDeduction;
+
+    @Column(name = "esi_deduction", precision = 12, scale = 2)
+    private BigDecimal esiDeduction;
+
+    @Column(name = "tds_deduction", precision = 12, scale = 2)
+    private BigDecimal tdsDeduction;
+
+    @Column(name = "professional_tax", precision = 12, scale = 2)
+    private BigDecimal professionalTax;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

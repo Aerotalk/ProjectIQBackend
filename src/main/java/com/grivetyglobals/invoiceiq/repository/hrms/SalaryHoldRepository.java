@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface SalaryHoldRepository extends JpaRepository<SalaryHold, UUID> {
     List<SalaryHold> findByOrganizationId(UUID organizationId);
+    List<SalaryHold> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
     List<SalaryHold> findByEmployeeId(UUID employeeId);
 }

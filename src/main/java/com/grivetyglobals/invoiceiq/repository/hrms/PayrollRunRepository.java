@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface PayrollRunRepository extends JpaRepository<PayrollRun, UUID> {
     List<PayrollRun> findByOrganizationId(UUID organizationId);
     Optional<PayrollRun> findByOrganizationIdAndPayrollPeriod(UUID organizationId, String payrollPeriod);
+    Optional<PayrollRun> findTopByOrganizationIdAndStatusOrderByApprovedOnDesc(UUID organizationId, String status);
 }

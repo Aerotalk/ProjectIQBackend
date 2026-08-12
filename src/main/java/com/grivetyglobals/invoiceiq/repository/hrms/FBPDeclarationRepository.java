@@ -11,5 +11,6 @@ import java.util.UUID;
 @Repository
 public interface FBPDeclarationRepository extends JpaRepository<FBPDeclaration, UUID> {
     List<FBPDeclaration> findByOrganizationId(UUID organizationId);
+    List<FBPDeclaration> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
     Optional<FBPDeclaration> findByEmployeeIdAndFinancialYear(UUID employeeId, String financialYear);
 }
