@@ -1,5 +1,6 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
+import com.grivetyglobals.invoiceiq.dto.hrms.PayrollRunDetailDto;
 import com.grivetyglobals.invoiceiq.dto.hrms.PayrollVarianceDto;
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsPayrollService;
@@ -83,7 +84,12 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/salary-inputs")
-    public ResponseEntity<List<SalaryInput>> getSalaryInputs(@RequestParam(required = false) String period) {
+    public ResponseEntity<List<SalaryInput>> getSalaryInputs(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getSalaryInputsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getSalaryInputs(period));
     }
 
@@ -142,7 +148,10 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/salary-holds")
-    public ResponseEntity<List<SalaryHold>> getSalaryHolds() {
+    public ResponseEntity<List<SalaryHold>> getSalaryHolds(@RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getSalaryHoldsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getSalaryHolds());
     }
 
@@ -167,7 +176,10 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/salary-stops")
-    public ResponseEntity<List<SalaryStop>> getSalaryStops() {
+    public ResponseEntity<List<SalaryStop>> getSalaryStops(@RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getSalaryStopsByEmployee(employeeId));
+        }
         return ResponseEntity.ok(hrmsPayrollService.getSalaryStops());
     }
 
@@ -235,6 +247,60 @@ public class HrmsPayrollController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/it-declarations/{id}/items/{itemId}")
+    public ResponseEntity<Void> deleteITDeclarationItem(@PathVariable UUID id, @PathVariable UUID itemId) {
+        hrmsPayrollService.deleteITDeclarationItem(id, itemId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/fbp-declarations")
+    public ResponseEntity<List<FBPDeclaration>> getFBPDeclarations(@RequestParam(required = false) UUID employeeId) {
+        if (employeeId != null) {
+            return ResponseEntity.ok(hrmsPayrollService.getFBPDeclarationsByEmployee(employeeId));
+        }
+        return ResponseEntity.ok(hrmsPayrollService.getFBPDeclarations());
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/fbp-declarations")
+    public ResponseEntity<FBPDeclaration> createFBPDeclaration(@RequestBody FBPDeclaration decl) {
+        return ResponseEntity.ok(hrmsPayrollService.createFBPDeclaration(decl));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/fbp-declarations/{id}")
+    public ResponseEntity<FBPDeclaration> updateFBPDeclaration(@PathVariable UUID id, @RequestBody FBPDeclaration decl) {
+        return ResponseEntity.ok(hrmsPayrollService.updateFBPDeclaration(id, decl));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/fbp-declarations/{id}")
+    public ResponseEntity<Void> deleteFBPDeclaration(@PathVariable UUID id) {
+        hrmsPayrollService.deleteFBPDeclaration(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/fbp-declarations/{id}/items")
+    public ResponseEntity<List<FBPDeclarationItem>> getFBPDeclarationItems(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.getFBPDeclarationItems(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/fbp-declarations/{id}/items")
+    public ResponseEntity<FBPDeclarationItem> addFBPDeclarationItem(@PathVariable UUID id, @RequestBody FBPDeclarationItem item) {
+        return ResponseEntity.ok(hrmsPayrollService.addFBPDeclarationItem(id, item));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/fbp-declarations/{id}/items/{itemId}")
+    public ResponseEntity<Void> deleteFBPDeclarationItem(@PathVariable UUID id, @PathVariable UUID itemId) {
+        hrmsPayrollService.deleteFBPDeclarationItem(id, itemId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/reimbursements")
     public ResponseEntity<List<ReimbursementClaim>> getReimbursementClaims(@RequestParam(required = false) UUID employeeId) {
         if (employeeId != null) {
@@ -272,30 +338,6 @@ public class HrmsPayrollController {
     @PutMapping("/reimbursements/{id}/reject")
     public ResponseEntity<ReimbursementClaim> rejectReimbursementClaim(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.rejectReimbursementClaim(id));
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/fbp-declarations")
-    public ResponseEntity<List<FBPDeclaration>> getFBPDeclarations() {
-        return ResponseEntity.ok(hrmsPayrollService.getFBPDeclarations());
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/fbp-declarations")
-    public ResponseEntity<FBPDeclaration> createFBPDeclaration(@RequestBody FBPDeclaration decl) {
-        return ResponseEntity.ok(hrmsPayrollService.createFBPDeclaration(decl));
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/fbp-declarations/{id}/items")
-    public ResponseEntity<List<FBPDeclarationItem>> getFBPDeclarationItems(@PathVariable UUID id) {
-        return ResponseEntity.ok(hrmsPayrollService.getFBPDeclarationItems(id));
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/fbp-declarations/{id}/items")
-    public ResponseEntity<FBPDeclarationItem> addFBPDeclarationItem(@PathVariable UUID id, @RequestBody FBPDeclarationItem item) {
-        return ResponseEntity.ok(hrmsPayrollService.addFBPDeclarationItem(id, item));
     }
 
     // ─────────────────────────────────────────────────────────
@@ -347,7 +389,7 @@ public class HrmsPayrollController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/runs/{id}/details")
-    public ResponseEntity<List<PayrollRunDetail>> getPayrollRunDetails(@PathVariable UUID id) {
+    public ResponseEntity<List<PayrollRunDetailDto>> getPayrollRunDetails(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollRunDetails(id));
     }
 
@@ -355,6 +397,27 @@ public class HrmsPayrollController {
     @GetMapping("/runs/{id}/variances")
     public ResponseEntity<List<PayrollVarianceDto>> getPayrollVariances(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollVariances(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/runs/{id}/reprocess")
+    public ResponseEntity<PayrollRun> reprocessPayrollRun(@PathVariable UUID id) {
+        return ResponseEntity.ok(hrmsPayrollService.processPayrollRun(id)); // processPayrollRun already deletes old details and re-runs
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/{id}/bank-export")
+    public ResponseEntity<String> exportBankCSV(@PathVariable UUID id) {
+        String csv = hrmsPayrollService.exportBankCSV(id);
+        return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=\"bank_export_" + id + ".csv\"")
+            .body(csv);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/dashboard-stats")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        return ResponseEntity.ok(hrmsPayrollService.getDashboardStats());
     }
 
     // ─────────────────────────────────────────────────────────

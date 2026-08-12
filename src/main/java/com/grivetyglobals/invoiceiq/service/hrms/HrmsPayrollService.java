@@ -18,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import com.grivetyglobals.invoiceiq.dto.hrms.PayrollRunDetailDto;
 import com.grivetyglobals.invoiceiq.dto.hrms.PayrollVarianceDto;
 
 @Service
@@ -113,6 +116,9 @@ public class HrmsPayrollService {
     @Transactional
     public PayslipTemplate createPayslipTemplate(PayslipTemplate template) {
         template.setOrganization(getCurrentOrganization());
+        if (Boolean.TRUE.equals(template.getSetAsDefault())) {
+            unsetOtherDefaultTemplates(template.getOrganization().getId());
+        }
         return payslipTemplateRepository.save(template);
     }
 
@@ -126,7 +132,23 @@ public class HrmsPayrollService {
         tmpl.setLayoutHTML(updated.getLayoutHTML());
         tmpl.setPreviewImage(updated.getPreviewImage());
         tmpl.setSetAsDefault(updated.getSetAsDefault());
+        
+        if (Boolean.TRUE.equals(tmpl.getSetAsDefault())) {
+            unsetOtherDefaultTemplates(tmpl.getOrganization().getId());
+            tmpl.setSetAsDefault(true); // Ensure this one stays true
+        }
+        
         return payslipTemplateRepository.save(tmpl);
+    }
+
+    private void unsetOtherDefaultTemplates(UUID orgId) {
+        List<PayslipTemplate> templates = payslipTemplateRepository.findByOrganizationId(orgId);
+        for (PayslipTemplate t : templates) {
+            if (Boolean.TRUE.equals(t.getSetAsDefault())) {
+                t.setSetAsDefault(false);
+                payslipTemplateRepository.save(t);
+            }
+        }
     }
 
     @Transactional
@@ -145,6 +167,11 @@ public class HrmsPayrollService {
             return salaryInputRepository.findByOrganizationIdAndPayrollPeriod(orgId, period);
         }
         return salaryInputRepository.findByOrganizationId(orgId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SalaryInput> getSalaryInputsByEmployee(UUID employeeId) {
+        return salaryInputRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
     }
 
     @Transactional
@@ -219,6 +246,11 @@ public class HrmsPayrollService {
         return salaryHoldRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
     }
 
+    @Transactional(readOnly = true)
+    public List<SalaryHold> getSalaryHoldsByEmployee(UUID employeeId) {
+        return salaryHoldRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
+    }
+
     @Transactional
     public SalaryHold createSalaryHold(SalaryHold hold) {
         hold.setOrganization(getCurrentOrganization());
@@ -246,6 +278,11 @@ public class HrmsPayrollService {
     @Transactional(readOnly = true)
     public List<SalaryStop> getSalaryStops() {
         return salaryStopRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SalaryStop> getSalaryStopsByEmployee(UUID employeeId) {
+        return salaryStopRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
     }
 
     @Transactional
@@ -342,6 +379,84 @@ public class HrmsPayrollService {
         return itDeclarationItemRepository.save(item);
     }
 
+    @Transactional
+    public void deleteITDeclarationItem(UUID declarationId, UUID itemId) {
+        ITDeclaration decl = itDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        itDeclarationItemRepository.deleteById(itemId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FBPDeclaration> getFBPDeclarations() {
+        return fbpDeclarationRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<FBPDeclaration> getFBPDeclarationsByEmployee(UUID employeeId) {
+        return fbpDeclarationRepository.findByOrganizationIdAndEmployeeId(SecurityUtils.getCurrentOrganizationId(), employeeId);
+    }
+
+    @Transactional
+    public FBPDeclaration createFBPDeclaration(FBPDeclaration decl) {
+        Organization org = getCurrentOrganization();
+        decl.setOrganization(org);
+        if (decl.getEmployee() != null && decl.getFinancialYear() != null) {
+            fbpDeclarationRepository.findByEmployeeIdAndFinancialYear(
+                decl.getEmployee().getId(), decl.getFinancialYear()
+            ).ifPresent(existing -> {
+                throw new IllegalStateException("An FBP Declaration already exists for this employee for FY " + decl.getFinancialYear());
+            });
+        }
+        return fbpDeclarationRepository.save(decl);
+    }
+
+    @Transactional
+    public FBPDeclaration updateFBPDeclaration(UUID id, FBPDeclaration updated) {
+        FBPDeclaration decl = fbpDeclarationRepository.findById(id).orElseThrow(() -> new RuntimeException("FBP Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        if (updated.getFinancialYear() != null) decl.setFinancialYear(updated.getFinancialYear());
+        return fbpDeclarationRepository.save(decl);
+    }
+
+    @Transactional
+    public void deleteFBPDeclaration(UUID id) {
+        FBPDeclaration decl = fbpDeclarationRepository.findById(id).orElseThrow(() -> new RuntimeException("FBP Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        List<FBPDeclarationItem> items = fbpDeclarationItemRepository.findByDeclarationId(id);
+        fbpDeclarationItemRepository.deleteAll(items);
+        fbpDeclarationRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FBPDeclarationItem> getFBPDeclarationItems(UUID declarationId) {
+        return fbpDeclarationItemRepository.findByDeclarationId(declarationId);
+    }
+
+    @Transactional
+    public FBPDeclarationItem addFBPDeclarationItem(UUID declarationId, FBPDeclarationItem item) {
+        FBPDeclaration decl = fbpDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        item.setDeclaration(decl);
+        return fbpDeclarationItemRepository.save(item);
+    }
+
+    @Transactional
+    public void deleteFBPDeclarationItem(UUID declarationId, UUID itemId) {
+        FBPDeclaration decl = fbpDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("Declaration not found"));
+        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        fbpDeclarationItemRepository.deleteById(itemId);
+    }
+
     @Transactional(readOnly = true)
     public List<ReimbursementClaim> getReimbursementClaims() {
         return reimbursementClaimRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
@@ -403,32 +518,6 @@ public class HrmsPayrollService {
         }
         claim.setStatus("Rejected");
         return reimbursementClaimRepository.save(claim);
-    }
-
-    @Transactional(readOnly = true)
-    public List<FBPDeclaration> getFBPDeclarations() {
-        return fbpDeclarationRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
-    }
-
-    @Transactional
-    public FBPDeclaration createFBPDeclaration(FBPDeclaration decl) {
-        decl.setOrganization(getCurrentOrganization());
-        return fbpDeclarationRepository.save(decl);
-    }
-
-    @Transactional(readOnly = true)
-    public List<FBPDeclarationItem> getFBPDeclarationItems(UUID declarationId) {
-        return fbpDeclarationItemRepository.findByDeclarationId(declarationId);
-    }
-
-    @Transactional
-    public FBPDeclarationItem addFBPDeclarationItem(UUID declarationId, FBPDeclarationItem item) {
-        FBPDeclaration decl = fbpDeclarationRepository.findById(declarationId).orElseThrow(() -> new RuntimeException("FBP Declaration not found"));
-        if (!decl.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
-            throw new SecurityException("Access Denied");
-        }
-        item.setDeclaration(decl);
-        return fbpDeclarationItemRepository.save(item);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -503,23 +592,52 @@ public class HrmsPayrollService {
         }
 
         // 2. Fetch all employees for this organization
-        List<Employee> employees = employeeRepository.searchAndFilterEmployees(run.getOrganization().getId(), null, null, "Active", null, null);
+        List<Employee> allEmployees = employeeRepository.searchAndFilterEmployees(run.getOrganization().getId(), null, null, "Active", null, null);
         
-        if (run.getEmployeeScope() != null && run.getEmployeeScope().equals("Department") && run.getDepartment() != null) {
-            employees = employees.stream()
-                .filter(e -> e.getDepartment() != null && e.getDepartment().getId().equals(run.getDepartment().getId()))
-                .toList();
+        if (run.getEmployeeScope() != null) {
+            if (run.getEmployeeScope().equals("Department") && run.getDepartment() != null) {
+                allEmployees = allEmployees.stream()
+                    .filter(e -> e.getDepartment() != null && e.getDepartment().getId().equals(run.getDepartment().getId()))
+                    .toList();
+            } else if (run.getEmployeeScope().equals("Selected Employees") && run.getSelectedEmployees() != null) {
+                java.util.Set<UUID> selectedIds = run.getSelectedEmployees().stream().map(Employee::getId).collect(java.util.stream.Collectors.toSet());
+                allEmployees = allEmployees.stream()
+                    .filter(e -> selectedIds.contains(e.getId()))
+                    .toList();
+            }
         }
 
         BigDecimal totalGross = BigDecimal.ZERO;
         BigDecimal totalDeductions = BigDecimal.ZERO;
         BigDecimal totalNet = BigDecimal.ZERO;
+        int processedCount = 0;
         
         List<SalaryInput> allInputs = salaryInputRepository.findByOrganizationIdAndPayrollPeriod(run.getOrganization().getId(), run.getPayrollPeriod());
         List<EmployeeLOP> allLops = employeeLOPRepository.findByOrganizationIdAndPayrollPeriod(run.getOrganization().getId(), run.getPayrollPeriod());
+        List<EmployeeSalaryRevision> allRevisions = employeeSalaryRevisionRepository.findByOrganizationId(run.getOrganization().getId());
+        List<EmployeeStatutory> allStatuaries = employeeStatutoryRepository.findByOrganizationId(run.getOrganization().getId());
+        List<SalaryStop> allStops = salaryStopRepository.findByOrganizationId(run.getOrganization().getId());
+        List<SalaryHold> allHolds = salaryHoldRepository.findByOrganizationId(run.getOrganization().getId());
 
-        for (Employee emp : employees) {
-            BigDecimal baseSalary = BigDecimal.valueOf(50000.0);
+        for (Employee emp : allEmployees) {
+            // Check if salary stopped
+            boolean isStopped = allStops.stream().anyMatch(s -> s.getEmployee().getId().equals(emp.getId()) && Boolean.TRUE.equals(s.getActive()));
+            if (isStopped) continue;
+            
+            // Fetch revision
+            EmployeeSalaryRevision revision = allRevisions.stream()
+                .filter(r -> r.getEmployee().getId().equals(emp.getId()))
+                .max(java.util.Comparator.comparing(EmployeeSalaryRevision::getEffectiveDate, java.util.Comparator.nullsFirst(java.time.LocalDate::compareTo)))
+                .orElse(null);
+                
+            if (revision == null || revision.getAnnualCTC() == null) continue;
+            
+            BigDecimal monthlyGross = revision.getAnnualCTC().divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
+            
+            // Full CTC Breakdown
+            BigDecimal basicPay = monthlyGross.multiply(BigDecimal.valueOf(0.40)).setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal hra = basicPay.multiply(BigDecimal.valueOf(0.50)).setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
             
             List<SalaryInput> inputs = allInputs.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).toList();
             BigDecimal additions = BigDecimal.ZERO;
@@ -531,7 +649,8 @@ public class HrmsPayrollService {
                 } else if("Deduction".equalsIgnoreCase(input.getInputType())) {
                     deductions = deductions.add(input.getAmount());
                 } else if("Override".equalsIgnoreCase(input.getInputType())) {
-                    baseSalary = input.getAmount();
+                    basicPay = input.getAmount(); 
+                    monthlyGross = basicPay.add(hra).add(specialAllowance);
                 }
             }
             
@@ -541,18 +660,48 @@ public class HrmsPayrollService {
                 totalLopDays = totalLopDays.add(lop.getLopDays());
             }
             
-            BigDecimal lopDeduction = baseSalary.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP).multiply(totalLopDays);
+            BigDecimal lopDeduction = monthlyGross.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP).multiply(totalLopDays);
             deductions = deductions.add(lopDeduction);
             
-            BigDecimal tds = baseSalary.multiply(BigDecimal.valueOf(0.10));
-            deductions = deductions.add(tds);
+            // Statutory Deductions
+            EmployeeStatutory stat = allStatuaries.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).findFirst().orElse(null);
             
-            BigDecimal gross = baseSalary.add(additions);
+            BigDecimal pfDeduction = BigDecimal.ZERO;
+            BigDecimal esiDeduction = BigDecimal.ZERO;
+            BigDecimal professionalTax = BigDecimal.valueOf(200);
+            
+            if (stat != null) {
+                if (Boolean.TRUE.equals(stat.getPfApplicable())) {
+                    pfDeduction = basicPay.multiply(BigDecimal.valueOf(0.12)).min(BigDecimal.valueOf(1800)).setScale(2, java.math.RoundingMode.HALF_UP);
+                }
+                if (Boolean.TRUE.equals(stat.getEsiApplicable()) && monthlyGross.compareTo(BigDecimal.valueOf(21000)) <= 0) {
+                    esiDeduction = monthlyGross.multiply(BigDecimal.valueOf(0.0075)).setScale(2, java.math.RoundingMode.HALF_UP);
+                }
+            }
+            
+            BigDecimal tdsDeduction = monthlyGross.multiply(BigDecimal.valueOf(0.10)).setScale(2, java.math.RoundingMode.HALF_UP);
+            deductions = deductions.add(pfDeduction).add(esiDeduction).add(tdsDeduction).add(professionalTax);
+            
+            BigDecimal gross = monthlyGross.add(additions);
             BigDecimal net = gross.subtract(deductions);
+            
+            // Apply holds
+            SalaryHold hold = allHolds.stream().filter(h -> h.getEmployee().getId().equals(emp.getId()) && Boolean.TRUE.equals(h.getActive())).findFirst().orElse(null);
+            if (hold != null) {
+                net = net.subtract(hold.getHoldAmount());
+                deductions = deductions.add(hold.getHoldAmount());
+            }
             
             PayrollRunDetail detail = new PayrollRunDetail();
             detail.setPayrollRun(run);
             detail.setEmployee(emp);
+            detail.setBasicPay(basicPay);
+            detail.setHra(hra);
+            detail.setSpecialAllowance(specialAllowance);
+            detail.setPfDeduction(pfDeduction);
+            detail.setEsiDeduction(esiDeduction);
+            detail.setTdsDeduction(tdsDeduction);
+            detail.setProfessionalTax(professionalTax);
             detail.setGross(gross);
             detail.setTotalDeductions(deductions);
             detail.setNet(net);
@@ -564,11 +713,12 @@ public class HrmsPayrollService {
             totalGross = totalGross.add(gross);
             totalDeductions = totalDeductions.add(deductions);
             totalNet = totalNet.add(net);
+            processedCount++;
         }
 
         run.setStatus("Processed");
         run.setProcessedOn(LocalDateTime.now());
-        run.setEmployeeCount(employees.size());
+        run.setEmployeeCount(processedCount);
         run.setTotalGross(totalGross);
         run.setTotalDeductions(totalDeductions);
         run.setTotalNet(totalNet);
@@ -582,11 +732,34 @@ public class HrmsPayrollService {
             throw new SecurityException("Access Denied");
         }
         
+        PayrollRun prevRun = payrollRunRepository.findTopByOrganizationIdAndStatusOrderByApprovedOnDesc(run.getOrganization().getId(), "Approved").orElse(null);
+        
         List<PayrollVarianceDto> variances = new ArrayList<>();
-        // Compare with dummy data for immediate integration (as "previous" requires complex historical querying)
-        variances.add(new PayrollVarianceDto("Basic Pay", "₹" + run.getTotalGross().subtract(BigDecimal.valueOf(25000)), "₹" + run.getTotalGross(), "+₹25,000", "Salary Revisions/Additions"));
-        variances.add(new PayrollVarianceDto("Deductions", "₹" + run.getTotalDeductions().subtract(BigDecimal.valueOf(4000)), "₹" + run.getTotalDeductions(), "+₹4,000", "Higher LOP/TDS"));
-        variances.add(new PayrollVarianceDto("Net Pay", "₹" + run.getTotalNet().subtract(BigDecimal.valueOf(21000)), "₹" + run.getTotalNet(), "+₹21,000", "Net Change"));
+        if (prevRun == null) {
+            return variances;
+        }
+
+        BigDecimal grossDiff = run.getTotalGross().subtract(prevRun.getTotalGross());
+        BigDecimal dedDiff = run.getTotalDeductions().subtract(prevRun.getTotalDeductions());
+        BigDecimal netDiff = run.getTotalNet().subtract(prevRun.getTotalNet());
+
+        variances.add(new PayrollVarianceDto("Basic Pay", 
+            "₹" + prevRun.getTotalGross(), 
+            "₹" + run.getTotalGross(), 
+            (grossDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + grossDiff.abs(), 
+            "Salary Revisions/Additions"));
+            
+        variances.add(new PayrollVarianceDto("Deductions", 
+            "₹" + prevRun.getTotalDeductions(), 
+            "₹" + run.getTotalDeductions(), 
+            (dedDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + dedDiff.abs(), 
+            "Higher LOP/TDS"));
+            
+        variances.add(new PayrollVarianceDto("Net Pay", 
+            "₹" + prevRun.getTotalNet(), 
+            "₹" + run.getTotalNet(), 
+            (netDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + netDiff.abs(), 
+            "Net Change"));
         
         return variances;
     }
@@ -613,8 +786,83 @@ public class HrmsPayrollService {
     }
 
     @Transactional(readOnly = true)
-    public List<PayrollRunDetail> getPayrollRunDetails(UUID runId) {
-        return payrollRunDetailRepository.findByPayrollRunId(runId);
+    public List<PayrollRunDetailDto> getPayrollRunDetails(UUID runId) {
+        return payrollRunDetailRepository.findByPayrollRunId(runId).stream().map(d -> {
+            return PayrollRunDetailDto.builder()
+                .id(d.getId())
+                .employeeId(d.getEmployee().getId())
+                .employeeName(d.getEmployee().getFirstName() + " " + d.getEmployee().getLastName())
+                .employeeCode(d.getEmployee().getEmployeeCode())
+                .departmentName(d.getEmployee().getDepartment() != null ? d.getEmployee().getDepartment().getDepartmentName() : null)
+                .basicPay(d.getBasicPay())
+                .hra(d.getHra())
+                .specialAllowance(d.getSpecialAllowance())
+                .gross(d.getGross())
+                .pfDeduction(d.getPfDeduction())
+                .esiDeduction(d.getEsiDeduction())
+                .tdsDeduction(d.getTdsDeduction())
+                .professionalTax(d.getProfessionalTax())
+                .totalDeductions(d.getTotalDeductions())
+                .net(d.getNet())
+                .lopDays(d.getLopDays())
+                .payableDays(d.getPayableDays())
+                .build();
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDashboardStats() {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        Map<String, Object> stats = new HashMap<>();
+        
+        List<PayrollRun> runs = payrollRunRepository.findByOrganizationId(orgId);
+        long processedRuns = runs.stream().filter(r -> "Processed".equals(r.getStatus()) || "Approved".equals(r.getStatus())).count();
+        BigDecimal totalPayrollCost = runs.stream().filter(r -> "Processed".equals(r.getStatus()) || "Approved".equals(r.getStatus()))
+            .map(PayrollRun::getTotalGross).reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        long pendingSettlements = finalSettlementRepository.findByOrganizationId(orgId).stream()
+            .filter(s -> "Draft".equals(s.getStatus()) || "Pending".equals(s.getStatus())).count();
+            
+        BigDecimal heldSalaries = salaryHoldRepository.findByOrganizationId(orgId).stream()
+            .filter(h -> Boolean.TRUE.equals(h.getActive()))
+            .map(SalaryHold::getHoldAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+        stats.put("processedRuns", processedRuns);
+        stats.put("totalPayrollCost", totalPayrollCost);
+        stats.put("pendingSettlements", pendingSettlements);
+        stats.put("heldSalaries", heldSalaries);
+        stats.put("activeEmployees", employeeRepository.searchAndFilterEmployees(orgId, null, null, "Active", null, null).size());
+        
+        return stats;
+    }
+
+    @Transactional(readOnly = true)
+    public String exportBankCSV(UUID runId) {
+        PayrollRun run = payrollRunRepository.findById(runId).orElseThrow(() -> new RuntimeException("Payroll Run not found"));
+        if (!run.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        
+        List<PayrollRunDetail> details = payrollRunDetailRepository.findByPayrollRunId(runId);
+        StringBuilder csv = new StringBuilder();
+        csv.append("Employee ID,Employee Name,Bank Account,IFSC,Net Amount\n");
+        
+        for (PayrollRunDetail detail : details) {
+            List<EmployeeBankAccount> accounts = employeeBankAccountRepository.findByEmployeeId(detail.getEmployee().getId());
+            EmployeeBankAccount account = accounts.isEmpty() ? null : accounts.get(0);
+            
+            String acc = account != null && account.getAccountNumber() != null ? account.getAccountNumber() : "N/A";
+            String ifsc = account != null && account.getIfscCode() != null ? account.getIfscCode() : "N/A";
+            csv.append(String.format("%s,%s %s,%s,%s,%.2f\n",
+                detail.getEmployee().getEmployeeCode(),
+                detail.getEmployee().getFirstName(),
+                detail.getEmployee().getLastName(),
+                acc,
+                ifsc,
+                detail.getNet()
+            ));
+        }
+        return csv.toString();
     }
 
     // ─────────────────────────────────────────────────────────

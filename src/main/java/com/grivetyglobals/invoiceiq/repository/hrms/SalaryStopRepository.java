@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface SalaryStopRepository extends JpaRepository<SalaryStop, UUID> {
     List<SalaryStop> findByOrganizationId(UUID organizationId);
+    List<SalaryStop> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
     List<SalaryStop> findByEmployeeId(UUID employeeId);
 }

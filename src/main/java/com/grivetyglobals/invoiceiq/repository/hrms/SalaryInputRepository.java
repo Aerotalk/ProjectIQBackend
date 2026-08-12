@@ -11,5 +11,6 @@ import java.util.UUID;
 public interface SalaryInputRepository extends JpaRepository<SalaryInput, UUID> {
     List<SalaryInput> findByOrganizationId(UUID organizationId);
     List<SalaryInput> findByOrganizationIdAndPayrollPeriod(UUID organizationId, String payrollPeriod);
+    List<SalaryInput> findByOrganizationIdAndEmployeeId(UUID organizationId, UUID employeeId);
     List<SalaryInput> findByEmployeeId(UUID employeeId);
 }

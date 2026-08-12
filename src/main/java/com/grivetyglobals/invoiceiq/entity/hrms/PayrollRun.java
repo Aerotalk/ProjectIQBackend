@@ -49,6 +49,14 @@ public class PayrollRun {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "pay_payroll_run_employees",
+        joinColumns = @JoinColumn(name = "payroll_run_id"),
+        inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private java.util.List<com.grivetyglobals.invoiceiq.entity.Employee> selectedEmployees;
+
     /** Draft, Processing, Processed, Approved */
     @Column(name = "status", length = 20)
     private String status;
