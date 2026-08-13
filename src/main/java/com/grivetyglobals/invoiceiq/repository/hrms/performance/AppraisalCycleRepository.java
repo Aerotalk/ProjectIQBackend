@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface AppraisalCycleRepository extends JpaRepository<AppraisalCycle, UUID> {
     List<AppraisalCycle> findByOrganizationId(UUID organizationId);
+    List<AppraisalCycle> findByOrganizationIdAndStatus(UUID organizationId, String status);
+    List<AppraisalCycle> findByOrganizationIdOrderByCreatedAtDesc(UUID organizationId);
 }
