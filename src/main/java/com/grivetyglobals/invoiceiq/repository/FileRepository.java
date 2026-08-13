@@ -13,4 +13,5 @@ import java.util.UUID;
 @Repository
 public interface FileRepository extends JpaRepository<File, UUID> {
     List<File> findAllByUploadedByOrderByUploadedAtDesc(UUID uploadedBy);
+    List<File> findAllByUploadedByAndStoragePathContainingOrderByUploadedAtDesc(UUID uploadedBy, String module);
 }

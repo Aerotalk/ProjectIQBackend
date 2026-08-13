@@ -123,6 +123,13 @@ public class FileService {
     }
 
     /**
+     * Retrieves files uploaded by a specific user, filtered by module (storagePath).
+     */
+    public java.util.List<File> getUserFilesByModule(UUID userId, String module) {
+        return fileRepository.findAllByUploadedByAndStoragePathContainingOrderByUploadedAtDesc(userId, module);
+    }
+
+    /**
      * Retrieves the metadata for a specific file.
      * 
      * @param fileId the UUID of the file metadata record
