@@ -1,5 +1,6 @@
 package com.grivetyglobals.invoiceiq.service.hrms;
 
+import com.grivetyglobals.invoiceiq.entity.Employee;
 import com.grivetyglobals.invoiceiq.entity.Organization;
 import com.grivetyglobals.invoiceiq.entity.hrms.*;
 import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
@@ -216,6 +217,27 @@ public class HrmsExpenseClaimsService {
         ExpenseClaim saved = claimRepository.save(claim);
         logAudit("Claim", saved.getId(), saved.getStatus(), "Create", "Claim Envelope created");
         return saved;
+    }
+
+    @Transactional
+    public ExpenseClaim createClaim(String title, String currency, String employeeId, String templateId) {
+        ExpenseClaim claim = new ExpenseClaim();
+        claim.setTitle(title);
+        claim.setCurrency(currency);
+
+        if (employeeId != null && !employeeId.isEmpty()) {
+            Employee emp = employeeRepository.findById(UUID.fromString(employeeId))
+                    .orElseThrow(() -> new RuntimeException("Employee not found: " + employeeId));
+            claim.setEmployee(emp);
+        }
+
+        if (templateId != null && !templateId.isEmpty()) {
+            ExpenseClaimTemplate tmpl = templateRepository.findById(UUID.fromString(templateId))
+                    .orElseThrow(() -> new RuntimeException("Template not found: " + templateId));
+            claim.setTemplate(tmpl);
+        }
+
+        return createClaim(claim);
     }
 
     @Transactional

@@ -166,8 +166,33 @@ public class HrmsExpenseClaimsController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/claims")
-    public ResponseEntity<ExpenseClaim> createClaim(@RequestBody ExpenseClaim claim) {
-        return ResponseEntity.ok(expenseClaimsService.createClaim(claim));
+    public ResponseEntity<ExpenseClaim> createClaim(@RequestBody Map<String, Object> payload) {
+        String title = (String) payload.get("title");
+        String currency = (String) payload.get("currency");
+
+        // Extract employee ID from either { employee: { id: "..." } } or { employee: "..." }
+        String employeeId = null;
+        Object empObj = payload.get("employee");
+        if (empObj instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> empMap = (Map<String, Object>) empObj;
+            employeeId = (String) empMap.get("id");
+        } else if (empObj instanceof String) {
+            employeeId = (String) empObj;
+        }
+
+        // Extract template ID from either { template: { id: "..." } } or { template: "..." }
+        String templateId = null;
+        Object tmplObj = payload.get("template");
+        if (tmplObj instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> tmplMap = (Map<String, Object>) tmplObj;
+            templateId = (String) tmplMap.get("id");
+        } else if (tmplObj instanceof String) {
+            templateId = (String) tmplObj;
+        }
+
+        return ResponseEntity.ok(expenseClaimsService.createClaim(title, currency, employeeId, templateId));
     }
 
     @PreAuthorize("isAuthenticated()")
