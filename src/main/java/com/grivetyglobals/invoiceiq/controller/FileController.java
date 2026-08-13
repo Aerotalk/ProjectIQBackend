@@ -48,9 +48,14 @@ public class FileController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-files")
-    public ResponseEntity<java.util.List<File>> getMyFiles(@AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user) {
+    public ResponseEntity<java.util.List<File>> getMyFiles(
+            @AuthenticationPrincipal com.grivetyglobals.invoiceiq.entity.User user,
+            @RequestParam(required = false) String module) {
         if (user == null) {
             return ResponseEntity.status(401).build();
+        }
+        if (module != null && !module.isEmpty()) {
+            return ResponseEntity.ok(fileService.getUserFilesByModule(user.getId(), module));
         }
         return ResponseEntity.ok(fileService.getUserFiles(user.getId()));
     }
