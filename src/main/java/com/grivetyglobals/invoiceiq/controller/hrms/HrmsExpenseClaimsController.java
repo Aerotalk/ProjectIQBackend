@@ -117,7 +117,22 @@ public class HrmsExpenseClaimsController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/policies")
-    public ResponseEntity<ExpensePolicy> createPolicy(@RequestBody ExpensePolicy policy) {
+    public ResponseEntity<ExpensePolicy> createPolicy(@RequestBody Map<String, Object> payload) {
+        ExpenseCategoryConfig category = expenseClaimsService.getCategoryById(
+                UUID.fromString((String) payload.get("categoryId")));
+
+        ExpensePolicy policy = ExpensePolicy.builder()
+                .category(category)
+                .grade((String) payload.get("grade"))
+                .limitType((String) payload.get("limitType"))
+                .maxClaim(payload.get("maxClaim") != null
+                        ? new BigDecimal(payload.get("maxClaim").toString()) : null)
+                .periodLimit(payload.get("periodLimit") != null
+                        ? new BigDecimal(payload.get("periodLimit").toString()) : null)
+                .backdatedDays(payload.get("backdatedDays") != null
+                        ? ((Number) payload.get("backdatedDays")).intValue() : null)
+                .build();
+
         return ResponseEntity.ok(expenseClaimsService.createPolicy(policy));
     }
 
