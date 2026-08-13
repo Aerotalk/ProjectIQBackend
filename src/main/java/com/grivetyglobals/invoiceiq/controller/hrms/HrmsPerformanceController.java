@@ -1,13 +1,17 @@
 package com.grivetyglobals.invoiceiq.controller.hrms;
 
-import com.grivetyglobals.invoiceiq.entity.hrms.performance.*;
+import com.grivetyglobals.invoiceiq.dto.hrms.performance.*;
+import com.grivetyglobals.invoiceiq.entity.hrms.performance.CalibrationRecord;
+import com.grivetyglobals.invoiceiq.entity.hrms.performance.Competency;
+import com.grivetyglobals.invoiceiq.entity.hrms.performance.RatingScale;
 import com.grivetyglobals.invoiceiq.service.hrms.HrmsPerformanceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -21,127 +25,188 @@ public class HrmsPerformanceController {
     // RATING SCALES & COMPETENCIES
     // ─────────────────────────────────────────────────────────
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/rating-scales")
-    public ResponseEntity<List<RatingScale>> getRatingScales() {
+    public ResponseEntity<List<RatingScaleDTO>> getRatingScales() {
         return ResponseEntity.ok(performanceService.getRatingScales());
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/rating-scales")
-    public ResponseEntity<RatingScale> createRatingScale(@RequestBody RatingScale ratingScale) {
+    public ResponseEntity<RatingScaleDTO> createRatingScale(@RequestBody RatingScale ratingScale) {
         return ResponseEntity.ok(performanceService.createRatingScale(ratingScale));
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/competencies")
-    public ResponseEntity<List<Competency>> getCompetencies() {
+    public ResponseEntity<List<CompetencyDTO>> getCompetencies() {
         return ResponseEntity.ok(performanceService.getCompetencies());
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/competencies")
-    public ResponseEntity<Competency> createCompetency(@RequestBody Competency competency) {
+    public ResponseEntity<CompetencyDTO> createCompetency(@RequestBody Competency competency) {
         return ResponseEntity.ok(performanceService.createCompetency(competency));
+    }
+
+    @PutMapping("/competencies/{id}")
+    public ResponseEntity<CompetencyDTO> updateCompetency(@PathVariable UUID id, @RequestBody Competency competency) {
+        return ResponseEntity.ok(performanceService.updateCompetency(id, competency));
+    }
+
+    @DeleteMapping("/competencies/{id}")
+    public ResponseEntity<Void> deleteCompetency(@PathVariable UUID id) {
+        performanceService.deleteCompetency(id);
+        return ResponseEntity.noContent().build();
     }
 
     // ─────────────────────────────────────────────────────────
     // APPRAISAL CYCLES
     // ─────────────────────────────────────────────────────────
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/cycles")
-    public ResponseEntity<List<AppraisalCycle>> getCycles() {
+    public ResponseEntity<List<AppraisalCycleDTO>> getCycles() {
         return ResponseEntity.ok(performanceService.getCycles());
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/cycles")
-    public ResponseEntity<AppraisalCycle> createCycle(@RequestBody AppraisalCycle cycle) {
-        return ResponseEntity.ok(performanceService.createCycle(cycle));
+    @GetMapping("/cycles/{id}")
+    public ResponseEntity<AppraisalCycleDTO> getCycleById(@PathVariable UUID id) {
+        return ResponseEntity.ok(performanceService.getCycleById(id));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/cycles")
+    public ResponseEntity<AppraisalCycleDTO> createCycle(@Valid @RequestBody CreateCycleRequest request) {
+        return ResponseEntity.ok(performanceService.createCycle(request));
+    }
+
     @PutMapping("/cycles/{id}")
-    public ResponseEntity<AppraisalCycle> updateCycle(@PathVariable UUID id, @RequestBody AppraisalCycle cycle) {
-        return ResponseEntity.ok(performanceService.updateCycle(id, cycle));
+    public ResponseEntity<AppraisalCycleDTO> updateCycle(@PathVariable UUID id, @Valid @RequestBody CreateCycleRequest request) {
+        return ResponseEntity.ok(performanceService.updateCycle(id, request));
+    }
+
+    @DeleteMapping("/cycles/{id}")
+    public ResponseEntity<Void> deleteCycle(@PathVariable UUID id) {
+        performanceService.deleteCycle(id);
+        return ResponseEntity.noContent().build();
     }
 
     // ─────────────────────────────────────────────────────────
     // GOALS / KRAs
     // ─────────────────────────────────────────────────────────
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/goals")
-    public ResponseEntity<List<PerformanceGoal>> getGoals() {
+    public ResponseEntity<List<PerformanceGoalDTO>> getGoals() {
         return ResponseEntity.ok(performanceService.getGoals());
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/goals/{id}")
+    public ResponseEntity<PerformanceGoalDTO> getGoalById(@PathVariable UUID id) {
+        return ResponseEntity.ok(performanceService.getGoalById(id));
+    }
+
     @PostMapping("/goals")
-    public ResponseEntity<PerformanceGoal> createGoal(@RequestBody PerformanceGoal goal) {
-        return ResponseEntity.ok(performanceService.createGoal(goal));
+    public ResponseEntity<PerformanceGoalDTO> createGoal(@Valid @RequestBody CreateGoalRequest request) {
+        return ResponseEntity.ok(performanceService.createGoal(request));
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PutMapping("/goals/{id}")
-    public ResponseEntity<PerformanceGoal> updateGoal(@PathVariable UUID id, @RequestBody PerformanceGoal goal) {
-        return ResponseEntity.ok(performanceService.updateGoal(id, goal));
+    public ResponseEntity<PerformanceGoalDTO> updateGoal(@PathVariable UUID id, @Valid @RequestBody CreateGoalRequest request) {
+        return ResponseEntity.ok(performanceService.updateGoal(id, request));
+    }
+
+    @DeleteMapping("/goals/{id}")
+    public ResponseEntity<Void> deleteGoal(@PathVariable UUID id) {
+        performanceService.deleteGoal(id);
+        return ResponseEntity.noContent().build();
     }
 
     // ─────────────────────────────────────────────────────────
-    // REVIEWS & CALIBRATION
+    // SELF REVIEWS
     // ─────────────────────────────────────────────────────────
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/reviews/self")
-    public ResponseEntity<List<SelfReview>> getSelfReviews() {
+    public ResponseEntity<List<SelfReviewDTO>> getSelfReviews() {
         return ResponseEntity.ok(performanceService.getSelfReviews());
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/reviews/self")
-    public ResponseEntity<SelfReview> saveSelfReview(@RequestBody SelfReview review, @RequestParam(defaultValue = "false") boolean submit) {
-        return ResponseEntity.ok(performanceService.createOrSubmitSelfReview(review, submit));
+    @GetMapping("/reviews/self/{id}")
+    public ResponseEntity<SelfReviewDTO> getSelfReviewById(@PathVariable UUID id) {
+        return ResponseEntity.ok(performanceService.getSelfReviewById(id));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/reviews/self")
+    public ResponseEntity<SelfReviewDTO> createSelfReview(
+            @Valid @RequestBody SubmitReviewRequest request,
+            @RequestParam(required = false, defaultValue = "false") boolean submit) {
+        return ResponseEntity.ok(performanceService.createOrUpdateSelfReview(request, submit, null));
+    }
+
+    @PutMapping("/reviews/self/{id}")
+    public ResponseEntity<SelfReviewDTO> updateSelfReview(
+            @PathVariable UUID id,
+            @Valid @RequestBody SubmitReviewRequest request,
+            @RequestParam(required = false, defaultValue = "false") boolean submit) {
+        return ResponseEntity.ok(performanceService.createOrUpdateSelfReview(request, submit, id));
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // MANAGER REVIEWS
+    // ─────────────────────────────────────────────────────────
+
     @GetMapping("/reviews/manager")
-    public ResponseEntity<List<ManagerReview>> getManagerReviews() {
+    public ResponseEntity<List<ManagerReviewDTO>> getManagerReviews() {
         return ResponseEntity.ok(performanceService.getManagerReviews());
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PutMapping("/reviews/manager/{id}")
-    public ResponseEntity<ManagerReview> submitManagerReview(@PathVariable UUID id, @RequestBody ManagerReview review) {
-        return ResponseEntity.ok(performanceService.submitManagerReview(id, review));
+    @GetMapping("/reviews/manager/{id}")
+    public ResponseEntity<ManagerReviewDTO> getManagerReviewById(@PathVariable UUID id) {
+        return ResponseEntity.ok(performanceService.getManagerReviewById(id));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/reviews/manager/{id}")
+    public ResponseEntity<ManagerReviewDTO> updateManagerReview(
+            @PathVariable UUID id,
+            @Valid @RequestBody SubmitReviewRequest request,
+            @RequestParam(required = false, defaultValue = "false") boolean submit) {
+        return ResponseEntity.ok(performanceService.submitManagerReview(id, request, submit));
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // CALIBRATION
+    // ─────────────────────────────────────────────────────────
+
     @GetMapping("/calibration")
-    public ResponseEntity<List<CalibrationRecord>> getCalibrationRecords() {
+    public ResponseEntity<List<CalibrationRecordDTO>> getCalibrationRecords() {
         return ResponseEntity.ok(performanceService.getCalibrationRecords());
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/calibration/cycle/{cycleId}")
+    public ResponseEntity<List<CalibrationRecordDTO>> getCalibrationByCycle(@PathVariable UUID cycleId) {
+        return ResponseEntity.ok(performanceService.getCalibrationByCycle(cycleId));
+    }
+
     @PutMapping("/calibration/{id}")
-    public ResponseEntity<CalibrationRecord> updateCalibration(@PathVariable UUID id, @RequestBody CalibrationRecord record) {
-        return ResponseEntity.ok(performanceService.updateCalibration(id, record));
+    public ResponseEntity<CalibrationRecordDTO> updateCalibration(@PathVariable UUID id, @RequestBody CalibrationRecord calibrationRecord) {
+        return ResponseEntity.ok(performanceService.updateCalibration(id, calibrationRecord));
+    }
+
+    @PostMapping("/calibration/{id}/finalize")
+    public ResponseEntity<CalibrationRecordDTO> finalizeCalibration(@PathVariable UUID id) {
+        return ResponseEntity.ok(performanceService.finalizeCalibration(id));
     }
 
     // ─────────────────────────────────────────────────────────
     // DASHBOARD & REPORTS
     // ─────────────────────────────────────────────────────────
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/dashboard/kpis")
-    public ResponseEntity<java.util.Map<String, Object>> getPerformanceDashboardKPIs() {
+    public ResponseEntity<PerformanceDashboardKpiDTO> getDashboardKPIs() {
         return ResponseEntity.ok(performanceService.getPerformanceDashboardKPIs());
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/reports/department-ratings")
-    public ResponseEntity<List<java.util.Map<String, Object>>> getDepartmentRatings() {
-        return ResponseEntity.ok(performanceService.getDepartmentRatings());
+    public ResponseEntity<List<DepartmentRatingDTO>> getDepartmentRatings(@RequestParam(required = false) UUID cycleId) {
+        return ResponseEntity.ok(performanceService.getDepartmentRatings(cycleId));
+    }
+
+    @GetMapping("/reports/promotions")
+    public ResponseEntity<List<Map<String, Object>>> getPromotionRecommendations(@RequestParam(required = false) UUID cycleId) {
+        return ResponseEntity.ok(performanceService.getPromotionRecommendations(cycleId));
     }
 }
