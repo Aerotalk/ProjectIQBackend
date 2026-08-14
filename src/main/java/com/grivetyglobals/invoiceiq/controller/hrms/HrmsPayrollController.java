@@ -19,6 +19,7 @@ import java.util.UUID;
 public class HrmsPayrollController {
 
     private final HrmsPayrollService hrmsPayrollService;
+    private final com.grivetyglobals.invoiceiq.service.hrms.PayslipPdfService payslipPdfService;
 
     // ─────────────────────────────────────────────────────────
     // PAY COMPONENTS
@@ -397,6 +398,16 @@ public class HrmsPayrollController {
     @GetMapping("/runs/{id}/variances")
     public ResponseEntity<List<PayrollVarianceDto>> getPayrollVariances(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsPayrollService.getPayrollVariances(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/runs/details/{detailId}/payslip")
+    public ResponseEntity<byte[]> generatePayslipPdf(@PathVariable UUID detailId) {
+        byte[] pdf = payslipPdfService.generatePayslipPdf(detailId);
+        return ResponseEntity.ok()
+            .header("Content-Type", "application/pdf")
+            .header("Content-Disposition", "attachment; filename=\"payslip.pdf\"")
+            .body(pdf);
     }
 
     @PreAuthorize("isAuthenticated()")

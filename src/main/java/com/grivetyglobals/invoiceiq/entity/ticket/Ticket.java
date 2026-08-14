@@ -159,6 +159,7 @@ public class Ticket {
     @Column(name = "closed_by", length = 100)
     private String closedBy;
 
+    @Builder.Default
     @Column(name = "reopen_count")
     private Integer reopenCount = 0;
 
@@ -177,6 +178,7 @@ public class Ticket {
     @Column(name = "configuration_item", length = 100)
     private String configurationItem;
 
+    @Builder.Default
     @Column(name = "is_major_incident")
     private Boolean isMajorIncident = false;
 
