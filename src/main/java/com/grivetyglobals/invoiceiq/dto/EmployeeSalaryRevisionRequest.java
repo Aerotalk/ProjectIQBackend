@@ -21,6 +21,6 @@ public class EmployeeSalaryRevisionRequest {
     private String effectiveDate;
     private BigDecimal annualCTC;
     private BigDecimal incrementPercentage;
-    private String salaryComponents;
+    private java.util.List<SalaryComponentDto> salaryComponents;
     private String reason;
 }
