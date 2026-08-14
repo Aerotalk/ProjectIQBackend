@@ -18,6 +18,8 @@ import com.grivetyglobals.invoiceiq.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -262,7 +264,17 @@ public class EmployeeService {
         if (employee.getUser() != null) {
             User linkedUser = employee.getUser();
             if (request.getWorkEmail() != null && !request.getWorkEmail().isBlank()) {
-                linkedUser.setEmail(request.getWorkEmail());
+                String newEmail = request.getWorkEmail().trim();
+                // Only update if the email has actually changed
+                if (!newEmail.equalsIgnoreCase(linkedUser.getEmail())) {
+                    // Ensure no other user already owns this email
+                    boolean emailTaken = userRepository.existsByEmailIgnoreCaseAndIdNot(newEmail, linkedUser.getId());
+                    if (emailTaken) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Email '" + newEmail + "' is already in use by another account.");
+                    }
+                    linkedUser.setEmail(newEmail);
+                }
             }
             if (request.getPhone() != null && !request.getPhone().isBlank()) {
                 linkedUser.setMobile(request.getPhone());
