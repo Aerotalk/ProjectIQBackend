@@ -30,4 +30,5 @@ public class PayrollRunDetailDto {
     private BigDecimal net;
     private BigDecimal lopDays;
     private BigDecimal payableDays;
+    private java.util.List<PayrollRunDetailComponentDto> components;
 }

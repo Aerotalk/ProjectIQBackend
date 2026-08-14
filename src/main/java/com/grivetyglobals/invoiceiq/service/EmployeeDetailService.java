@@ -35,6 +35,7 @@ public class EmployeeDetailService {
     private final EmployeeContractRepository contractRepository;
     private final EmployeePositionChangeRepository positionChangeRepository;
     private final EmployeeSeparationRepository separationRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     // ─────────────────────────────────────────────
     // Address
@@ -219,13 +220,49 @@ public class EmployeeDetailService {
     public EmployeeSalaryRevision addSalaryRevision(UUID employeeId, EmployeeSalaryRevisionRequest req) {
         Employee employee = employeeService.getEmployeeById(employeeId);
 
+        String revType = req.getRevisionType();
+        LocalDate effDate = parseDate(req.getEffectiveDate());
+
+        List<EmployeeSalaryRevision> existing = salaryRevisionRepository.findByEmployeeIdOrderByCreatedAtDesc(employeeId);
+
+        if (revType == null || revType.isBlank()) {
+            if (existing.isEmpty()) {
+                revType = "INITIAL";
+            } else {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST,
+                        "revisionType is required for salary revisions after the initial one"
+                );
+            }
+        }
+
+        if (effDate == null) {
+            if (existing.isEmpty()) {
+                effDate = employee.getJoiningDate();
+            } else {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST,
+                        "effectiveDate is required"
+                );
+            }
+        }
+
+        String componentsJson = null;
+        if (req.getSalaryComponents() != null) {
+            try {
+                componentsJson = objectMapper.writeValueAsString(req.getSalaryComponents());
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                throw new RuntimeException("Failed to serialize salary components", e);
+            }
+        }
+
         EmployeeSalaryRevision revision = EmployeeSalaryRevision.builder()
                 .employee(employee)
-                .revisionType(req.getRevisionType())
-                .effectiveDate(parseDate(req.getEffectiveDate()))
+                .revisionType(revType)
+                .effectiveDate(effDate)
                 .annualCTC(req.getAnnualCTC())
                 .incrementPercentage(req.getIncrementPercentage())
-                .salaryComponents(req.getSalaryComponents())
+                .salaryComponents(componentsJson)
                 .reason(req.getReason())
                 .build();
 

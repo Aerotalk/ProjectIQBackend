@@ -51,12 +51,18 @@ public class PayrollRunDetail {
     @Column(name = "payable_days", precision = 5, scale = 2)
     private BigDecimal payableDays;
 
+    @OneToMany(mappedBy = "payrollRunDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<PayrollRunDetailComponent> components;
+
+    @Deprecated
     @Column(name = "basic_pay", precision = 12, scale = 2)
     private BigDecimal basicPay;
 
+    @Deprecated
     @Column(name = "hra", precision = 12, scale = 2)
     private BigDecimal hra;
 
+    @Deprecated
     @Column(name = "special_allowance", precision = 12, scale = 2)
     private BigDecimal specialAllowance;
 

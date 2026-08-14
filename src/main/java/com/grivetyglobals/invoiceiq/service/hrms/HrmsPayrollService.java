@@ -53,6 +53,8 @@ public class HrmsPayrollService {
     private final com.grivetyglobals.invoiceiq.repository.EmployeeStatutoryRepository employeeStatutoryRepository;
     private final com.grivetyglobals.invoiceiq.repository.EmployeeSalaryRevisionRepository employeeSalaryRevisionRepository;
     private final UserRepository userRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final PayrollRunDetailComponentRepository payrollRunDetailComponentRepository;
 
     private Organization getCurrentOrganization() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
@@ -538,7 +540,10 @@ public class HrmsPayrollService {
         List<EmployeeBankAccount> banks = employeeBankAccountRepository.findByOrganizationId(orgId);
         List<EmployeeStatutory> statuaries = employeeStatutoryRepository.findByOrganizationId(orgId);
 
-        java.util.Set<UUID> salEmpIds = salaries.stream().map(s -> s.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
+        java.util.Set<UUID> salEmpIds = salaries.stream()
+                .filter(s -> s.getAnnualCTC() != null && s.getAnnualCTC().compareTo(BigDecimal.ZERO) > 0)
+                .map(s -> s.getEmployee().getId())
+                .collect(java.util.stream.Collectors.toSet());
         java.util.Set<UUID> bankEmpIds = banks.stream().map(b -> b.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
         java.util.Set<UUID> statEmpIds = statuaries.stream().map(s -> s.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
 
@@ -619,6 +624,15 @@ public class HrmsPayrollService {
         List<SalaryStop> allStops = salaryStopRepository.findByOrganizationId(run.getOrganization().getId());
         List<SalaryHold> allHolds = salaryHoldRepository.findByOrganizationId(run.getOrganization().getId());
 
+        java.time.LocalDate tempPeriodEnd;
+        try {
+            java.time.YearMonth ym = java.time.YearMonth.parse(run.getPayrollPeriod());
+            tempPeriodEnd = ym.atEndOfMonth();
+        } catch (Exception e) {
+            tempPeriodEnd = java.time.LocalDate.now();
+        }
+        final java.time.LocalDate periodEnd = tempPeriodEnd;
+
         for (Employee emp : allEmployees) {
             // Check if salary stopped
             boolean isStopped = allStops.stream().anyMatch(s -> s.getEmployee().getId().equals(emp.getId()) && Boolean.TRUE.equals(s.getActive()));
@@ -627,21 +641,82 @@ public class HrmsPayrollService {
             // Fetch revision
             EmployeeSalaryRevision revision = allRevisions.stream()
                 .filter(r -> r.getEmployee().getId().equals(emp.getId()))
-                .max(java.util.Comparator.comparing(EmployeeSalaryRevision::getEffectiveDate, java.util.Comparator.nullsFirst(java.time.LocalDate::compareTo)))
+                .filter(r -> r.getEffectiveDate() != null && !r.getEffectiveDate().isAfter(periodEnd))
+                .max(java.util.Comparator.comparing(EmployeeSalaryRevision::getEffectiveDate))
                 .orElse(null);
                 
             if (revision == null || revision.getAnnualCTC() == null) continue;
             
-            BigDecimal monthlyGross = revision.getAnnualCTC().divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
+            BigDecimal annualCTC = revision.getAnnualCTC();
+            BigDecimal monthlyGross = BigDecimal.ZERO;
+            BigDecimal basicPay = BigDecimal.ZERO;
+            BigDecimal hra = BigDecimal.ZERO;
+            BigDecimal specialAllowance = BigDecimal.ZERO;
             
-            // Full CTC Breakdown
-            BigDecimal basicPay = monthlyGross.multiply(BigDecimal.valueOf(0.40)).setScale(2, java.math.RoundingMode.HALF_UP);
-            BigDecimal hra = basicPay.multiply(BigDecimal.valueOf(0.50)).setScale(2, java.math.RoundingMode.HALF_UP);
-            BigDecimal specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
-            
+            List<com.grivetyglobals.invoiceiq.dto.SalaryComponentDto> dtos = null;
+            if (revision.getSalaryComponents() != null && !revision.getSalaryComponents().isBlank()) {
+                try {
+                    dtos = objectMapper.readValue(
+                        revision.getSalaryComponents(),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<com.grivetyglobals.invoiceiq.dto.SalaryComponentDto>>() {}
+                    );
+                } catch (Exception ignored) {}
+            }
+
+            List<PayrollRunDetailComponent> detailComponents = new ArrayList<>();
+            BigDecimal computedEarnings = BigDecimal.ZERO;
+            BigDecimal computedDeductions = BigDecimal.ZERO;
+
+            if (dtos != null && !dtos.isEmpty()) {
+                for (int i = 0; i < dtos.size(); i++) {
+                    com.grivetyglobals.invoiceiq.dto.SalaryComponentDto dto = dtos.get(i);
+                    BigDecimal amount = BigDecimal.ZERO;
+                    if (dto.getPercentage() != null) {
+                        amount = annualCTC.divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP)
+                            .multiply(dto.getPercentage()).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                    } else if (dto.getAmount() != null) {
+                        amount = dto.getAmount().divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
+                    }
+
+                    if ("EARNING".equalsIgnoreCase(dto.getType())) {
+                        computedEarnings = computedEarnings.add(amount);
+                    } else if ("DEDUCTION".equalsIgnoreCase(dto.getType())) {
+                        computedDeductions = computedDeductions.add(amount);
+                    }
+
+                    if ("Basic".equalsIgnoreCase(dto.getComponentName()) || "Basic Pay".equalsIgnoreCase(dto.getComponentName())) {
+                        basicPay = amount;
+                    } else if ("HRA".equalsIgnoreCase(dto.getComponentName())) {
+                        hra = amount;
+                    }
+
+                    PayrollRunDetailComponent comp = new PayrollRunDetailComponent();
+                    comp.setComponentName(dto.getComponentName());
+                    comp.setType(dto.getType() != null ? dto.getType() : "EARNING");
+                    comp.setAmount(amount);
+                    comp.setDisplayOrder(i);
+                    detailComponents.add(comp);
+                }
+                monthlyGross = computedEarnings;
+                specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
+                if (basicPay.compareTo(BigDecimal.ZERO) == 0 && monthlyGross.compareTo(BigDecimal.ZERO) > 0) {
+                    basicPay = monthlyGross; // fallback for statutory calc if no basic found
+                }
+            } else {
+                // Fallback to legacy ratio
+                monthlyGross = annualCTC.divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
+                basicPay = monthlyGross.multiply(BigDecimal.valueOf(0.40)).setScale(2, java.math.RoundingMode.HALF_UP);
+                hra = basicPay.multiply(BigDecimal.valueOf(0.50)).setScale(2, java.math.RoundingMode.HALF_UP);
+                specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
+
+                detailComponents.add(PayrollRunDetailComponent.builder().componentName("Basic").type("EARNING").amount(basicPay).displayOrder(1).build());
+                detailComponents.add(PayrollRunDetailComponent.builder().componentName("HRA").type("EARNING").amount(hra).displayOrder(2).build());
+                detailComponents.add(PayrollRunDetailComponent.builder().componentName("Special Allowance").type("EARNING").amount(specialAllowance).displayOrder(3).build());
+            }
+
             List<SalaryInput> inputs = allInputs.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).toList();
             BigDecimal additions = BigDecimal.ZERO;
-            BigDecimal deductions = BigDecimal.ZERO;
+            BigDecimal deductions = computedDeductions;
             
             for(SalaryInput input : inputs) {
                 if("Addition".equalsIgnoreCase(input.getInputType())) {
@@ -708,7 +783,12 @@ public class HrmsPayrollService {
             detail.setLopDays(totalLopDays);
             detail.setPayableDays(BigDecimal.valueOf(30).subtract(totalLopDays));
             
-            payrollRunDetailRepository.save(detail);
+            PayrollRunDetail savedDetail = payrollRunDetailRepository.save(detail);
+
+            for (PayrollRunDetailComponent c : detailComponents) {
+                c.setPayrollRunDetail(savedDetail);
+                payrollRunDetailComponentRepository.save(c);
+            }
             
             totalGross = totalGross.add(gross);
             totalDeductions = totalDeductions.add(deductions);
@@ -788,6 +868,15 @@ public class HrmsPayrollService {
     @Transactional(readOnly = true)
     public List<PayrollRunDetailDto> getPayrollRunDetails(UUID runId) {
         return payrollRunDetailRepository.findByPayrollRunId(runId).stream().map(d -> {
+            List<PayrollRunDetailComponent> comps = payrollRunDetailComponentRepository.findByPayrollRunDetailId(d.getId());
+            List<com.grivetyglobals.invoiceiq.dto.hrms.PayrollRunDetailComponentDto> compDtos = comps.stream().map(c -> 
+                com.grivetyglobals.invoiceiq.dto.hrms.PayrollRunDetailComponentDto.builder()
+                    .componentName(c.getComponentName())
+                    .type(c.getType())
+                    .amount(c.getAmount())
+                    .build()
+            ).toList();
+
             return PayrollRunDetailDto.builder()
                 .id(d.getId())
                 .employeeId(d.getEmployee().getId())
@@ -806,6 +895,7 @@ public class HrmsPayrollService {
                 .net(d.getNet())
                 .lopDays(d.getLopDays())
                 .payableDays(d.getPayableDays())
+                .components(compDtos)
                 .build();
         }).toList();
     }
