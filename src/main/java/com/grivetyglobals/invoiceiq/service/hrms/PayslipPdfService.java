@@ -83,6 +83,18 @@ public class PayslipPdfService {
     }
 
     private String getDefaultHtml() {
+        try {
+            java.nio.file.Path path = java.nio.file.Paths.get("Document_Templates", "payslip.html");
+            if (!java.nio.file.Files.exists(path)) {
+                path = java.nio.file.Paths.get("ProjectIQBackend", "Document_Templates", "payslip.html");
+            }
+            if (java.nio.file.Files.exists(path)) {
+                return new String(java.nio.file.Files.readAllBytes(path), java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            // ignore and fallback to hardcoded HTML
+        }
+
         return "<!DOCTYPE html><html><head><style>" +
                "body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; margin-top: 10px; } " +
                "th, td { border: 1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; text-align: left; } " +

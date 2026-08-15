@@ -635,11 +635,11 @@ public class HrmsPayrollService {
             .setParameter("orgId", orgId).setParameter("period", period).setParameter("empIds", empIds).getResultList();
             
         List<EmployeeSalaryRevision> allRevisions = entityManager.createQuery(
-                "SELECT r FROM EmployeeSalaryRevision r WHERE r.organization.id = :orgId AND r.employee.id IN :empIds", EmployeeSalaryRevision.class)
+                "SELECT r FROM EmployeeSalaryRevision r WHERE r.employee.organization.id = :orgId AND r.employee.id IN :empIds", EmployeeSalaryRevision.class)
             .setParameter("orgId", orgId).setParameter("empIds", empIds).getResultList();
             
         List<EmployeeStatutory> allStatuaries = entityManager.createQuery(
-                "SELECT s FROM EmployeeStatutory s WHERE s.organization.id = :orgId AND s.employee.id IN :empIds", EmployeeStatutory.class)
+                "SELECT s FROM EmployeeStatutory s WHERE s.employee.organization.id = :orgId AND s.employee.id IN :empIds", EmployeeStatutory.class)
             .setParameter("orgId", orgId).setParameter("empIds", empIds).getResultList();
             
         List<SalaryStop> allStops = entityManager.createQuery(
