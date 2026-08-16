@@ -431,8 +431,10 @@ public class HrmsAttendanceController {
     @GetMapping("/attendance/records")
     public ResponseEntity<List<AttendanceRecord>> getAttendanceRecords(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) UUID employeeId) {
-        return ResponseEntity.ok(hrmsAttendanceService.getAttendanceRecordsFiltered(status, employeeId));
+            @RequestParam(required = false) UUID employeeId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate endDate) {
+        return ResponseEntity.ok(hrmsAttendanceService.getAttendanceRecordsFiltered(status, employeeId, startDate, endDate));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -462,8 +464,8 @@ public class HrmsAttendanceController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-in")
-    public ResponseEntity<?> checkIn(@RequestBody Map<String, String> body) {
-        String empIdStr = body.get("employeeId");
+    public ResponseEntity<?> checkIn(@RequestBody Map<String, Object> body) {
+        String empIdStr = body.get("employeeId") != null ? body.get("employeeId").toString() : null;
         if (empIdStr == null || empIdStr.isBlank()) {
             return ResponseEntity.badRequest().body("employeeId is required");
         }
@@ -473,14 +475,23 @@ public class HrmsAttendanceController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid employeeId format");
         }
-        String source = body.get("source");
-        return ResponseEntity.ok(hrmsAttendanceService.checkIn(employeeId, source));
+        String source = body.get("source") != null ? body.get("source").toString() : null;
+        java.math.BigDecimal latitude = body.get("latitude") != null ? new java.math.BigDecimal(body.get("latitude").toString()) : null;
+        java.math.BigDecimal longitude = body.get("longitude") != null ? new java.math.BigDecimal(body.get("longitude").toString()) : null;
+        String locationLabel = body.get("locationLabel") != null ? body.get("locationLabel").toString() : null;
+        return ResponseEntity.ok(hrmsAttendanceService.checkIn(employeeId, source, latitude, longitude, locationLabel));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/attendance/records/check-in/status")
+    public ResponseEntity<Map<String, Object>> getCheckInStatus(@RequestParam UUID employeeId) {
+        return ResponseEntity.ok(hrmsAttendanceService.getCheckInStatus(employeeId));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-out")
-    public ResponseEntity<?> checkOut(@RequestBody Map<String, String> body) {
-        String empIdStr = body.get("employeeId");
+    public ResponseEntity<?> checkOut(@RequestBody Map<String, Object> body) {
+        String empIdStr = body.get("employeeId") != null ? body.get("employeeId").toString() : null;
         if (empIdStr == null || empIdStr.isBlank()) {
             return ResponseEntity.badRequest().body("employeeId is required");
         }
@@ -490,7 +501,10 @@ public class HrmsAttendanceController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid employeeId format");
         }
-        return ResponseEntity.ok(hrmsAttendanceService.checkOut(employeeId));
+        java.math.BigDecimal latitude = body.get("latitude") != null ? new java.math.BigDecimal(body.get("latitude").toString()) : null;
+        java.math.BigDecimal longitude = body.get("longitude") != null ? new java.math.BigDecimal(body.get("longitude").toString()) : null;
+        String locationLabel = body.get("locationLabel") != null ? body.get("locationLabel").toString() : null;
+        return ResponseEntity.ok(hrmsAttendanceService.checkOut(employeeId, latitude, longitude, locationLabel));
     }
 
     // Regularizations
