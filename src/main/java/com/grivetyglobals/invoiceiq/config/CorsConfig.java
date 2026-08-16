@@ -27,11 +27,8 @@ public class CorsConfig {
                 .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
                 .toList());
                 
-        List<String> devOrigins = List.of("http://localhost:*", "http://127.0.0.1:*", "http://localhost:5173");
-        for (String devOrigin : devOrigins) {
-            if (!origins.contains(devOrigin)) {
-                origins.add(devOrigin);
-            }
+        if (!origins.contains("http://localhost:5173")) {
+            origins.add("http://localhost:5173");
         }
         
         config.setAllowedOriginPatterns(origins);
