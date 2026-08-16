@@ -8,9 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 @Repository
 public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, UUID> {
     @EntityGraph(attributePaths = {"employee", "employee.department"})
@@ -18,12 +15,4 @@ public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, UU
 
     @EntityGraph(attributePaths = {"employee", "employee.department"})
     List<AttendanceLog> findByEmployeeId(UUID employeeId);
-
-    List<AttendanceLog> findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
-            UUID organizationId, UUID employeeId, LocalDateTime from, LocalDateTime to
-    );
-
-    Optional<AttendanceLog> findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(
-            UUID organizationId, UUID employeeId
-    );
 }

@@ -462,8 +462,8 @@ public class HrmsAttendanceController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-in")
-    public ResponseEntity<?> checkIn(@RequestBody Map<String, Object> body) {
-        String empIdStr = (String) body.get("employeeId");
+    public ResponseEntity<?> checkIn(@RequestBody Map<String, String> body) {
+        String empIdStr = body.get("employeeId");
         if (empIdStr == null || empIdStr.isBlank()) {
             return ResponseEntity.badRequest().body("employeeId is required");
         }
@@ -473,20 +473,14 @@ public class HrmsAttendanceController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid employeeId format");
         }
-        
-        String source = (String) body.get("source");
-        java.math.BigDecimal latitude = body.get("latitude") != null
-            ? new java.math.BigDecimal(body.get("latitude").toString()) : null;
-        java.math.BigDecimal longitude = body.get("longitude") != null
-            ? new java.math.BigDecimal(body.get("longitude").toString()) : null;
-
-        return ResponseEntity.ok(hrmsAttendanceService.checkIn(employeeId, source, latitude, longitude));
+        String source = body.get("source");
+        return ResponseEntity.ok(hrmsAttendanceService.checkIn(employeeId, source));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/attendance/records/check-out")
-    public ResponseEntity<?> checkOut(@RequestBody Map<String, Object> body) {
-        String empIdStr = (String) body.get("employeeId");
+    public ResponseEntity<?> checkOut(@RequestBody Map<String, String> body) {
+        String empIdStr = body.get("employeeId");
         if (empIdStr == null || empIdStr.isBlank()) {
             return ResponseEntity.badRequest().body("employeeId is required");
         }
@@ -496,19 +490,7 @@ public class HrmsAttendanceController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid employeeId format");
         }
-
-        java.math.BigDecimal latitude = body.get("latitude") != null
-            ? new java.math.BigDecimal(body.get("latitude").toString()) : null;
-        java.math.BigDecimal longitude = body.get("longitude") != null
-            ? new java.math.BigDecimal(body.get("longitude").toString()) : null;
-
-        return ResponseEntity.ok(hrmsAttendanceService.checkOut(employeeId, latitude, longitude));
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/attendance/records/check-in/status")
-    public ResponseEntity<?> getCheckInStatus(@RequestParam UUID employeeId) {
-        return ResponseEntity.ok(hrmsAttendanceService.getTodayCheckInStatus(employeeId));
+        return ResponseEntity.ok(hrmsAttendanceService.checkOut(employeeId));
     }
 
     // Regularizations

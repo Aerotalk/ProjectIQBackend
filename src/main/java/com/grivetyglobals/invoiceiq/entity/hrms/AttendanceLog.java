@@ -49,16 +49,6 @@ public class AttendanceLog {
     @Column(name = "source", length = 30)
     private String source;
 
-    @Column(name = "latitude", precision = 10, scale = 7)
-    private java.math.BigDecimal latitude;
-
-    @Column(name = "longitude", precision = 10, scale = 7)
-    private java.math.BigDecimal longitude;
-
-    /** Optional human-readable address resolved from coords */
-    @Column(name = "location_label", length = 255)
-    private String locationLabel;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
