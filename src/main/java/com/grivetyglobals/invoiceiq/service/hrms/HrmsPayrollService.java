@@ -55,6 +55,8 @@ public class HrmsPayrollService {
     private final UserRepository userRepository;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final PayrollRunDetailComponentRepository payrollRunDetailComponentRepository;
+    private final jakarta.persistence.EntityManager entityManager;
+    private final PayrollCalculationEngine payrollCalculationEngine;
 
     private Organization getCurrentOrganization() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
@@ -617,12 +619,40 @@ public class HrmsPayrollService {
         BigDecimal totalNet = BigDecimal.ZERO;
         int processedCount = 0;
         
-        List<SalaryInput> allInputs = salaryInputRepository.findByOrganizationIdAndPayrollPeriod(run.getOrganization().getId(), run.getPayrollPeriod());
-        List<EmployeeLOP> allLops = employeeLOPRepository.findByOrganizationIdAndPayrollPeriod(run.getOrganization().getId(), run.getPayrollPeriod());
-        List<EmployeeSalaryRevision> allRevisions = employeeSalaryRevisionRepository.findByOrganizationId(run.getOrganization().getId());
-        List<EmployeeStatutory> allStatuaries = employeeStatutoryRepository.findByOrganizationId(run.getOrganization().getId());
-        List<SalaryStop> allStops = salaryStopRepository.findByOrganizationId(run.getOrganization().getId());
-        List<SalaryHold> allHolds = salaryHoldRepository.findByOrganizationId(run.getOrganization().getId());
+        List<UUID> empIds = allEmployees.stream().map(Employee::getId).toList();
+        if (empIds.isEmpty()) return run;
+
+        String period = run.getPayrollPeriod();
+        UUID orgId = run.getOrganization().getId();
+
+        // Optimized Batch Fetches
+        List<SalaryInput> allInputs = entityManager.createQuery(
+                "SELECT s FROM SalaryInput s WHERE s.organization.id = :orgId AND s.payrollPeriod = :period AND s.employee.id IN :empIds", SalaryInput.class)
+            .setParameter("orgId", orgId).setParameter("period", period).setParameter("empIds", empIds).getResultList();
+            
+        List<EmployeeLOP> allLops = entityManager.createQuery(
+                "SELECT l FROM EmployeeLOP l WHERE l.organization.id = :orgId AND l.payrollPeriod = :period AND l.employee.id IN :empIds", EmployeeLOP.class)
+            .setParameter("orgId", orgId).setParameter("period", period).setParameter("empIds", empIds).getResultList();
+            
+        List<EmployeeSalaryRevision> allRevisions = entityManager.createQuery(
+                "SELECT r FROM EmployeeSalaryRevision r WHERE r.employee.organization.id = :orgId AND r.employee.id IN :empIds", EmployeeSalaryRevision.class)
+            .setParameter("orgId", orgId).setParameter("empIds", empIds).getResultList();
+            
+        List<EmployeeStatutory> allStatuaries = entityManager.createQuery(
+                "SELECT s FROM EmployeeStatutory s WHERE s.employee.organization.id = :orgId AND s.employee.id IN :empIds", EmployeeStatutory.class)
+            .setParameter("orgId", orgId).setParameter("empIds", empIds).getResultList();
+            
+        List<SalaryStop> allStops = entityManager.createQuery(
+                "SELECT s FROM SalaryStop s WHERE s.organization.id = :orgId AND s.employee.id IN :empIds AND s.active = true", SalaryStop.class)
+            .setParameter("orgId", orgId).setParameter("empIds", empIds).getResultList();
+            
+        List<SalaryHold> allHolds = entityManager.createQuery(
+                "SELECT h FROM SalaryHold h WHERE h.organization.id = :orgId AND h.payrollPeriod = :period AND h.employee.id IN :empIds AND h.active = true", SalaryHold.class)
+            .setParameter("orgId", orgId).setParameter("period", period).setParameter("empIds", empIds).getResultList();
+            
+        List<ReimbursementClaim> allReimbursements = entityManager.createQuery(
+                "SELECT r FROM ReimbursementClaim r WHERE r.organization.id = :orgId AND r.claimPeriod = :period AND r.employee.id IN :empIds AND r.status = 'Approved'", ReimbursementClaim.class)
+            .setParameter("orgId", orgId).setParameter("period", period).setParameter("empIds", empIds).getResultList();
 
         java.time.LocalDate tempPeriodEnd;
         try {
@@ -635,7 +665,7 @@ public class HrmsPayrollService {
 
         for (Employee emp : allEmployees) {
             // Check if salary stopped
-            boolean isStopped = allStops.stream().anyMatch(s -> s.getEmployee().getId().equals(emp.getId()) && Boolean.TRUE.equals(s.getActive()));
+            boolean isStopped = allStops.stream().anyMatch(s -> s.getEmployee().getId().equals(emp.getId()));
             if (isStopped) continue;
             
             // Fetch revision
@@ -647,152 +677,53 @@ public class HrmsPayrollService {
                 
             if (revision == null || revision.getAnnualCTC() == null) continue;
             
-            BigDecimal annualCTC = revision.getAnnualCTC();
-            BigDecimal monthlyGross = BigDecimal.ZERO;
-            BigDecimal basicPay = BigDecimal.ZERO;
-            BigDecimal hra = BigDecimal.ZERO;
-            BigDecimal specialAllowance = BigDecimal.ZERO;
-            
-            List<com.grivetyglobals.invoiceiq.dto.SalaryComponentDto> dtos = null;
-            if (revision.getSalaryComponents() != null && !revision.getSalaryComponents().isBlank()) {
-                try {
-                    dtos = objectMapper.readValue(
-                        revision.getSalaryComponents(),
-                        new com.fasterxml.jackson.core.type.TypeReference<List<com.grivetyglobals.invoiceiq.dto.SalaryComponentDto>>() {}
-                    );
-                } catch (Exception ignored) {}
-            }
-
-            List<PayrollRunDetailComponent> detailComponents = new ArrayList<>();
-            BigDecimal computedEarnings = BigDecimal.ZERO;
-            BigDecimal computedDeductions = BigDecimal.ZERO;
-
-            if (dtos != null && !dtos.isEmpty()) {
-                for (int i = 0; i < dtos.size(); i++) {
-                    com.grivetyglobals.invoiceiq.dto.SalaryComponentDto dto = dtos.get(i);
-                    BigDecimal amount = BigDecimal.ZERO;
-                    if (dto.getPercentage() != null) {
-                        amount = annualCTC.divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP)
-                            .multiply(dto.getPercentage()).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
-                    } else if (dto.getAmount() != null) {
-                        amount = dto.getAmount().divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
-                    }
-
-                    if ("EARNING".equalsIgnoreCase(dto.getType())) {
-                        computedEarnings = computedEarnings.add(amount);
-                    } else if ("DEDUCTION".equalsIgnoreCase(dto.getType())) {
-                        computedDeductions = computedDeductions.add(amount);
-                    }
-
-                    if ("Basic".equalsIgnoreCase(dto.getComponentName()) || "Basic Pay".equalsIgnoreCase(dto.getComponentName())) {
-                        basicPay = amount;
-                    } else if ("HRA".equalsIgnoreCase(dto.getComponentName())) {
-                        hra = amount;
-                    }
-
-                    PayrollRunDetailComponent comp = new PayrollRunDetailComponent();
-                    comp.setComponentName(dto.getComponentName());
-                    comp.setType(dto.getType() != null ? dto.getType() : "EARNING");
-                    comp.setAmount(amount);
-                    comp.setDisplayOrder(i);
-                    detailComponents.add(comp);
-                }
-                monthlyGross = computedEarnings;
-                specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
-                if (basicPay.compareTo(BigDecimal.ZERO) == 0 && monthlyGross.compareTo(BigDecimal.ZERO) > 0) {
-                    basicPay = monthlyGross; // fallback for statutory calc if no basic found
-                }
-            } else {
-                // Fallback to legacy ratio
-                monthlyGross = annualCTC.divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP);
-                basicPay = monthlyGross.multiply(BigDecimal.valueOf(0.40)).setScale(2, java.math.RoundingMode.HALF_UP);
-                hra = basicPay.multiply(BigDecimal.valueOf(0.50)).setScale(2, java.math.RoundingMode.HALF_UP);
-                specialAllowance = monthlyGross.subtract(basicPay).subtract(hra);
-
-                detailComponents.add(PayrollRunDetailComponent.builder().componentName("Basic").type("EARNING").amount(basicPay).displayOrder(1).build());
-                detailComponents.add(PayrollRunDetailComponent.builder().componentName("HRA").type("EARNING").amount(hra).displayOrder(2).build());
-                detailComponents.add(PayrollRunDetailComponent.builder().componentName("Special Allowance").type("EARNING").amount(specialAllowance).displayOrder(3).build());
-            }
-
-            List<SalaryInput> inputs = allInputs.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).toList();
-            BigDecimal additions = BigDecimal.ZERO;
-            BigDecimal deductions = computedDeductions;
-            
-            for(SalaryInput input : inputs) {
-                if("Addition".equalsIgnoreCase(input.getInputType())) {
-                    additions = additions.add(input.getAmount());
-                } else if("Deduction".equalsIgnoreCase(input.getInputType())) {
-                    deductions = deductions.add(input.getAmount());
-                } else if("Override".equalsIgnoreCase(input.getInputType())) {
-                    basicPay = input.getAmount(); 
-                    monthlyGross = basicPay.add(hra).add(specialAllowance);
-                }
-            }
-            
-            List<EmployeeLOP> lops = allLops.stream().filter(l -> l.getEmployee().getId().equals(emp.getId())).toList();
-            BigDecimal totalLopDays = BigDecimal.ZERO;
-            for(EmployeeLOP lop : lops) {
-                totalLopDays = totalLopDays.add(lop.getLopDays());
-            }
-            
-            BigDecimal lopDeduction = monthlyGross.divide(BigDecimal.valueOf(30), 2, java.math.RoundingMode.HALF_UP).multiply(totalLopDays);
-            deductions = deductions.add(lopDeduction);
-            
-            // Statutory Deductions
             EmployeeStatutory stat = allStatuaries.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).findFirst().orElse(null);
-            
-            BigDecimal pfDeduction = BigDecimal.ZERO;
-            BigDecimal esiDeduction = BigDecimal.ZERO;
-            BigDecimal professionalTax = BigDecimal.valueOf(200);
-            
-            if (stat != null) {
-                if (Boolean.TRUE.equals(stat.getPfApplicable())) {
-                    pfDeduction = basicPay.multiply(BigDecimal.valueOf(0.12)).min(BigDecimal.valueOf(1800)).setScale(2, java.math.RoundingMode.HALF_UP);
-                }
-                if (Boolean.TRUE.equals(stat.getEsiApplicable()) && monthlyGross.compareTo(BigDecimal.valueOf(21000)) <= 0) {
-                    esiDeduction = monthlyGross.multiply(BigDecimal.valueOf(0.0075)).setScale(2, java.math.RoundingMode.HALF_UP);
-                }
-            }
-            
-            BigDecimal tdsDeduction = monthlyGross.multiply(BigDecimal.valueOf(0.10)).setScale(2, java.math.RoundingMode.HALF_UP);
-            deductions = deductions.add(pfDeduction).add(esiDeduction).add(tdsDeduction).add(professionalTax);
-            
-            BigDecimal gross = monthlyGross.add(additions);
-            BigDecimal net = gross.subtract(deductions);
-            
-            // Apply holds
-            SalaryHold hold = allHolds.stream().filter(h -> h.getEmployee().getId().equals(emp.getId()) && Boolean.TRUE.equals(h.getActive())).findFirst().orElse(null);
-            if (hold != null) {
-                net = net.subtract(hold.getHoldAmount());
-                deductions = deductions.add(hold.getHoldAmount());
-            }
-            
+            List<SalaryInput> inputs = allInputs.stream().filter(s -> s.getEmployee().getId().equals(emp.getId())).toList();
+            List<EmployeeLOP> lops = allLops.stream().filter(l -> l.getEmployee().getId().equals(emp.getId())).toList();
+            List<ReimbursementClaim> reimbursements = allReimbursements.stream().filter(r -> r.getEmployee().getId().equals(emp.getId())).toList();
+            SalaryHold hold = allHolds.stream().filter(h -> h.getEmployee().getId().equals(emp.getId())).findFirst().orElse(null);
+
+            com.grivetyglobals.invoiceiq.dto.hrms.PayrollCalculationInput calcInput = com.grivetyglobals.invoiceiq.dto.hrms.PayrollCalculationInput.builder()
+                .employee(emp)
+                .salaryRevision(revision)
+                .statutoryDetails(stat)
+                .salaryInputs(inputs)
+                .lopDays(lops)
+                .reimbursements(reimbursements)
+                .activeHold(hold)
+                .payrollPeriodEnd(periodEnd)
+                .build();
+
+            com.grivetyglobals.invoiceiq.dto.hrms.PayrollCalculationResult calcResult = payrollCalculationEngine.calculate(calcInput);
+
             PayrollRunDetail detail = new PayrollRunDetail();
             detail.setPayrollRun(run);
             detail.setEmployee(emp);
-            detail.setBasicPay(basicPay);
-            detail.setHra(hra);
-            detail.setSpecialAllowance(specialAllowance);
-            detail.setPfDeduction(pfDeduction);
-            detail.setEsiDeduction(esiDeduction);
-            detail.setTdsDeduction(tdsDeduction);
-            detail.setProfessionalTax(professionalTax);
-            detail.setGross(gross);
-            detail.setTotalDeductions(deductions);
-            detail.setNet(net);
-            detail.setLopDays(totalLopDays);
-            detail.setPayableDays(BigDecimal.valueOf(30).subtract(totalLopDays));
+            detail.setBasicPay(calcResult.getBasicPay());
+            detail.setHra(calcResult.getHra());
+            detail.setSpecialAllowance(calcResult.getSpecialAllowance());
+            detail.setPfDeduction(calcResult.getPfDeduction());
+            detail.setEsiDeduction(calcResult.getEsiDeduction());
+            detail.setTdsDeduction(calcResult.getTdsDeduction());
+            detail.setProfessionalTax(calcResult.getProfessionalTax());
+            detail.setGross(calcResult.getGross());
+            detail.setTotalDeductions(calcResult.getTotalDeductions());
+            detail.setNet(calcResult.getNet());
+            detail.setLopDays(calcResult.getTotalLopDays());
+            detail.setPayableDays(calcResult.getPayableDays());
             
             PayrollRunDetail savedDetail = payrollRunDetailRepository.save(detail);
 
-            for (PayrollRunDetailComponent c : detailComponents) {
-                c.setPayrollRunDetail(savedDetail);
-                payrollRunDetailComponentRepository.save(c);
+            if (calcResult.getDetailComponents() != null) {
+                for (PayrollRunDetailComponent c : calcResult.getDetailComponents()) {
+                    c.setPayrollRunDetail(savedDetail);
+                    payrollRunDetailComponentRepository.save(c);
+                }
             }
             
-            totalGross = totalGross.add(gross);
-            totalDeductions = totalDeductions.add(deductions);
-            totalNet = totalNet.add(net);
+            totalGross = totalGross.add(calcResult.getGross());
+            totalDeductions = totalDeductions.add(calcResult.getTotalDeductions());
+            totalNet = totalNet.add(calcResult.getNet());
             processedCount++;
         }
 
@@ -839,8 +770,18 @@ public class HrmsPayrollService {
             "₹" + prevRun.getTotalNet(), 
             "₹" + run.getTotalNet(), 
             (netDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + netDiff.abs(), 
-            "Net Change"));
+            "Overall Change"));
+            
+        BigDecimal prevReimb = payrollRunDetailComponentRepository.getTotalReimbursementsByRunId(prevRun.getId());
+        BigDecimal currReimb = payrollRunDetailComponentRepository.getTotalReimbursementsByRunId(run.getId());
+        BigDecimal reimbDiff = currReimb.subtract(prevReimb);
         
+        variances.add(new PayrollVarianceDto("Reimbursements",
+            "₹" + prevReimb,
+            "₹" + currReimb,
+            (reimbDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + reimbDiff.abs(),
+            "Expense Claims"));
+
         return variances;
     }
 

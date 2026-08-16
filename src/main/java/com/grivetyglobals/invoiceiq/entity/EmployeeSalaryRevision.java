@@ -22,6 +22,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
+
 public class EmployeeSalaryRevision {
 
     @Id
