@@ -32,5 +32,11 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
 
     @EntityGraph(attributePaths = {"employee", "employee.department", "employee.designation", "shift"})
     Optional<AttendanceRecord> findByEmployeeIdAndAttendanceDate(UUID employeeId, LocalDate attendanceDate);
+
+    @EntityGraph(attributePaths = {"employee", "employee.department", "employee.designation", "shift"})
+    Optional<AttendanceRecord> findByOrganizationIdAndEmployeeIdAndAttendanceDate(UUID organizationId, UUID employeeId, LocalDate attendanceDate);
+
+    @EntityGraph(attributePaths = {"employee", "employee.department", "employee.designation", "shift"})
+    Optional<AttendanceRecord> findTopByOrganizationIdAndEmployeeIdOrderByAttendanceDateDesc(UUID organizationId, UUID employeeId);
 }
 

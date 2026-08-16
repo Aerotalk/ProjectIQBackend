@@ -1212,6 +1212,128 @@ public class HrmsAttendanceService {
     }
 
     // ─────────────────────────────────────────────────────────
+    // CHECK-IN / CHECK-OUT (Mobile)
+    // ─────────────────────────────────────────────────────────
+
+    @Transactional
+    public AttendanceRecord checkIn(UUID employeeId, String source,
+                                     BigDecimal latitude, BigDecimal longitude) {
+        Organization org = getCurrentOrganization();
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Guard: last punch must NOT be "In" (can't double-check-in)
+        Optional<AttendanceLog> lastPunch = attendanceLogRepository
+                .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(org.getId(), employeeId);
+        if (lastPunch.isPresent()
+                && "In".equals(lastPunch.get().getDirection())
+                && lastPunch.get().getTimestamp().toLocalDate().isEqual(today)) {
+            throw new RuntimeException("Already checked in. Please check out first.");
+        }
+
+        // Upsert the day record — set checkIn only on first punch of the day
+        AttendanceRecord record = attendanceRecordRepository
+                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(org.getId(), employeeId, today)
+                .orElseGet(() -> AttendanceRecord.builder()
+                        .organization(org)
+                        .employee(employee)
+                        .attendanceDate(today)
+                        .attendanceSource(source != null ? source : "Mobile")
+                        .status("Present")
+                        .build());
+        if (record.getCheckIn() == null) {
+            record.setCheckIn(now); // first check-in of the day
+        }
+        attendanceRecordRepository.save(record);
+
+        // Write audit punch
+        AttendanceLog punch = AttendanceLog.builder()
+                .organization(org)
+                .employee(employee)
+                .timestamp(now)
+                .direction("In")
+                .source(source != null ? source : "Mobile")
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
+        attendanceLogRepository.save(punch);
+
+        return record;
+    }
+
+    @Transactional
+    public AttendanceRecord checkOut(UUID employeeId,
+                                      BigDecimal latitude, BigDecimal longitude) {
+        Organization org = getCurrentOrganization();
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Guard: last punch must be "In"
+        Optional<AttendanceLog> lastPunch = attendanceLogRepository
+                .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(org.getId(), employeeId);
+        if (lastPunch.isEmpty()
+                || !"In".equals(lastPunch.get().getDirection())
+                || !lastPunch.get().getTimestamp().toLocalDate().isEqual(today)) {
+            throw new RuntimeException("Not currently checked in.");
+        }
+
+        AttendanceRecord record = attendanceRecordRepository
+                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(org.getId(), employeeId, today)
+                .orElseThrow(() -> new RuntimeException("No attendance record for today"));
+
+        // Update last check-out time on the day record
+        record.setCheckOut(now);
+        // NOTE: workingHours is NOT computed here — deferred to the processing job
+        attendanceRecordRepository.save(record);
+
+        // Write audit punch
+        AttendanceLog punch = AttendanceLog.builder()
+                .organization(org)
+                .employee(employee)
+                .timestamp(now)
+                .direction("Out")
+                .source("Mobile")
+                .latitude(latitude)
+                .longitude(longitude)
+                .build();
+        attendanceLogRepository.save(punch);
+
+        return record;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTodayCheckInStatus(UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        LocalDate today = LocalDate.now();
+
+        // Determine current state from last punch direction
+        Optional<AttendanceLog> lastPunch = attendanceLogRepository
+                .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(orgId, employeeId);
+
+        boolean isCurrentlyIn = lastPunch.isPresent()
+                && "In".equals(lastPunch.get().getDirection())
+                && lastPunch.get().getTimestamp().toLocalDate().isEqual(today);
+
+        // Get full day record for timestamps
+        Optional<AttendanceRecord> record = attendanceRecordRepository
+                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, today);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("currentlyCheckedIn", isCurrentlyIn);
+        result.put("lastPunchDirection", lastPunch.map(AttendanceLog::getDirection).orElse(null));
+        result.put("lastPunchTime", lastPunch.map(AttendanceLog::getTimestamp).orElse(null));
+        record.ifPresent(r -> {
+            result.put("firstCheckIn", r.getCheckIn());
+            result.put("lastCheckOut", r.getCheckOut());
+        });
+        return result;
+    }
+
+    // ─────────────────────────────────────────────────────────
     // DASHBOARD
     // ─────────────────────────────────────────────────────────
 
