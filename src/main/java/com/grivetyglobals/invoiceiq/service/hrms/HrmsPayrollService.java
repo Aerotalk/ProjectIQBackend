@@ -873,19 +873,27 @@ public class HrmsPayrollService {
     @Transactional(readOnly = true)
     public Map<String, Object> getDashboardStats() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            throw new RuntimeException("Organization context is missing");
+        }
+
         Map<String, Object> stats = new HashMap<>();
         
         List<PayrollRun> runs = payrollRunRepository.findByOrganizationId(orgId);
         long processedRuns = runs.stream().filter(r -> "Processed".equals(r.getStatus()) || "Approved".equals(r.getStatus())).count();
         BigDecimal totalPayrollCost = runs.stream().filter(r -> "Processed".equals(r.getStatus()) || "Approved".equals(r.getStatus()))
-            .map(PayrollRun::getTotalGross).reduce(BigDecimal.ZERO, BigDecimal::add);
+            .map(PayrollRun::getTotalGross)
+            .filter(java.util.Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         long pendingSettlements = finalSettlementRepository.findByOrganizationId(orgId).stream()
             .filter(s -> "Draft".equals(s.getStatus()) || "Pending".equals(s.getStatus())).count();
             
         BigDecimal heldSalaries = salaryHoldRepository.findByOrganizationId(orgId).stream()
             .filter(h -> Boolean.TRUE.equals(h.getActive()))
-            .map(SalaryHold::getHoldAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+            .map(SalaryHold::getHoldAmount)
+            .filter(java.util.Objects::nonNull)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
             
         stats.put("processedRuns", processedRuns);
         stats.put("totalPayrollCost", totalPayrollCost);
