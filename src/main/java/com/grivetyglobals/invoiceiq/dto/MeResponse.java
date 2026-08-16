@@ -27,5 +27,4 @@ public class MeResponse {
     private String primaryColor;
     private String secondaryColor;
     private String sidebarColor;
-    private UUID employeeId;
 }
