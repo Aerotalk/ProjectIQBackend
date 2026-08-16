@@ -44,7 +44,7 @@ public class EmployeeController {
      * @param principal the authenticated principal (user email)
      * @return the Employee entity
      */
-    @PreAuthorize("hasAuthority('employee.view')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<Employee> getMyProfile(Principal principal) {
         return ResponseEntity.ok(employeeService.getMyProfile(principal.getName()));
