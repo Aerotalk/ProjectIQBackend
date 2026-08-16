@@ -132,6 +132,47 @@ public class PayrollCalculationEngine {
             }
         }
 
+        // FBP Declarations (Restructuring of Special Allowance)
+        if (input.getFbpItems() != null) {
+            for (com.grivetyglobals.invoiceiq.entity.hrms.FBPDeclarationItem item : input.getFbpItems()) {
+                if (item.getAnnualAmount() == null) continue;
+                BigDecimal monthlyAmount = item.getAnnualAmount().divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);
+                
+                // Deduct from special allowance to keep gross unchanged
+                specialAllowance = specialAllowance.subtract(monthlyAmount);
+                if (specialAllowance.compareTo(BigDecimal.ZERO) < 0) {
+                    monthlyAmount = monthlyAmount.add(specialAllowance); // adjust FBP to not exceed special allowance
+                    specialAllowance = BigDecimal.ZERO;
+                }
+                
+                if (monthlyAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    boolean foundSa = false;
+                    for (PayrollRunDetailComponent c : detailComponents) {
+                        if ("Special Allowance".equalsIgnoreCase(c.getComponentName())) {
+                            c.setAmount(specialAllowance);
+                            foundSa = true;
+                            break;
+                        }
+                    }
+                    if (!foundSa) {
+                        detailComponents.add(PayrollRunDetailComponent.builder()
+                            .componentName("Special Allowance")
+                            .type("EARNING")
+                            .amount(specialAllowance)
+                            .displayOrder(nextOrder++)
+                            .build());
+                    }
+                    
+                    detailComponents.add(PayrollRunDetailComponent.builder()
+                            .componentName(item.getReimbursementType() + " (FBP)")
+                            .type("EARNING")
+                            .amount(monthlyAmount)
+                            .displayOrder(nextOrder++)
+                            .build());
+                }
+            }
+        }
+
         BigDecimal totalLopDays = BigDecimal.ZERO;
         if (input.getLopDays() != null) {
             for (EmployeeLOP lop : input.getLopDays()) {
@@ -174,7 +215,7 @@ public class PayrollCalculationEngine {
         if (input.getActiveHold() != null) {
             net = net.subtract(input.getActiveHold().getHoldAmount());
             deductions = deductions.add(input.getActiveHold().getHoldAmount());
-            detailComponents.add(PayrollRunDetailComponent.builder().componentName("Salary Hold").type("DEDUCTION").amount(input.getActiveHold().getHoldAmount()).displayOrder(nextOrder++).build());
+            detailComponents.add(PayrollRunDetailComponent.builder().componentName("Salary Hold").type("DEDUCTION").amount(input.getActiveHold().getHoldAmount()).displayOrder(nextOrder).build());
         }
 
         return PayrollCalculationResult.builder()

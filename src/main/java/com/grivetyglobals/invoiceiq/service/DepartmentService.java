@@ -37,6 +37,9 @@ public class DepartmentService {
     @Transactional
     public Department createDepartment(DepartmentRequest request) {
         UUID currentOrgId = SecurityUtils.getCurrentOrganizationId();
+        if (currentOrgId == null) {
+            throw new RuntimeException("Organization context is missing");
+        }
 
         Organization organization = organizationRepository.findById(currentOrgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));

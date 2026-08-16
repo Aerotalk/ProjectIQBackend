@@ -42,7 +42,7 @@ public class DatabaseSeeder {
                 Resource[] resources = resolver.getResources("classpath:db/migration/*.sql");
 
                 // Sort resources to ensure V2 runs before V3, etc.
-                Arrays.sort(resources, Comparator.comparing(Resource::getFilename));
+                Arrays.sort(resources, Comparator.comparing(r -> r.getFilename() != null ? r.getFilename() : ""));
 
                 for (Resource resource : resources) {
                     System.out.println("Executing script: " + resource.getFilename());

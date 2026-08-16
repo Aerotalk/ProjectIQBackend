@@ -64,6 +64,15 @@ public class HrmsPayrollService {
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
     }
 
+    private String getFinancialYear(java.time.LocalDate date) {
+        int year = date.getYear();
+        if (date.getMonthValue() < 4) {
+            return (year - 1) + "-" + year;
+        } else {
+            return year + "-" + (year + 1);
+        }
+    }
+
     // ─────────────────────────────────────────────────────────
     // PAY COMPONENTS
     // ─────────────────────────────────────────────────────────
@@ -663,6 +672,19 @@ public class HrmsPayrollService {
         }
         final java.time.LocalDate periodEnd = tempPeriodEnd;
 
+        String currentFY = getFinancialYear(periodEnd);
+        List<FBPDeclaration> allFbps = entityManager.createQuery(
+                "SELECT f FROM FBPDeclaration f WHERE f.organization.id = :orgId AND f.financialYear = :fy AND f.employee.id IN :empIds", FBPDeclaration.class)
+            .setParameter("orgId", orgId).setParameter("fy", currentFY).setParameter("empIds", empIds).getResultList();
+            
+        List<FBPDeclarationItem> allFbpItems = new ArrayList<>();
+        if (!allFbps.isEmpty()) {
+            List<UUID> fbpIds = allFbps.stream().map(FBPDeclaration::getId).toList();
+            allFbpItems = entityManager.createQuery(
+                    "SELECT i FROM FBPDeclarationItem i WHERE i.declaration.id IN :fbpIds", FBPDeclarationItem.class)
+                .setParameter("fbpIds", fbpIds).getResultList();
+        }
+
         for (Employee emp : allEmployees) {
             // Check if salary stopped
             boolean isStopped = allStops.stream().anyMatch(s -> s.getEmployee().getId().equals(emp.getId()));
@@ -682,6 +704,12 @@ public class HrmsPayrollService {
             List<EmployeeLOP> lops = allLops.stream().filter(l -> l.getEmployee().getId().equals(emp.getId())).toList();
             List<ReimbursementClaim> reimbursements = allReimbursements.stream().filter(r -> r.getEmployee().getId().equals(emp.getId())).toList();
             SalaryHold hold = allHolds.stream().filter(h -> h.getEmployee().getId().equals(emp.getId())).findFirst().orElse(null);
+            
+            FBPDeclaration fbp = allFbps.stream().filter(f -> f.getEmployee().getId().equals(emp.getId())).findFirst().orElse(null);
+            List<FBPDeclarationItem> fbpItems = new ArrayList<>();
+            if (fbp != null) {
+                fbpItems = allFbpItems.stream().filter(i -> i.getDeclaration().getId().equals(fbp.getId())).toList();
+            }
 
             com.grivetyglobals.invoiceiq.dto.hrms.PayrollCalculationInput calcInput = com.grivetyglobals.invoiceiq.dto.hrms.PayrollCalculationInput.builder()
                 .employee(emp)
@@ -690,6 +718,7 @@ public class HrmsPayrollService {
                 .salaryInputs(inputs)
                 .lopDays(lops)
                 .reimbursements(reimbursements)
+                .fbpItems(fbpItems)
                 .activeHold(hold)
                 .payrollPeriodEnd(periodEnd)
                 .build();

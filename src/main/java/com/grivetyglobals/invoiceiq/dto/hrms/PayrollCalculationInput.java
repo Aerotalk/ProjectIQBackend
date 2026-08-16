@@ -22,6 +22,7 @@ public class PayrollCalculationInput {
     private List<SalaryInput> salaryInputs;
     private List<EmployeeLOP> lopDays;
     private List<ReimbursementClaim> reimbursements;
+    private List<com.grivetyglobals.invoiceiq.entity.hrms.FBPDeclarationItem> fbpItems;
     private SalaryHold activeHold;
     private LocalDate payrollPeriodEnd;
 }

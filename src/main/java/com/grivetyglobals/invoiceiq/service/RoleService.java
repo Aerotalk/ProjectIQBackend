@@ -87,7 +87,7 @@ public class RoleService {
         if (isSuperAdmin || isOrgAdmin) {
             return allRoles.stream()
                     .filter(role -> !("ROLE_SUPER_ADMIN".equals(role.getRoleName()) && !isSuperAdmin))
-                    .filter(role -> !("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin && !isOrgAdmin))
+                    .filter(role -> !("ROLE_ORG_ADMIN".equals(role.getRoleName()) && !isSuperAdmin))
                     .collect(java.util.stream.Collectors.toList());
         }
 

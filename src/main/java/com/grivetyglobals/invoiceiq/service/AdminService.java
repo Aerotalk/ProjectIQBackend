@@ -439,23 +439,15 @@ public class AdminService {
 
         companies.forEach(company -> {
             if (company.getAddresses() != null)
-                company.getAddresses().size();
+                org.hibernate.Hibernate.initialize(company.getAddresses());
             if (company.getBankAccounts() != null)
-                company.getBankAccounts().size();
+                org.hibernate.Hibernate.initialize(company.getBankAccounts());
         });
 
         return companies;
     }
 
-    /**
-     * Retrieves a company by its UUID, enforcing organization tenancy rules.
-     * 
-     * @param companyId the UUID of the company
-     * @return the Company entity
-     */
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    @Cacheable(value = "companyProfile", key = "#companyId")
-    public Company getCompanyById(java.util.UUID companyId) {
+    private Company fetchCompanyAndVerifyAccess(java.util.UUID companyId) {
         java.util.UUID organizationId = com.grivetyglobals.invoiceiq.security.SecurityUtils.getCurrentOrganizationId();
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
@@ -473,6 +465,18 @@ public class AdminService {
     }
 
     /**
+     * Retrieves a company by its UUID, enforcing organization tenancy rules.
+     * 
+     * @param companyId the UUID of the company
+     * @return the Company entity
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Cacheable(value = "companyProfile", key = "#companyId")
+    public Company getCompanyById(java.util.UUID companyId) {
+        return fetchCompanyAndVerifyAccess(companyId);
+    }
+
+    /**
      * Retrieves the company profile associated with the currently authenticated user.
      * 
      * @param email the email of the user
@@ -485,7 +489,7 @@ public class AdminService {
         if (companyId == null) {
             return null; // System Super Admins or Org Admins might not have a specific company
         }
-        return getCompanyById(companyId);
+        return fetchCompanyAndVerifyAccess(companyId);
     }
 
     /**
@@ -498,7 +502,7 @@ public class AdminService {
     @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     @Transactional
     public Company updateCompany(java.util.UUID companyId, CompanyUpdateRequest request) {
-        Company company = getCompanyById(companyId);
+        Company company = fetchCompanyAndVerifyAccess(companyId);
 
         company.setCompanyName(request.getCompanyName());
         company.setLegalName(request.getLegalName());
@@ -580,7 +584,7 @@ public class AdminService {
      */
     @Transactional
     public void deleteCompany(java.util.UUID companyId) {
-        Company company = getCompanyById(companyId);
+        Company company = fetchCompanyAndVerifyAccess(companyId);
         companyRepository.delete(company);
     }
 
@@ -594,7 +598,7 @@ public class AdminService {
     @Transactional
     @CacheEvict(value = {"companyProfile", "companyProfileByEmail"}, allEntries = true)
     public Company updateCompanyStatus(java.util.UUID companyId, String status) {
-        Company company = getCompanyById(companyId);
+        Company company = fetchCompanyAndVerifyAccess(companyId);
         company.setStatus(status);
         return companyRepository.save(company);
     }

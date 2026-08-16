@@ -35,6 +35,9 @@ public class HrmsPerformanceService {
 
     private Organization getCurrentOrganization() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            throw new RuntimeException("Organization context is missing");
+        }
         return organizationRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
     }
