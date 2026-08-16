@@ -832,13 +832,12 @@ public class HrmsAttendanceService {
         Optional<AttendanceLog> lastPunch = attendanceLogRepository
                 .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(orgId, employeeId);
 
-        boolean isCurrentlyIn = lastPunch.isPresent()
-                && "In".equals(lastPunch.get().getDirection())
-                && lastPunch.get().getTimestamp().toLocalDate().isEqual(today);
+        boolean isCurrentlyIn = lastPunch.isPresent() && "In".equals(lastPunch.get().getDirection());
 
-        // Get full day record for timestamps
+        // Get full day record for the active shift
+        LocalDate activeDate = isCurrentlyIn ? lastPunch.get().getTimestamp().toLocalDate() : LocalDate.now();
         Optional<AttendanceRecord> record = attendanceRecordRepository
-                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, today);
+                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, activeDate);
 
         Map<String, Object> result = new HashMap<>();
         result.put("currentlyCheckedIn", isCurrentlyIn);
