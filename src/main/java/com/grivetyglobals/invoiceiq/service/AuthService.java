@@ -5,6 +5,7 @@ import com.grivetyglobals.invoiceiq.entity.Role;
 import com.grivetyglobals.invoiceiq.entity.User;
 import com.grivetyglobals.invoiceiq.entity.RefreshToken;
 import com.grivetyglobals.invoiceiq.entity.VerificationToken;
+import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import com.grivetyglobals.invoiceiq.repository.RoleRepository;
 import com.grivetyglobals.invoiceiq.repository.UserRepository;
 import com.grivetyglobals.invoiceiq.repository.RefreshTokenRepository;
@@ -37,6 +38,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final PermissionService permissionService;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * Bootstraps the initial super admin user in the system.
@@ -259,6 +261,12 @@ public class AuthService {
 
         java.util.Set<String> effectivePermissions = permissionService.getEffectivePermissions(user);
 
+        // Look up the employee profile for this user (if any)
+        java.util.UUID employeeId = employeeRepository
+                .findByUserId(user.getId())
+                .map(e -> e.getId())
+                .orElse(null);
+
         return MeResponse.builder()
                 .id(user.getId())
                 .username(user.getActualUsername())
@@ -274,6 +282,7 @@ public class AuthService {
                 .primaryColor(user.getCompany() != null ? user.getCompany().getPrimaryColor() : null)
                 .secondaryColor(user.getCompany() != null ? user.getCompany().getSecondaryColor() : null)
                 .sidebarColor(user.getCompany() != null ? user.getCompany().getSidebarColor() : null)
+                .employeeId(employeeId)
                 .build();
     }
 
