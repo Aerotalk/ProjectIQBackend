@@ -39,6 +39,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -661,8 +662,23 @@ public class HrmsAttendanceService {
     }
 
     @Transactional(readOnly = true)
-    public List<AttendanceRecord> getAttendanceRecordsFiltered(String status, UUID employeeId) {
+    public List<AttendanceRecord> getAttendanceRecordsFiltered(String status, UUID employeeId, LocalDate startDate, LocalDate endDate) {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        
+        if (startDate != null && endDate != null) {
+            if (status != null && !status.isEmpty() && employeeId != null) {
+                return attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetweenAndStatus(orgId, startDate, endDate, status)
+                        .stream().filter(r -> r.getEmployee() != null && employeeId.equals(r.getEmployee().getId()))
+                        .collect(Collectors.toList());
+            } else if (status != null && !status.isEmpty()) {
+                return attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetweenAndStatus(orgId, startDate, endDate, status);
+            } else if (employeeId != null) {
+                return attendanceRecordRepository.findByEmployeeIdAndAttendanceDateBetween(employeeId, startDate, endDate);
+            } else {
+                return attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, startDate, endDate);
+            }
+        }
+
         if (status != null && !status.isEmpty() && employeeId != null) {
             return attendanceRecordRepository.findByOrganizationIdAndStatus(orgId, status)
                     .stream().filter(r -> r.getEmployee() != null && employeeId.equals(r.getEmployee().getId()))
@@ -708,14 +724,15 @@ public class HrmsAttendanceService {
     }
 
     @Transactional
-    public AttendanceRecord checkIn(UUID employeeId, String source) {
+    public AttendanceRecord checkIn(UUID employeeId, String source, java.math.BigDecimal latitude, java.math.BigDecimal longitude, String locationLabel) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
         Employee employee = employeeRepository.findById(employeeId).orElseThrow(() -> new RuntimeException("Employee not found"));
-        if (!employee.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+        if (!employee.getOrganization().getId().equals(orgId)) {
             throw new SecurityException("Access Denied");
         }
         LocalDate today = LocalDate.now();
 
-        AttendanceRecord record = attendanceRecordRepository.findByEmployeeIdAndAttendanceDate(employeeId, today)
+        AttendanceRecord record = attendanceRecordRepository.findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, today)
                 .orElse(AttendanceRecord.builder()
                         .organization(getCurrentOrganization())
                         .employee(employee)
@@ -724,24 +741,116 @@ public class HrmsAttendanceService {
                         .attendanceSource(source != null ? source : "Web")
                         .build());
 
-        record.setCheckIn(LocalDateTime.now());
+        if (record.getCheckIn() == null) {
+            record.setCheckIn(LocalDateTime.now());
+        }
+        record.setCheckOut(null); // Clear checkout if re-checking in
         record.setStatus("Present");
-        return attendanceRecordRepository.save(record);
+        record = attendanceRecordRepository.save(record);
+
+        AttendanceLog punch = AttendanceLog.builder()
+                .organization(getCurrentOrganization())
+                .employee(employee)
+                .timestamp(LocalDateTime.now())
+                .direction("In")
+                .source(source != null ? source : "Mobile")
+                .latitude(latitude)
+                .longitude(longitude)
+                .locationLabel(locationLabel)
+                .build();
+        attendanceLogRepository.save(punch);
+
+        return record;
     }
 
     @Transactional
-    public AttendanceRecord checkOut(UUID employeeId) {
-        LocalDate today = LocalDate.now();
-        AttendanceRecord record = attendanceRecordRepository.findByEmployeeIdAndAttendanceDate(employeeId, today)
-                .orElseThrow(() -> new RuntimeException("Check-in record not found for today"));
-
-        record.setCheckOut(LocalDateTime.now());
-        if (record.getCheckIn() != null) {
-            long minutes = Duration.between(record.getCheckIn(), record.getCheckOut()).toMinutes();
-            BigDecimal hours = BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
-            record.setWorkingHours(hours);
+    public AttendanceRecord checkOut(UUID employeeId, java.math.BigDecimal latitude, java.math.BigDecimal longitude, String locationLabel) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        
+        Optional<AttendanceLog> lastPunch = attendanceLogRepository
+                .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(orgId, employeeId);
+        
+        if (lastPunch.isEmpty() || !"In".equals(lastPunch.get().getDirection())) {
+            throw new RuntimeException("You must check in before checking out.");
         }
-        return attendanceRecordRepository.save(record);
+        
+        LocalDate shiftDate = lastPunch.get().getTimestamp().toLocalDate();
+        AttendanceRecord record = attendanceRecordRepository.findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, shiftDate)
+                .orElseThrow(() -> new RuntimeException("Check-in record not found for the active shift"));
+
+        LocalDateTime now = LocalDateTime.now();
+        record.setCheckOut(now);
+        
+        AttendanceLog punch = AttendanceLog.builder()
+                .organization(getCurrentOrganization())
+                .employee(record.getEmployee())
+                .timestamp(now)
+                .direction("Out")
+                .source("Mobile")
+                .latitude(latitude)
+                .longitude(longitude)
+                .locationLabel(locationLabel)
+                .build();
+        attendanceLogRepository.saveAndFlush(punch);
+
+        // Recalculate total working hours based on all punches for this shift's date up to now
+        record.setWorkingHours(calculateTotalWorkingHours(orgId, employeeId, shiftDate, now));
+        record = attendanceRecordRepository.save(record);
+
+        return record;
+    }
+
+    private BigDecimal calculateTotalWorkingHours(UUID organizationId, UUID employeeId, LocalDate shiftDate, LocalDateTime currentCheckOutTime) {
+        LocalDateTime startOfShift = shiftDate.atStartOfDay();
+        List<AttendanceLog> logs = attendanceLogRepository
+                .findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
+                        organizationId, employeeId, startOfShift, currentCheckOutTime);
+                        
+        long totalMinutes = 0;
+        LocalDateTime lastInTime = null;
+        
+        for (AttendanceLog log : logs) {
+            if ("In".equals(log.getDirection())) {
+                if (lastInTime == null) {
+                    lastInTime = log.getTimestamp();
+                }
+            } else if ("Out".equals(log.getDirection())) {
+                if (lastInTime != null) {
+                    totalMinutes += Duration.between(lastInTime, log.getTimestamp()).toMinutes();
+                    lastInTime = null; // Reset for next In
+                }
+            }
+        }
+        return BigDecimal.valueOf(totalMinutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCheckInStatus(UUID employeeId) {
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        LocalDate today = LocalDate.now();
+
+        // Determine current state from last punch direction
+        Optional<AttendanceLog> lastPunch = attendanceLogRepository
+                .findTopByOrganizationIdAndEmployeeIdOrderByTimestampDesc(orgId, employeeId);
+
+        boolean isCurrentlyIn = lastPunch.isPresent() && "In".equals(lastPunch.get().getDirection());
+
+        // Get full day record for the active shift
+        LocalDate activeDate = isCurrentlyIn ? lastPunch.get().getTimestamp().toLocalDate() : LocalDate.now();
+        Optional<AttendanceRecord> record = attendanceRecordRepository
+                .findByOrganizationIdAndEmployeeIdAndAttendanceDate(orgId, employeeId, activeDate);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("currentlyCheckedIn", isCurrentlyIn);
+        result.put("lastPunchDirection", lastPunch.map(AttendanceLog::getDirection).orElse(null));
+        result.put("lastPunchTime", lastPunch.map(AttendanceLog::getTimestamp).orElse(null));
+        record.ifPresent(r -> {
+            result.put("firstCheckIn", r.getCheckIn());
+            result.put("lastCheckOut", r.getCheckOut());
+        });
+        return result;
     }
 
     // ─────────────────────────────────────────────────────────
