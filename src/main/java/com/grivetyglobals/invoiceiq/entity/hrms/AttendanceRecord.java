@@ -54,6 +54,24 @@ public class AttendanceRecord {
     @Column(name = "check_out")
     private LocalDateTime checkOut;
 
+    @Column(name = "check_in_latitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkInLatitude;
+
+    @Column(name = "check_in_longitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkInLongitude;
+
+    @Column(name = "check_in_location", length = 255)
+    private String checkInLocation;
+
+    @Column(name = "check_out_latitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkOutLatitude;
+
+    @Column(name = "check_out_longitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkOutLongitude;
+
+    @Column(name = "check_out_location", length = 255)
+    private String checkOutLocation;
+
     @Column(name = "working_hours", precision = 4, scale = 2)
     private BigDecimal workingHours;
 
