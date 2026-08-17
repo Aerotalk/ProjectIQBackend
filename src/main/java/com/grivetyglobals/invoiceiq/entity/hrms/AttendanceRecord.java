@@ -30,14 +30,17 @@ public class AttendanceRecord {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @JsonIgnoreProperties({"user", "reportingManager", "hrManager", "organization", "company"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    @JsonIgnoreProperties({"organization", "company"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id")
     private Shift shift;
@@ -86,6 +89,7 @@ public class AttendanceRecord {
     @Column(name = "remarks", length = 500)
     private String remarks;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
     private Employee approvedBy;
