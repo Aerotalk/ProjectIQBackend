@@ -30,6 +30,7 @@ public class AdminService {
     private final CompanyBankAccountRepository companyBankAccountRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -82,6 +83,7 @@ public class AdminService {
             orgAdmin.getUserRoles().add(orgAdminUserRole);
 
             userRepository.save(orgAdmin);
+            ensureEmployeeProfileExists(orgAdmin, org, null);
         }
 
         return org;
@@ -210,7 +212,8 @@ public class AdminService {
                             .build()));
             companyAdmin.getUserRoles().add(UserRole.builder().user(companyAdmin).role(employeeRole).build());
 
-            userRepository.save(companyAdmin);
+            companyAdmin = userRepository.save(companyAdmin);
+            ensureEmployeeProfileExists(companyAdmin, organization, company);
         }
 
         java.util.List<CompanyAddress> savedAddresses = new java.util.ArrayList<>();
@@ -332,7 +335,36 @@ public class AdminService {
                     .build();
             user.getUserRoles().add(userRole);
         }
-        return userRepository.save(user);
+        
+        user = userRepository.save(user);
+        ensureEmployeeProfileExists(user, organization, company);
+        return user;
+    }
+
+    private void ensureEmployeeProfileExists(User user, Organization org, Company company) {
+        if (org == null) return; // Super Admins without an organization do not get an employee profile
+        
+        if (employeeRepository.findByUserId(user.getId()).isEmpty()) {
+            long currentCount = employeeRepository.countByOrganizationId(org.getId());
+            String empCode = String.format("EMP-%04d", currentCount + 1);
+
+            String[] nameParts = user.getUsername() != null && !user.getUsername().isBlank() ? user.getUsername().trim().split("\\s+", 2) : new String[]{"User", "User"};
+            String firstName = nameParts[0];
+            String lastName = nameParts.length > 1 ? nameParts[1] : "-";
+
+            Employee emp = Employee.builder()
+                    .organization(org)
+                    .company(company)
+                    .user(user)
+                    .employeeCode(empCode)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .workEmail(user.getEmail())
+                    .phone(user.getMobile())
+                    .employmentStatus("ACTIVE")
+                    .build();
+            employeeRepository.save(emp);
+        }
     }
 
     /**
