@@ -743,8 +743,14 @@ public class HrmsAttendanceService {
 
         if (record.getCheckIn() == null) {
             record.setCheckIn(LocalDateTime.now());
+            record.setCheckInLatitude(latitude);
+            record.setCheckInLongitude(longitude);
+            record.setCheckInLocation(locationLabel);
         }
         record.setCheckOut(null); // Clear checkout if re-checking in
+        record.setCheckOutLatitude(null);
+        record.setCheckOutLongitude(null);
+        record.setCheckOutLocation(null);
         record.setStatus("Present");
         record = attendanceRecordRepository.save(record);
 
@@ -780,6 +786,9 @@ public class HrmsAttendanceService {
 
         LocalDateTime now = LocalDateTime.now();
         record.setCheckOut(now);
+        record.setCheckOutLatitude(latitude);
+        record.setCheckOutLongitude(longitude);
+        record.setCheckOutLocation(locationLabel);
         
         AttendanceLog punch = AttendanceLog.builder()
                 .organization(getCurrentOrganization())

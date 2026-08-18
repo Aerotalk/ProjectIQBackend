@@ -30,14 +30,17 @@ public class AttendanceRecord {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @JsonIgnoreProperties({"user", "reportingManager", "hrManager", "organization", "company"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    @JsonIgnoreProperties({"organization", "company"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id")
     private Shift shift;
@@ -50,6 +53,24 @@ public class AttendanceRecord {
 
     @Column(name = "check_out")
     private LocalDateTime checkOut;
+
+    @Column(name = "check_in_latitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkInLatitude;
+
+    @Column(name = "check_in_longitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkInLongitude;
+
+    @Column(name = "check_in_location", length = 255)
+    private String checkInLocation;
+
+    @Column(name = "check_out_latitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkOutLatitude;
+
+    @Column(name = "check_out_longitude", precision = 10, scale = 7)
+    private java.math.BigDecimal checkOutLongitude;
+
+    @Column(name = "check_out_location", length = 255)
+    private String checkOutLocation;
 
     @Column(name = "working_hours", precision = 4, scale = 2)
     private BigDecimal workingHours;
@@ -86,6 +107,7 @@ public class AttendanceRecord {
     @Column(name = "remarks", length = 500)
     private String remarks;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
     private Employee approvedBy;
