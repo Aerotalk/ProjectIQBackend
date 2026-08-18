@@ -858,6 +858,7 @@ public class HrmsAttendanceService {
         record.ifPresent(r -> {
             result.put("firstCheckIn", r.getCheckIn());
             result.put("lastCheckOut", r.getCheckOut());
+            result.put("workingHours", r.getWorkingHours());
         });
         return result;
     }
@@ -1071,6 +1072,22 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceLog> getAttendanceLogs() {
         return attendanceLogRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+    
+    @Transactional(readOnly = true)
+    public List<AttendanceLog> getAttendanceLogsForRecord(UUID recordId) {
+        var record = attendanceRecordRepository.findById(recordId)
+            .orElseThrow(() -> new RuntimeException("Attendance Record not found"));
+            
+        if (!record.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        
+        LocalDateTime startOfDay = record.getAttendanceDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+        
+        return attendanceLogRepository.findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
+            record.getOrganization().getId(), record.getEmployee().getId(), startOfDay, endOfDay);
     }
 
     @Transactional(readOnly = true)
