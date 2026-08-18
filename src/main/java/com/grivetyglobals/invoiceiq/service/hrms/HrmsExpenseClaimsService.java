@@ -39,6 +39,9 @@ public class HrmsExpenseClaimsService {
 
     private Organization getCurrentOrganization() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            throw new IllegalStateException("No organization context for the current user");
+        }
         return organizationRepository.findById(orgId)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
     }
@@ -62,7 +65,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpenseCategoryConfig> getCategories() {
-        return categoryRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return categoryRepository.findByOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -102,7 +107,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpenseClaimTemplate> getTemplates() {
-        return templateRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return templateRepository.findByOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -167,7 +174,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpensePolicy> getPolicies() {
-        return policyRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return policyRepository.findByOrganizationId(orgId);
     }
 
     @Transactional
@@ -178,7 +187,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ReviewerAssignment> getReviewerAssignments() {
-        return reviewerAssignmentRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return reviewerAssignmentRepository.findByOrganizationId(orgId);
     }
 
     @Transactional
@@ -193,7 +204,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpenseClaim> getClaims() {
-        return claimRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return claimRepository.findByOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -333,7 +346,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpenseAdvance> getAdvances() {
-        return advanceRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return advanceRepository.findByOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -395,7 +410,9 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ClaimBatch> getBatches() {
-        return batchRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return batchRepository.findByOrganizationId(orgId);
     }
 
     @Transactional(readOnly = true)
@@ -440,6 +457,8 @@ public class HrmsExpenseClaimsService {
 
     @Transactional(readOnly = true)
     public List<ExpenseAuditLog> getAuditLogs() {
-        return auditLogRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+        UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
+        return auditLogRepository.findByOrganizationId(orgId);
     }
 }

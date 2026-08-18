@@ -304,8 +304,8 @@ public class HrmsPerformanceService {
                         .organization(org)
                         .employee(employee)
                         .cycle(cycle)
-                        .goalRatings(new ArrayList<>())
-                        .competencyRatings(new ArrayList<>())
+                        .goalRatings(new LinkedHashSet<>())
+                        .competencyRatings(new LinkedHashSet<>())
                         .build();
             }
         }
@@ -371,8 +371,8 @@ public class HrmsPerformanceService {
                             .cycle(savedSelfReview.getCycle())
                             .status("Pending")
                             .overallRating(BigDecimal.ZERO)
-                            .goalRatings(new ArrayList<>())
-                            .competencyRatings(new ArrayList<>())
+                            .goalRatings(new LinkedHashSet<>())
+                            .competencyRatings(new LinkedHashSet<>())
                             .build();
                     managerReviewRepository.save(managerReview);
                 }
@@ -525,6 +525,13 @@ public class HrmsPerformanceService {
     @Transactional(readOnly = true)
     public PerformanceDashboardKpiDTO getPerformanceDashboardKPIs() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            return PerformanceDashboardKpiDTO.builder()
+                    .activeCycles(0).pendingSelf(0).pendingManager(0)
+                    .completedReviews(0).averageRating(0.0)
+                    .topGoals(List.of()).cycleStatuses(List.of()).departmentRatings(List.of())
+                    .build();
+        }
         
         long activeCycles = cycleRepository.findByOrganizationIdAndStatus(orgId, "Active").size() + 
                             cycleRepository.findByOrganizationIdAndStatus(orgId, "Review Phase").size();
@@ -578,6 +585,7 @@ public class HrmsPerformanceService {
     @Transactional(readOnly = true)
     public List<DepartmentRatingDTO> getDepartmentRatings(UUID cycleId) {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return List.of();
         List<PerformanceGoal> allGoals;
         
         if (cycleId != null) {

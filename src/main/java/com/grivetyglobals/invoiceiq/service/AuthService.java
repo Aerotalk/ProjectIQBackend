@@ -9,6 +9,7 @@ import com.grivetyglobals.invoiceiq.repository.RoleRepository;
 import com.grivetyglobals.invoiceiq.repository.UserRepository;
 import com.grivetyglobals.invoiceiq.repository.RefreshTokenRepository;
 import com.grivetyglobals.invoiceiq.repository.VerificationTokenRepository;
+import com.grivetyglobals.invoiceiq.repository.EmployeeRepository;
 import com.grivetyglobals.invoiceiq.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,6 +38,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final PermissionService permissionService;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * Bootstraps the initial super admin user in the system.
@@ -222,12 +224,17 @@ public class AuthService {
 
         java.util.Set<String> effectivePermissions = permissionService.getEffectivePermissions(user);
 
+        UUID employeeId = employeeRepository.findByUserId(user.getId())
+                .map(com.grivetyglobals.invoiceiq.entity.Employee::getId)
+                .orElse(null);
+
         return AuthResponse.builder()
                 .token(jwtToken)
                 .refreshToken(refreshToken.getToken())
                 .username(user.getActualUsername())
                 .email(user.getEmail())
                 .roles(roles)
+                .employeeId(employeeId)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
                 .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
@@ -259,11 +266,16 @@ public class AuthService {
 
         java.util.Set<String> effectivePermissions = permissionService.getEffectivePermissions(user);
 
+        UUID employeeId = employeeRepository.findByUserId(user.getId())
+                .map(com.grivetyglobals.invoiceiq.entity.Employee::getId)
+                .orElse(null);
+
         return MeResponse.builder()
                 .id(user.getId())
                 .username(user.getActualUsername())
                 .email(user.getEmail())
                 .roles(roles)
+                .employeeId(employeeId)
                 .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getOrganizationName() : null)
                 .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
