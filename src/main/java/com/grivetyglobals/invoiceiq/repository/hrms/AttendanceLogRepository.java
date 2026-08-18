@@ -17,6 +17,7 @@ public interface AttendanceLogRepository extends JpaRepository<AttendanceLog, UU
     @EntityGraph(attributePaths = {"employee", "employee.department"})
     List<AttendanceLog> findByEmployeeId(UUID employeeId);
 
+    @EntityGraph(attributePaths = {"employee", "employee.department"})
     List<AttendanceLog> findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
             UUID organizationId, UUID employeeId, java.time.LocalDateTime from, java.time.LocalDateTime to
     );

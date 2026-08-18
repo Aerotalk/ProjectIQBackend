@@ -900,7 +900,11 @@ public class HrmsAttendanceService {
         record.ifPresent(r -> {
             result.put("firstCheckIn", r.getCheckIn());
             result.put("lastCheckOut", r.getCheckOut());
-            result.put("workingHours", r.getWorkingHours());
+            if (isCurrentlyIn) {
+                result.put("workingHours", calculateTotalWorkingHours(orgId, employeeId, activeDate, LocalDateTime.now()));
+            } else {
+                result.put("workingHours", r.getWorkingHours());
+            }
         });
         return result;
     }
@@ -1122,11 +1126,11 @@ public class HrmsAttendanceService {
             .orElseThrow(() -> new RuntimeException("Attendance Record not found"));
             
         if (!record.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new SecurityException("Access Denied");
         }
         
         LocalDateTime startOfDay = record.getAttendanceDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+        LocalDateTime endOfDay = record.getCheckOut() != null ? record.getCheckOut().plusHours(12) : LocalDateTime.now().plusHours(12);
         
         return attendanceLogRepository.findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
             record.getOrganization().getId(), record.getEmployee().getId(), startOfDay, endOfDay);
