@@ -742,10 +742,29 @@ public class HrmsAttendanceService {
                         .build());
 
         if (record.getCheckIn() == null) {
-            record.setCheckIn(LocalDateTime.now());
+            LocalDateTime now = LocalDateTime.now();
+            record.setCheckIn(now);
             record.setCheckInLatitude(latitude);
             record.setCheckInLongitude(longitude);
             record.setCheckInLocation(locationLabel);
+
+            // Compute lateBy against ShiftRoster if assigned
+            List<ShiftRoster> rosters = shiftRosterRepository.findByEmployeeIdAndRosterDate(employeeId, today);
+            if (!rosters.isEmpty()) {
+                Shift shift = rosters.get(0).getAssignedShift();
+                if (shift != null && shift.getStartTime() != null) {
+                    LocalTime expectedStart = shift.getStartTime();
+                    if (shift.getGraceTime() != null) {
+                        expectedStart = expectedStart.plusMinutes(shift.getGraceTime());
+                    }
+                    LocalTime actualTime = now.toLocalTime();
+                    if (actualTime.isAfter(expectedStart)) {
+                        record.setLateBy((int) java.time.Duration.between(expectedStart, actualTime).toMinutes());
+                    } else {
+                        record.setLateBy(0);
+                    }
+                }
+            }
         }
         record.setCheckOut(null); // Clear checkout if re-checking in
         record.setCheckOutLatitude(null);
@@ -803,7 +822,30 @@ public class HrmsAttendanceService {
         attendanceLogRepository.saveAndFlush(punch);
 
         // Recalculate total working hours based on all punches for this shift's date up to now
-        record.setWorkingHours(calculateTotalWorkingHours(orgId, employeeId, shiftDate, now));
+        BigDecimal totalWorkingHours = calculateTotalWorkingHours(orgId, employeeId, shiftDate, now);
+        record.setWorkingHours(totalWorkingHours);
+
+        // Compute earlyExit and Half Day against ShiftRoster if assigned
+        List<ShiftRoster> rosters = shiftRosterRepository.findByEmployeeIdAndRosterDate(employeeId, shiftDate);
+        if (!rosters.isEmpty()) {
+            Shift shift = rosters.get(0).getAssignedShift();
+            if (shift != null && shift.getEndTime() != null) {
+                LocalTime expectedEnd = shift.getEndTime();
+                LocalTime actualTime = now.toLocalTime();
+                if (actualTime.isBefore(expectedEnd)) {
+                    record.setEarlyExit((int) java.time.Duration.between(actualTime, expectedEnd).toMinutes());
+                } else {
+                    record.setEarlyExit(0);
+                }
+
+                if (shift.getHalfDayHours() != null && shift.getFullDayHours() != null) {
+                    if (totalWorkingHours.compareTo(shift.getFullDayHours()) < 0 && totalWorkingHours.compareTo(shift.getHalfDayHours()) >= 0) {
+                        record.setStatus("Half Day");
+                    }
+                }
+            }
+        }
+
         record = attendanceRecordRepository.save(record);
 
         return record;
@@ -858,6 +900,11 @@ public class HrmsAttendanceService {
         record.ifPresent(r -> {
             result.put("firstCheckIn", r.getCheckIn());
             result.put("lastCheckOut", r.getCheckOut());
+            if (isCurrentlyIn) {
+                result.put("workingHours", calculateTotalWorkingHours(orgId, employeeId, activeDate, LocalDateTime.now()));
+            } else {
+                result.put("workingHours", r.getWorkingHours());
+            }
         });
         return result;
     }
@@ -1071,6 +1118,22 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceLog> getAttendanceLogs() {
         return attendanceLogRepository.findByOrganizationId(SecurityUtils.getCurrentOrganizationId());
+    }
+    
+    @Transactional(readOnly = true)
+    public List<AttendanceLog> getAttendanceLogsForRecord(UUID recordId) {
+        var record = attendanceRecordRepository.findById(recordId)
+            .orElseThrow(() -> new RuntimeException("Attendance Record not found"));
+            
+        if (!record.getOrganization().getId().equals(SecurityUtils.getCurrentOrganizationId())) {
+            throw new SecurityException("Access Denied");
+        }
+        
+        LocalDateTime startOfDay = record.getAttendanceDate().atStartOfDay();
+        LocalDateTime endOfDay = record.getCheckOut() != null ? record.getCheckOut().plusHours(12) : LocalDateTime.now().plusHours(12);
+        
+        return attendanceLogRepository.findByOrganizationIdAndEmployeeIdAndTimestampBetweenOrderByTimestampAsc(
+            record.getOrganization().getId(), record.getEmployee().getId(), startOfDay, endOfDay);
     }
 
     @Transactional(readOnly = true)

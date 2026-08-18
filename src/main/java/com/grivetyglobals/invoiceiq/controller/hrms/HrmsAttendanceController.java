@@ -644,6 +644,12 @@ public class HrmsAttendanceController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/attendance/{recordId}/logs")
+    public ResponseEntity<List<AttendanceLog>> getAttendanceLogsForRecord(@PathVariable UUID recordId) {
+        return ResponseEntity.ok(hrmsAttendanceService.getAttendanceLogsForRecord(recordId));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/attendance/logs/{id}")
     public ResponseEntity<AttendanceLog> getAttendanceLogById(@PathVariable UUID id) {
         return ResponseEntity.ok(hrmsAttendanceService.getAttendanceLogById(id));
