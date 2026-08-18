@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.TextStyle;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1445,6 +1446,29 @@ public class HrmsAttendanceService {
         kpis.put("pendingLeaveRequests", pendingRequests);
         kpis.put("regularization", regularization);
         kpis.put("regularizationRequests", regularization);
+
+        // Calculate missing swipes (last 7 days where checkIn is present but checkOut is missing)
+        LocalDate sevenDaysAgo = today.minusDays(7);
+        List<AttendanceRecord> recentRecords = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, sevenDaysAgo, today.minusDays(1));
+        long missingSwipes = recentRecords.stream()
+                .filter(r -> r.getCheckIn() != null && r.getCheckOut() == null)
+                .count();
+        kpis.put("missingSwipes", missingSwipes);
+
+        // Calculate upcoming holidays
+        List<Holiday> holidays = holidayRepository.findByHolidayListOrganizationId(orgId);
+        List<Map<String, Object>> upcomingHolidays = holidays.stream()
+                .filter(h -> h.getHolidayDate() != null && !h.getHolidayDate().isBefore(today))
+                .sorted(Comparator.comparing(Holiday::getHolidayDate))
+                .limit(2)
+                .map(h -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", h.getHolidayName());
+                    map.put("date", h.getHolidayDate().format(DateTimeFormatter.ofPattern("MMM dd")));
+                    return map;
+                })
+                .collect(Collectors.toList());
+        kpis.put("upcomingHolidays", upcomingHolidays);
 
         // Calculate real 7-day trend data
         List<Map<String, Object>> trendData = new ArrayList<>();
