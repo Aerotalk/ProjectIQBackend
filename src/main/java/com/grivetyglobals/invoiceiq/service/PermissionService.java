@@ -268,28 +268,8 @@ public class PermissionService {
      */
     @Transactional(readOnly = true)
     public java.util.Set<UUID> getAllowedCompanyIdsForPermission(User detachedUser, String permissionKey) {
-        User user = userRepository.findById(detachedUser.getId()).orElse(detachedUser);
-        java.util.Set<UUID> allowedCompanyIds = new HashSet<>();
-        if (user.getUserRoles() != null) {
-            for (UserRole userRole : user.getUserRoles()) {
-                if (userRole.getRole().getRolePermissionGroups() != null) {
-                    for (RolePermissionGroup rpg : userRole.getRole().getRolePermissionGroups()) {
-                        if (rpg.getPermissionGroup() != null && rpg.getPermissionGroup().getPermissions() != null) {
-                            boolean hasPerm = rpg.getPermissionGroup().getPermissions().stream()
-                                    .anyMatch(m -> m.getPermission().getPermissionKey().equals(permissionKey));
-                            if (hasPerm) {
-                                if (userRole.getCompany() != null) {
-                                    allowedCompanyIds.add(userRole.getCompany().getId());
-                                } else {
-                                    allowedCompanyIds.add(null);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return allowedCompanyIds;
+        List<UUID> companyIds = permissionRepository.findAllowedCompanyIdsForPermission(detachedUser.getId(), permissionKey);
+        return new HashSet<>(companyIds);
     }
 
     /**
@@ -318,22 +298,14 @@ public class PermissionService {
             }
         }
 
-        // 2. Check RolePermissionGroup scopes
-        if (user.getUserRoles() != null) {
+        // 2. Check RolePermissionGroup scopes via optimized JPQL query
+        List<DataScope> scopes = permissionRepository.findDataScopesForPermission(user.getId(), permissionKey);
+        if (!scopes.isEmpty()) {
             DataScope broadestScope = null;
-            for (UserRole userRole : user.getUserRoles()) {
-                if (userRole.getRole().getRolePermissionGroups() != null) {
-                    for (RolePermissionGroup rpg : userRole.getRole().getRolePermissionGroups()) {
-                        if (rpg.getPermissionGroup() != null && rpg.getPermissionGroup().getPermissions() != null) {
-                            boolean groupHasPermission = rpg.getPermissionGroup().getPermissions().stream()
-                                    .anyMatch(m -> m.getPermission().getPermissionKey().equals(permissionKey));
-                            if (groupHasPermission && rpg.getDataScope() != null) {
-                                // Keep the broadest scope (lowest ordinal = broadest)
-                                if (broadestScope == null || rpg.getDataScope().ordinal() < broadestScope.ordinal()) {
-                                    broadestScope = rpg.getDataScope();
-                                }
-                            }
-                        }
+            for (DataScope s : scopes) {
+                if (s != null) {
+                    if (broadestScope == null || s.ordinal() < broadestScope.ordinal()) {
+                        broadestScope = s;
                     }
                 }
             }
