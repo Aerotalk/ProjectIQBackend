@@ -545,7 +545,7 @@ public class HrmsPayrollService {
     @Transactional(readOnly = true)
     public List<java.util.Map<String, Object>> getPayrollEligibilityCheck() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
-        List<Employee> allEmployees = employeeRepository.findByOrganizationId(orgId);
+        List<Employee> allEmployees = employeeRepository.searchAndFilterEmployees(orgId, null, null, "Active", null, null);
 
         List<EmployeeSalaryRevision> salaries = employeeSalaryRevisionRepository.findByOrganizationId(orgId);
         List<EmployeeBankAccount> banks = employeeBankAccountRepository.findByOrganizationId(orgId);
