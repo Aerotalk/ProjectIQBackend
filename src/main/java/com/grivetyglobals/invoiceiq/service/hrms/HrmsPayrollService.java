@@ -779,30 +779,40 @@ public class HrmsPayrollService {
             return variances;
         }
 
-        BigDecimal grossDiff = run.getTotalGross().subtract(prevRun.getTotalGross());
-        BigDecimal dedDiff = run.getTotalDeductions().subtract(prevRun.getTotalDeductions());
-        BigDecimal netDiff = run.getTotalNet().subtract(prevRun.getTotalNet());
+        BigDecimal runGross = run.getTotalGross() != null ? run.getTotalGross() : BigDecimal.ZERO;
+        BigDecimal prevGross = prevRun.getTotalGross() != null ? prevRun.getTotalGross() : BigDecimal.ZERO;
+        BigDecimal grossDiff = runGross.subtract(prevGross);
+
+        BigDecimal runDed = run.getTotalDeductions() != null ? run.getTotalDeductions() : BigDecimal.ZERO;
+        BigDecimal prevDed = prevRun.getTotalDeductions() != null ? prevRun.getTotalDeductions() : BigDecimal.ZERO;
+        BigDecimal dedDiff = runDed.subtract(prevDed);
+
+        BigDecimal runNet = run.getTotalNet() != null ? run.getTotalNet() : BigDecimal.ZERO;
+        BigDecimal prevNet = prevRun.getTotalNet() != null ? prevRun.getTotalNet() : BigDecimal.ZERO;
+        BigDecimal netDiff = runNet.subtract(prevNet);
 
         variances.add(new PayrollVarianceDto("Basic Pay", 
-            "₹" + prevRun.getTotalGross(), 
-            "₹" + run.getTotalGross(), 
+            "₹" + prevGross, 
+            "₹" + runGross, 
             (grossDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + grossDiff.abs(), 
             "Salary Revisions/Additions"));
             
         variances.add(new PayrollVarianceDto("Deductions", 
-            "₹" + prevRun.getTotalDeductions(), 
-            "₹" + run.getTotalDeductions(), 
+            "₹" + prevDed, 
+            "₹" + runDed, 
             (dedDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + dedDiff.abs(), 
             "Higher LOP/TDS"));
             
         variances.add(new PayrollVarianceDto("Net Pay", 
-            "₹" + prevRun.getTotalNet(), 
-            "₹" + run.getTotalNet(), 
+            "₹" + prevNet, 
+            "₹" + runNet, 
             (netDiff.compareTo(BigDecimal.ZERO) >= 0 ? "+₹" : "-₹") + netDiff.abs(), 
             "Overall Change"));
             
         BigDecimal prevReimb = payrollRunDetailComponentRepository.getTotalReimbursementsByRunId(prevRun.getId());
+        if (prevReimb == null) prevReimb = BigDecimal.ZERO;
         BigDecimal currReimb = payrollRunDetailComponentRepository.getTotalReimbursementsByRunId(run.getId());
+        if (currReimb == null) currReimb = BigDecimal.ZERO;
         BigDecimal reimbDiff = currReimb.subtract(prevReimb);
         
         variances.add(new PayrollVarianceDto("Reimbursements",
