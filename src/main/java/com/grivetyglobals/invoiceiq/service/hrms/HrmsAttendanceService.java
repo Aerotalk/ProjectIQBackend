@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.TextStyle;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -867,12 +868,15 @@ public class HrmsAttendanceService {
                 }
             } else if ("Out".equals(log.getDirection())) {
                 if (lastInTime != null) {
-                    totalMinutes += Duration.between(lastInTime, log.getTimestamp()).toMinutes();
+                    totalMinutes += java.time.Duration.between(lastInTime, log.getTimestamp()).toMinutes();
                     lastInTime = null; // Reset for next In
                 }
             }
         }
-        return BigDecimal.valueOf(totalMinutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+        if (lastInTime != null && currentCheckOutTime != null) {
+            totalMinutes += java.time.Duration.between(lastInTime, currentCheckOutTime).toMinutes();
+        }
+        return java.math.BigDecimal.valueOf(totalMinutes).divide(java.math.BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
     }
 
 
@@ -1442,6 +1446,29 @@ public class HrmsAttendanceService {
         kpis.put("pendingLeaveRequests", pendingRequests);
         kpis.put("regularization", regularization);
         kpis.put("regularizationRequests", regularization);
+
+        // Calculate missing swipes (last 7 days where checkIn is present but checkOut is missing)
+        LocalDate sevenDaysAgo = today.minusDays(7);
+        List<AttendanceRecord> recentRecords = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, sevenDaysAgo, today.minusDays(1));
+        long missingSwipes = recentRecords.stream()
+                .filter(r -> r.getCheckIn() != null && r.getCheckOut() == null)
+                .count();
+        kpis.put("missingSwipes", missingSwipes);
+
+        // Calculate upcoming holidays
+        List<Holiday> holidays = holidayRepository.findByHolidayListOrganizationId(orgId);
+        List<Map<String, Object>> upcomingHolidays = holidays.stream()
+                .filter(h -> h.getHolidayDate() != null && !h.getHolidayDate().isBefore(today))
+                .sorted(Comparator.comparing(Holiday::getHolidayDate))
+                .limit(2)
+                .map(h -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", h.getHolidayName());
+                    map.put("date", h.getHolidayDate().format(DateTimeFormatter.ofPattern("MMM dd")));
+                    return map;
+                })
+                .collect(Collectors.toList());
+        kpis.put("upcomingHolidays", upcomingHolidays);
 
         // Calculate real 7-day trend data
         List<Map<String, Object>> trendData = new ArrayList<>();
