@@ -552,14 +552,16 @@ public class HrmsPayrollService {
         List<EmployeeStatutory> statuaries = employeeStatutoryRepository.findByOrganizationId(orgId);
 
         java.util.Set<UUID> salEmpIds = salaries.stream()
-                .filter(s -> s.getAnnualCTC() != null && s.getAnnualCTC().compareTo(BigDecimal.ZERO) > 0)
+                .filter(s -> s.getEmployee() != null && s.getAnnualCTC() != null && s.getAnnualCTC().compareTo(BigDecimal.ZERO) > 0)
                 .map(s -> s.getEmployee().getId())
                 .collect(java.util.stream.Collectors.toSet());
-        java.util.Set<UUID> bankEmpIds = banks.stream().map(b -> b.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
-        java.util.Set<UUID> statEmpIds = statuaries.stream().map(s -> s.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
+        java.util.Set<UUID> bankEmpIds = banks.stream().filter(b -> b.getEmployee() != null).map(b -> b.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
+        java.util.Set<UUID> statEmpIds = statuaries.stream().filter(s -> s.getEmployee() != null).map(s -> s.getEmployee().getId()).collect(java.util.stream.Collectors.toSet());
 
         List<java.util.Map<String, Object>> missing = new java.util.ArrayList<>();
         for(Employee e : allEmployees) {
+            if (e == null || e.getId() == null) continue;
+            
             List<String> missingSteps = new java.util.ArrayList<>();
             if(!salEmpIds.contains(e.getId())) missingSteps.add("Salary Configuration");
             if(!bankEmpIds.contains(e.getId())) missingSteps.add("Bank Details");
@@ -628,7 +630,7 @@ public class HrmsPayrollService {
         BigDecimal totalNet = BigDecimal.ZERO;
         int processedCount = 0;
         
-        List<UUID> empIds = allEmployees.stream().map(Employee::getId).toList();
+        List<UUID> empIds = allEmployees.stream().filter(e -> e != null && e.getId() != null).map(Employee::getId).toList();
         if (empIds.isEmpty()) return run;
 
         String period = run.getPayrollPeriod();
