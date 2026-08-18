@@ -12,7 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 /**
  * Entity representing Employee.
@@ -28,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @SQLDelete(sql = "UPDATE employees SET deleted_at = CURRENT_TIMESTAMP WHERE employee_id = ?")
 @SQLRestriction("deleted_at IS NULL")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Employee {
 
     @Id

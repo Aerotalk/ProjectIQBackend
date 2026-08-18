@@ -191,11 +191,39 @@ public class EmployeeService {
      * @param email the email of the user
      * @return the associated Employee entity
      */
+    @Transactional
     public Employee getMyProfile(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        
         return employeeRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Employee profile not found"));
+                .orElseGet(() -> {
+                    // Auto-create a lightweight Employee profile if the user has an organization
+                    if (user.getOrganization() != null) {
+                        long currentCount = employeeRepository.countByOrganizationId(user.getOrganization().getId());
+                        String empCode = String.format("EMP-%04d", currentCount + 1);
+
+                        String[] nameParts = user.getUsername() != null && !user.getUsername().isBlank()
+                                ? user.getUsername().trim().split("\\s+", 2)
+                                : new String[]{"User", "User"};
+                        String firstName = nameParts[0];
+                        String lastName = nameParts.length > 1 ? nameParts[1] : "-";
+
+                        Employee emp = Employee.builder()
+                                .organization(user.getOrganization())
+                                .company(user.getCompany())
+                                .user(user)
+                                .employeeCode(empCode)
+                                .firstName(firstName)
+                                .lastName(lastName)
+                                .workEmail(user.getEmail())
+                                .phone(user.getMobile())
+                                .employmentStatus("ACTIVE")
+                                .build();
+                        return employeeRepository.save(emp);
+                    }
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee profile not found and user has no organization context");
+                });
     }
 
     /**

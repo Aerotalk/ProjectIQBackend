@@ -11,8 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -75,11 +75,11 @@ public class ManagerReview {
 
     @OneToMany(mappedBy = "managerReview", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ManagerReviewGoalRating> goalRatings = new ArrayList<>();
+    private Set<ManagerReviewGoalRating> goalRatings = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "managerReview", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ManagerReviewCompetencyRating> competencyRatings = new ArrayList<>();
+    private Set<ManagerReviewCompetencyRating> competencyRatings = new LinkedHashSet<>();
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

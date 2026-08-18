@@ -1279,6 +1279,7 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getEmployeeAttendanceSummaries(UUID employeeId) {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) return new ArrayList<>();
         List<AttendanceRecord> records = employeeId != null ?
                 attendanceRecordRepository.findByOrganizationIdAndEmployeeId(orgId, employeeId) :
                 attendanceRecordRepository.findByOrganizationId(orgId);
@@ -1339,6 +1340,21 @@ public class HrmsAttendanceService {
     @Transactional(readOnly = true)
     public Map<String, Object> getAttendanceDashboardKPIs() {
         UUID orgId = SecurityUtils.getCurrentOrganizationId();
+        if (orgId == null) {
+            Map<String, Object> emptyKpis = new HashMap<>();
+            emptyKpis.put("present", 0);
+            emptyKpis.put("absent", 0);
+            emptyKpis.put("late", 0);
+            emptyKpis.put("lateArrivals", 0);
+            emptyKpis.put("onLeave", 0);
+            emptyKpis.put("pendingRequests", 0);
+            emptyKpis.put("pendingLeaveRequests", 0);
+            emptyKpis.put("regularization", 0);
+            emptyKpis.put("regularizationRequests", 0);
+            emptyKpis.put("trendData", new ArrayList<>());
+            emptyKpis.put("leaveData", new ArrayList<>());
+            return emptyKpis;
+        }
         LocalDate today = LocalDate.now();
 
         List<AttendanceRecord> todaysRecords = attendanceRecordRepository.findByOrganizationIdAndAttendanceDateBetween(orgId, today, today);
@@ -1357,9 +1373,12 @@ public class HrmsAttendanceService {
         kpis.put("present", present);
         kpis.put("absent", absent);
         kpis.put("late", late);
+        kpis.put("lateArrivals", late);
         kpis.put("onLeave", onLeave);
         kpis.put("pendingRequests", pendingRequests);
+        kpis.put("pendingLeaveRequests", pendingRequests);
         kpis.put("regularization", regularization);
+        kpis.put("regularizationRequests", regularization);
 
         // Calculate real 7-day trend data
         List<Map<String, Object>> trendData = new ArrayList<>();

@@ -17,6 +17,7 @@ public class MeResponse {
     private String username;
     private String email;
     private List<String> roles;
+    private UUID employeeId;
     private UUID organizationId;
     private String organizationName;
     private UUID companyId;

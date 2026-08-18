@@ -18,6 +18,7 @@ public class AuthResponse {
     private String username;
     private String email;
     private java.util.List<String> roles;
+    private java.util.UUID employeeId;
     private java.util.UUID organizationId;
     private String organizationName;
     private java.util.UUID companyId;
